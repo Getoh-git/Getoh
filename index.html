@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Osaka Trip 2026 - Countdown & Hotel Selector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: #0f172a; 
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-panel { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.25s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+        
+        /* Smooth touch scrolling for iOS */
+        .touch-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-24 md:pb-8 custom-scrollbar">
+
+    <!-- Header for Desktop & Mobile -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl sm:text-2xl">🇯🇵</span>
+                    <span class="font-bold text-base sm:text-lg text-white tracking-wide">OSAKA <span class="text-sky-400">2026</span></span>
+                </div>
+                
+                <!-- Desktop Nav Buttons -->
+                <div class="hidden md:flex space-x-2">
+                    <button onclick="switchTab('countdown')" id="desk-nav-countdown" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 bg-sky-500 text-white shadow-lg shadow-sky-500/30">
+                        ⏳ นับถอยหลังทริป
+                    </button>
+                    <button onclick="switchTab('hotels')" id="desk-nav-hotels" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-200">
+                        🏨 เลือกโรงแรม (18 แห่ง)
+                    </button>
+                </div>
+
+                <!-- Quick Share button on top right for mobile -->
+                <button onclick="copyLineSummary()" class="md:hidden px-3 py-1.5 bg-emerald-600/90 text-white text-xs font-semibold rounded-lg flex items-center gap-1 active:scale-95 transition">
+                    <span>💬</span> ส่ง LINE
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 flex-grow w-full">
+
+        <!-- ================= PAGE 1: COUNTDOWN & TRIP OVERVIEW ================= -->
+        <section id="page-countdown" class="space-y-6 sm:space-y-8">
+            <div class="text-center space-y-2 sm:space-y-3">
+                <span class="px-3 py-1 bg-sky-500/15 border border-sky-500/30 text-sky-400 text-[11px] sm:text-xs font-semibold rounded-full uppercase tracking-wider">Japan Travel Plan 2026</span>
+                <h1 class="text-2xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-purple-400 leading-tight">
+                    เตรียมพร้อมสู่โอซาก้า 2026
+                </h1>
+                <p class="text-slate-400 text-xs sm:text-base max-w-2xl mx-auto px-2">
+                    นับถอยหลังสู่การเดินทางสุดพิเศษ พร้อมเปรียบเทียบที่พัก 18 แห่งที่ดีที่สุดในโอซาก้า
+                </p>
+            </div>
+
+            <!-- Mobile-Friendly Countdown Timer Card -->
+            <div class="glass-panel rounded-2xl sm:rounded-3xl p-5 sm:p-10 border border-sky-500/30 text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-20 -left-20 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
+                
+                <h2 class="text-xs sm:text-sm font-semibold tracking-wider text-sky-400 uppercase mb-4 sm:mb-6">เวลาที่เหลือจนถึงวันเดินทาง</h2>
+                
+                <!-- Countdown Grid Optimized for Narrow Screens -->
+                <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-3xl mx-auto">
+                    <div class="bg-slate-900/90 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-slate-700/60">
+                        <span id="timer-days" class="text-2xl sm:text-6xl font-black text-white tracking-tight">00</span>
+                        <span class="block text-[10px] sm:text-sm text-slate-400 mt-0.5">วัน</span>
+                    </div>
+                    <div class="bg-slate-900/90 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-slate-700/60">
+                        <span id="timer-hours" class="text-2xl sm:text-6xl font-black text-white tracking-tight">00</span>
+                        <span class="block text-[10px] sm:text-sm text-slate-400 mt-0.5">ชั่วโมง</span>
+                    </div>
+                    <div class="bg-slate-900/90 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-slate-700/60">
+                        <span id="timer-minutes" class="text-2xl sm:text-6xl font-black text-white tracking-tight">00</span>
+                        <span class="block text-[10px] sm:text-sm text-slate-400 mt-0.5">นาที</span>
+                    </div>
+                    <div class="bg-slate-900/90 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-slate-700/60">
+                        <span id="timer-seconds" class="text-2xl sm:text-6xl font-black text-sky-400 tracking-tight">00</span>
+                        <span class="block text-[10px] sm:text-sm text-slate-400 mt-0.5">วินาที</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 sm:mt-8 flex justify-center">
+                    <button onclick="switchTab('hotels')" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 active:scale-95 text-white font-bold text-xs sm:text-base rounded-xl sm:rounded-2xl shadow-xl shadow-sky-500/25 transition flex items-center justify-center gap-2">
+                        <span>ดูโรงแรมทั้งหมด 18 แห่ง</span>
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats Cards (2 cols on mobile) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="glass-card rounded-xl sm:rounded-2xl p-4 border-l-4 border-sky-400">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] sm:text-xs text-slate-400">จำนวนที่พัก</p>
+                            <h3 class="text-base sm:text-xl font-bold text-white mt-0.5">18 โรงแรม</h3>
+                        </div>
+                        <span class="text-xl sm:text-2xl">🏨</span>
+                    </div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5">ใน 4 ย่านทำเลสะดวก</p>
+                </div>
+                <div class="glass-card rounded-xl sm:rounded-2xl p-4 border-l-4 border-emerald-400">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] sm:text-xs text-slate-400">ราคาเริ่มต้น</p>
+                            <h3 class="text-base sm:text-xl font-bold text-emerald-400 mt-0.5">฿4,800.66</h3>
+                        </div>
+                        <span class="text-xl sm:text-2xl">💵</span>
+                    </div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5">สุทธิต่อคืน</p>
+                </div>
+                <div class="glass-card rounded-xl sm:rounded-2xl p-4 border-l-4 border-purple-400">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] sm:text-xs text-slate-400">ขนาดห้องพัก</p>
+                            <h3 class="text-base sm:text-xl font-bold text-purple-400 mt-0.5">10 - 27 m²</h3>
+                        </div>
+                        <span class="text-xl sm:text-2xl">📐</span>
+                    </div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5">หลากหลายประเภท</p>
+                </div>
+                <div class="glass-card rounded-xl sm:rounded-2xl p-4 border-l-4 border-amber-400">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] sm:text-xs text-slate-400">คะแนนเฉลี่ย</p>
+                            <h3 class="text-base sm:text-xl font-bold text-amber-400 mt-0.5">8.4 / 10</h3>
+                        </div>
+                        <span class="text-xl sm:text-2xl">⭐️</span>
+                    </div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5">จากผู้เข้าพักจริง</p>
+                </div>
+            </div>
+
+            <!-- District Highlights -->
+            <div class="space-y-3">
+                <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <span>📍</span> ย่านฮิตน่าพักในโอซาก้า
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="glass-card rounded-xl p-4">
+                        <div class="text-sky-400 font-bold text-sm mb-1">Namba & Shinsaibashi</div>
+                        <p class="text-xs text-slate-300 leading-relaxed">ศูนย์กลางการช้อปปิ้งและกินเที่ยว Dotonbori (Centara Life, APA, PG Kuromon)</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-4">
+                        <div class="text-emerald-400 font-bold text-sm mb-1">Ebisu & Shinsekai</div>
+                        <p class="text-xs text-slate-300 leading-relaxed">ย่านย้อนยุค ใกล้หอคอยซึเทนคาคุ ของกินเพียบ (Hotel Wan, E-stay, Seiryu)</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-4">
+                        <div class="text-purple-400 font-bold text-sm mb-1">Shin-Imamiya & Daikoku</div>
+                        <p class="text-xs text-slate-300 leading-relaxed">ต่อรถไฟตรงจากสนามบิน KIX สะดวก ราคาคุ้มค่า (CHECKinn, Apt 11, LIVIN)</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-4">
+                        <div class="text-amber-400 font-bold text-sm mb-1">Umeda Zone</div>
+                        <p class="text-xs text-slate-300 leading-relaxed">ย่านสถานีหลัก ต่อรถไฟไปเกียวโต/โกเบสะดวก (Hotel Kansai)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 2: HOTEL SELECTOR ================= -->
+        <section id="page-hotels" class="hidden space-y-4 sm:space-y-6">
+            
+            <!-- Mobile Collapsible Filter Toggle Header -->
+            <div class="glass-panel rounded-2xl p-4 space-y-3 border border-slate-700/50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-1.5">
+                            <span>🔍</span> ค้นหาโรงแรม <span class="text-sky-400 text-xs sm:text-sm font-normal">(18 แห่ง)</span>
+                        </h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Mobile Filter Toggle Button -->
+                        <button onclick="toggleMobileFilter()" class="md:hidden px-3 py-1.5 bg-slate-800 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 flex items-center gap-1 active:bg-slate-700">
+                            <span>⚙️</span> <span id="filter-toggle-text">เปิดตัวกรอง</span>
+                        </button>
+                        <button onclick="clearFilters()" class="hidden md:block px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition">
+                            ล้างตัวกรอง
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters Container (Hidden on mobile by default, expandable) -->
+                <div id="filter-container" class="hidden md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-800 md:border-t-0">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">ค้นหาชื่อโรงแรม</label>
+                        <input type="text" id="filter-search" oninput="renderHotels()" placeholder="พิมพ์ชื่อโรงแรม..." class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">กรองย่านทำเล</label>
+                        <select id="filter-area" onchange="renderHotels()" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-400">
+                            <option value="ALL">ทุกย่าน (All Areas)</option>
+                            <option value="Namba">Namba & Shinsaibashi</option>
+                            <option value="Ebisu">Ebisu & Shinsekai</option>
+                            <option value="Shin-Imamiya">Shin-Imamiya & Daikokucho</option>
+                            <option value="Umeda">Umeda Zone</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">กรองขนาดห้องพัก</label>
+                        <select id="filter-size" onchange="renderHotels()" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-400">
+                            <option value="ALL">ทุกขนาดห้อง</option>
+                            <option value="15">กว้าง 15 m² ขึ้นไป</option>
+                            <option value="20">กว้าง 20 m² ขึ้นไป (ห้องใหญ่)</option>
+                            <option value="25">กว้าง 25 m² ขึ้นไป (กว้างพิเศษ)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">เรียงลำดับตาม</label>
+                        <select id="filter-sort" onchange="renderHotels()" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-400">
+                            <option value="default">ลำดับตามตาราง (1-18)</option>
+                            <option value="price-asc">ราคา: ต่ำ ➔ สูง</option>
+                            <option value="price-desc">ราคา: สูง ➔ ต่ำ</option>
+                            <option value="size-desc">ขนาดห้อง: ใหญ่ ➔ เล็ก</option>
+                            <option value="score-desc">คะแนนรีวิว: สูง ➔ ต่ำ</option>
+                        </select>
+                    </div>
+                    <div class="md:hidden pt-2">
+                        <button onclick="clearFilters()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">ล้างตัวกรองทั้งหมด</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel Cards Grid (1 col on mobile, 2 on tablet, 3 on desktop) -->
+            <div id="hotels-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- JS Inserted Cards -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Mobile Sticky Floating Action Bar (Appears when items selected) -->
+    <div id="mobile-action-bar" class="fixed bottom-14 md:bottom-4 left-3 right-3 z-40 hidden">
+        <div class="glass-panel bg-slate-950/90 border border-sky-500/50 rounded-2xl p-3 shadow-2xl flex items-center justify-between gap-2">
+            <div class="text-xs text-slate-200 pl-2">
+                เลือกอยู่ <span id="compare-count" class="font-bold text-sky-400 text-sm">0</span> แห่ง
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openCompareModal()" class="px-3.5 py-2.5 bg-sky-500 hover:bg-sky-400 active:scale-95 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <span>📊</span> เปรียบเทียบ
+                </button>
+                <button onclick="copyLineSummary()" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <span>💬</span> ส่ง LINE
+                </button>
+                <button onclick="clearSelected()" class="p-2.5 bg-slate-800 text-slate-400 text-xs rounded-xl hover:text-white">
+                    ✕
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar (Thumb Friendly) -->
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 border-t border-slate-800 backdrop-blur-lg px-6 py-2">
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="switchTab('countdown')" id="mob-nav-countdown" class="py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                <span class="text-base">⏳</span>
+                <span>นับถอยหลัง</span>
+            </button>
+            <button onclick="switchTab('hotels')" id="mob-nav-hotels" class="py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200">
+                <span class="text-base">🏨</span>
+                <span>เลือกโรงแรม (18)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Responsive Compare Modal -->
+    <div id="modal-compare" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-sm sm:text-lg font-bold text-white flex items-center gap-1.5">📊 ตารางเปรียบเทียบเชิงลึก</h3>
+                <button onclick="closeCompareModal()" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+            </div>
+            <div class="p-3 sm:p-6 overflow-y-auto touch-scroll flex-grow" id="modal-compare-body">
+                <!-- Dynamic Comparison Table -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hotel Detail Modal -->
+    <div id="modal-detail" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="detail-modal-title" class="text-base sm:text-lg font-bold text-white">รายละเอียดโรงแรม</h3>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white text-xl p-1">✕</button>
+            </div>
+            <div class="p-4 sm:p-6 overflow-y-auto touch-scroll flex-grow space-y-4" id="modal-detail-body">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Image Modal -->
+    <div id="modal-image" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white">🖼️ เปลี่ยนรูปภาพโรงแรม</h3>
+                <button onclick="closeImageModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">วาง URL รูปภาพใหม่</label>
+                <input type="text" id="custom-image-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-400">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-2">หรือเลือกรูปตัวอย่าง</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                    <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                    <img src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                    <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                    <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80" onclick="selectPresetImg(this.src)" class="h-16 w-full object-cover rounded-lg cursor-pointer hover:ring-2 hover:ring-sky-400">
+                </div>
+            </div>
+            <button onclick="saveHotelImage()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs rounded-xl shadow transition">
+                บันทึกการเปลี่ยนรูป
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        // Data for all 18 Hotels with exact Room Sizes & Prices
+        const hotelsData = [
+            { id: 1, name: "Hotel Kansai", area: "Umeda", size: 12, price: 6130.55, score: 7.8, locationScore: 8.2, cleanScore: 7.5, serviceScore: 7.9, valueScore: 8.4, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80", tag: "ย่านอุเมดะ", comment: "ทำเลดีใกล้ย่านช้อปปิ้งอุเมดะ โรงแรมคลาสสิก คุ้มค่าเงิน", mapUrl: "https://maps.google.com/?q=Hotel+Kansai+Osaka" },
+            { id: 2, name: "Seiryu Tsutenkaku", area: "Ebisu", size: 25, price: 7781.08, score: 8.2, locationScore: 8.7, cleanScore: 8.1, serviceScore: 8.0, valueScore: 8.2, image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80", tag: "ห้องใหญ่ใกล้ซึเทนคาคุ", comment: "ห้องกว้าง 25 ตร.ม. เดินหาของทอดคุชิคัตสึตอนเย็นสะดวกมาก", mapUrl: "https://maps.google.com/?q=Seiryu+Tsutenkaku+Osaka" },
+            { id: 3, name: "BRACKETS HOTEL", area: "Namba", size: 11, price: 6409.52, score: 8.3, locationScore: 8.4, cleanScore: 8.6, serviceScore: 8.2, valueScore: 8.1, image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80", tag: "ดีไซน์โมเดิร์น", comment: "โรงแรมตกแต่งสวย ทันสมัย บรรยากาศเงียบสงบน่าพัก", mapUrl: "https://maps.google.com/?q=BRACKETS+HOTEL+Osaka" },
+            { id: 4, name: "Toho hotel", area: "Namba", size: 17, price: 6686.20, score: 8.2, locationScore: 8.1, cleanScore: 8.3, serviceScore: 8.1, valueScore: 8.3, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80", tag: "ราคาประหยัด", comment: "ราคาสบายกระเป๋า เดินทางไปโซนนัมบะได้ไม่ไกล", mapUrl: "https://maps.google.com/?q=Toho+hotel+Osaka" },
+            { id: 5, name: "Hotel Story@Namba by Tabist", area: "Namba", size: 25, price: 5783.41, score: 8.0, locationScore: 7.9, cleanScore: 8.0, serviceScore: 7.8, valueScore: 8.5, image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=600&q=80", tag: "ห้องกว้างคุ้มราคา", comment: "ห้องกว้างถึง 25 ตร.ม. ในราคาประหยัด เหมาะกับคนกระเป๋าใหญ่", mapUrl: "https://maps.google.com/?q=Hotel+Story+Namba+Osaka" },
+            { id: 6, name: "WONZ HOTEL", area: "Namba", size: 20, price: 6321.94, score: 8.1, locationScore: 8.5, cleanScore: 8.0, serviceScore: 8.1, valueScore: 8.2, image: "https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=600&q=80", tag: "ใกล้นัมบะ & คุรมง", comment: "อยู่ใกล้ตลาดคุรมง ของกินเยอะ เดินทางสะดวกเป็นกันเอง", mapUrl: "https://maps.google.com/?q=WONZ+HOTEL+Osaka" },
+            { id: 7, name: "Apartment Hotel 11 Shinimamiya 3", area: "Shin-Imamiya", size: 26, price: 6861.23, score: 8.4, locationScore: 8.3, cleanScore: 8.5, serviceScore: 8.2, valueScore: 8.6, image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80", tag: "สไตล์อพาร์ตเมนต์", comment: "มีโซนครัวและสิ่งอำนวยความสะดวกครบ ห้องกว้างสบาย 26 ตร.ม.", mapUrl: "https://maps.google.com/?q=Apartment+Hotel+11+Shinimamiya+Osaka" },
+            { id: 8, name: "LIVIN Osaka Nanbaminami", area: "Shin-Imamiya", size: 18, price: 4800.66, score: 8.2, locationScore: 8.0, cleanScore: 8.4, serviceScore: 8.0, valueScore: 8.8, image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80", tag: "ราคาถูกที่สุด", comment: "ราคาย่อมเยาที่สุดในตัวเลือก เหมาะสำหรับสายเน้นเที่ยวประหยัด", mapUrl: "https://maps.google.com/?q=LIVIN+Osaka+Nanbaminami" },
+            { id: 9, name: "APA Hotel Namba Minami Daikokucho Ekimae", area: "Shin-Imamiya", size: 11, price: 7352.43, score: 8.7, locationScore: 9.1, cleanScore: 8.8, serviceScore: 8.6, valueScore: 8.4, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80", tag: "ติดสถานี Daikokucho", comment: "ติดสถานีรถใต้ดิน นั่งไปนัมบะแค่ 1 สถานี ใกล้ซูเปอร์มาร์เก็ตใหญ่", mapUrl: "https://maps.google.com/?q=APA+Hotel+Daikokucho+Osaka" },
+            { id: 10, name: "Hotel Wan Osaka ebisu", area: "Ebisu", size: 11, price: 5695.96, score: 8.8, locationScore: 9.0, cleanScore: 9.1, serviceScore: 8.7, valueScore: 8.9, image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80", tag: "มินิมอลโมเดิร์น", comment: "โรงแรมสวย สะอาดมาก ติดสถานี Ebisucho อุปกรณ์ครบครัน", mapUrl: "https://maps.google.com/?q=Hotel+Wan+Osaka+ebisu" },
+            { id: 11, name: "APA Hotel Namba Shinsaibashi Nishi", area: "Namba", size: 10, price: 8979.02, score: 8.8, locationScore: 9.4, cleanScore: 8.9, serviceScore: 8.6, valueScore: 8.1, image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80", tag: "ทำเลทอง Shinsaibashi", comment: "ทำเลดีมากๆ เดินไป Dotonbori และ Shinsaibashi ช้อปปิ้งได้สบาย", mapUrl: "https://maps.google.com/?q=APA+Hotel+Namba+Shinsaibashi+Nishi" },
+            { id: 12, name: "PG Kuromon Hotel", area: "Namba", size: 26, price: 8005.47, score: 8.6, locationScore: 9.2, cleanScore: 8.4, serviceScore: 8.3, valueScore: 8.3, image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80", tag: "ติดตลาดปลาคุรมง", comment: "ตั้งอยู่ข้างตลาดคุรมง ห้องกว้าง 26 ตร.ม. เหมาะกับสายกิน", mapUrl: "https://maps.google.com/?q=PG+Kuromon+Hotel+Osaka" },
+            { id: 13, name: "CHECKinn Osaka Shinimamiya", area: "Shin-Imamiya", size: 14, price: 7750.95, score: 8.8, locationScore: 9.2, cleanScore: 8.9, serviceScore: 8.7, valueScore: 8.6, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80", tag: "ต่อรถไฟ KIX สะดวก", comment: "ติดสถานี Shin-Imamiya นั่งรถไฟ Nankai ตรงจากสนามบินได้ทันที", mapUrl: "https://maps.google.com/?q=CHECKinn+Osaka+Shinimamiya" },
+            { id: 14, name: "USP HOTEL SHINIMAMIYA(住宿)", area: "Shin-Imamiya", size: 18, price: 7856.05, score: 8.0, locationScore: 8.1, cleanScore: 8.0, serviceScore: 7.9, valueScore: 8.0, image: "https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=600&q=80", tag: "ใกล้ย่านชินอิมามิยะ", comment: "เน้นพักผ่อนสบายๆ ใกล้สถานีเดินทางสะดวก", mapUrl: "https://maps.google.com/?q=USP+HOTEL+SHINIMAMIYA" },
+            { id: 15, name: "Centara Life Namba Hotel Osaka", area: "Namba", size: 12, price: 9114.31, score: 8.8, locationScore: 9.0, cleanScore: 9.2, serviceScore: 9.1, valueScore: 8.2, image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80", tag: "แบรนด์ไทยพรีเมียม", comment: "โรงแรมใหม่หรูหรา มาตรฐานเซ็นทารา พนักงานพูดภาษาไทยได้", mapUrl: "https://maps.google.com/?q=Centara+Life+Namba+Hotel+Osaka" },
+            { id: 16, name: "APA Hotel Namba Minami Ebisucho Eki Shinsekai", area: "Ebisu", size: 11, price: 7272.89, score: 8.6, locationScore: 8.9, cleanScore: 8.7, serviceScore: 8.5, valueScore: 8.4, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80", tag: "ติดสถานี Ebisucho", comment: "มาตรฐาน APA เตียงนอนสบาย ติดรถไฟฟ้า Ebisucho", mapUrl: "https://maps.google.com/?q=APA+Hotel+Namba+Minami+Ebisucho" },
+            { id: 17, name: "E-stay ebisu", area: "Ebisu", size: 27, price: 7226.65, score: 8.5, locationScore: 8.4, cleanScore: 8.7, serviceScore: 8.3, valueScore: 8.7, image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80", tag: "ห้องใหญ่ที่สุด 27 m²", comment: "ห้องกว้างที่สุดในบรรดาตัวเลือก มีเครื่องซักผ้า ไมโครเวฟในห้อง", mapUrl: "https://maps.google.com/?q=E-stay+ebisu+Osaka" },
+            { id: 18, name: "Y&Y NAMBA HOTEL Osaka", area: "Namba", size: 10, price: 6715.98, score: 8.3, locationScore: 8.4, cleanScore: 8.3, serviceScore: 8.2, valueScore: 8.3, image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=600&q=80", tag: "โซนนัมบะราคากลางๆ", comment: "ที่พักสะอาด ตั้งอยู่ในย่านนัมบะ สะดวกต่อการเดินทาง", mapUrl: "https://maps.google.com/?q=Y%26Y+NAMBA+HOTEL+Osaka" }
+        ];
+
+        let selectedHotels = [];
+        let editingHotelId = null;
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            const pageCountdown = document.getElementById('page-countdown');
+            const pageHotels = document.getElementById('page-hotels');
+            const deskNavCountdown = document.getElementById('desk-nav-countdown');
+            const deskNavHotels = document.getElementById('desk-nav-hotels');
+            const mobNavCountdown = document.getElementById('mob-nav-countdown');
+            const mobNavHotels = document.getElementById('mob-nav-hotels');
+
+            if (tab === 'countdown') {
+                pageCountdown.classList.remove('hidden');
+                pageHotels.classList.add('hidden');
+
+                // Desktop style
+                deskNavCountdown.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 bg-sky-500 text-white shadow-lg shadow-sky-500/30";
+                deskNavHotels.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-200";
+
+                // Mobile style
+                mobNavCountdown.className = "py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30";
+                mobNavHotels.className = "py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200";
+            } else {
+                pageCountdown.classList.add('hidden');
+                pageHotels.classList.remove('hidden');
+
+                // Desktop style
+                deskNavHotels.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 bg-sky-500 text-white shadow-lg shadow-sky-500/30";
+                deskNavCountdown.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-200";
+
+                // Mobile style
+                mobNavHotels.className = "py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30";
+                mobNavCountdown.className = "py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200";
+            }
+        }
+
+        // Mobile Filter Collapsible Toggle
+        function toggleMobileFilter() {
+            const container = document.getElementById('filter-container');
+            const toggleText = document.getElementById('filter-toggle-text');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                if (toggleText) toggleText.innerText = 'ปิดตัวกรอง';
+            } else {
+                container.classList.add('hidden');
+                if (toggleText) toggleText.innerText = 'เปิดตัวกรอง';
+            }
+        }
+
+        // Render Hotel Cards (Optimized with Detail Modal & Change Image triggers)
+        function renderHotels() {
+            const grid = document.getElementById('hotels-grid');
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            const area = document.getElementById('filter-area').value;
+            const minSize = document.getElementById('filter-size').value;
+            const sort = document.getElementById('filter-sort').value;
+
+            let filtered = hotelsData.filter(h => {
+                const matchSearch = h.name.toLowerCase().includes(search) || h.tag.toLowerCase().includes(search);
+                const matchArea = area === 'ALL' || h.area === area;
+                const matchSize = minSize === 'ALL' || h.size >= parseInt(minSize);
+                return matchSearch && matchArea && matchSize;
+            });
+
+            // Sorting Logic
+            if (sort === 'price-asc') filtered.sort((a,b) => a.price - b.price);
+            if (sort === 'price-desc') filtered.sort((a,b) => b.price - a.price);
+            if (sort === 'size-desc') filtered.sort((a,b) => b.size - a.size);
+            if (sort === 'score-desc') filtered.sort((a,b) => b.score - a.score);
+
+            grid.innerHTML = filtered.map(h => {
+                const isSelected = selectedHotels.includes(h.id);
+                return `
+                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between border ${isSelected ? 'border-sky-400 ring-2 ring-sky-400/20' : 'border-slate-800'}">
+                        <div>
+                            <div class="relative h-44 sm:h-48 overflow-hidden group cursor-pointer" onclick="openHotelDetail(${h.id})">
+                                <img src="${h.image}" id="hotel-img-${h.id}" alt="${h.name}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
+                                <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-sky-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-sky-400/30">
+                                    ${h.tag}
+                                </span>
+                                <span class="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 text-[11px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shadow">
+                                    ⭐️ ${h.score}
+                                </span>
+                                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white">
+                                    <span>🔍 คลิกดูรายละเอียด</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 space-y-2.5">
+                                <div class="flex justify-between items-start gap-2">
+                                    <h3 onclick="openHotelDetail(${h.id})" class="font-bold text-white text-base leading-snug cursor-pointer hover:text-sky-400 transition">${h.name}</h3>
+                                    <button onclick="openChangeImageModal(${h.id})" title="เปลี่ยนรูปภาพ" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-lg border border-slate-700 flex-shrink-0">
+                                        🖼️ เปลี่ยนรูป
+                                    </button>
+                                </div>
+                                <p class="text-xs text-slate-400 italic leading-relaxed">"${h.comment}"</p>
+                                
+                                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+                                    <div class="bg-slate-900/60 p-2 rounded-lg text-center border border-slate-800">
+                                        <span class="block text-[10px] text-slate-400">ขนาดห้อง</span>
+                                        <strong class="text-sky-400 font-bold text-sm">${h.size} m²</strong>
+                                    </div>
+                                    <div class="bg-slate-900/60 p-2 rounded-lg text-center border border-slate-800">
+                                        <span class="block text-[10px] text-slate-400">ราคา/คืน</span>
+                                        <strong class="text-emerald-400 font-bold text-sm">฿${h.price.toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 pt-0 flex gap-2">
+                            <button onclick="openHotelDetail(${h.id})" class="w-1/3 py-3 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 active:scale-95 transition">
+                                ข้อมูลเต็ม
+                            </button>
+                            <button onclick="toggleSelect(${h.id})" class="w-2/3 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 ${isSelected ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700'}">
+                                <span>${isSelected ? '✓ เลือกแล้ว' : '+ เปรียบเทียบ'}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Open Detail Modal
+        function openHotelDetail(id) {
+            const h = hotelsData.find(item => item.id === id);
+            if (!h) return;
+
+            document.getElementById('detail-modal-title').innerText = h.name;
+            const body = document.getElementById('modal-detail-body');
+            body.innerHTML = `
+                <div class="relative h-48 rounded-xl overflow-hidden mb-4">
+                    <img src="${h.image}" class="w-full h-full object-cover">
+                    <span class="absolute top-2 left-2 bg-slate-900/80 text-sky-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-sky-400/30">${h.tag}</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block">ราคาจองจริง / คืน</span>
+                        <span class="text-emerald-400 font-bold text-lg">฿${h.price.toLocaleString('th-TH', {minimumFractionDigits:2})}</span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block">ขนาดห้องพัก</span>
+                        <span class="text-sky-400 font-bold text-lg">${h.size} ตร.ม. (m²)</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">คะแนนประเมินแต่ละหมวด</h4>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span class="text-slate-400">ทำเลที่ตั้ง:</span><span class="text-amber-400 font-bold">${h.locationScore} / 10</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">ความสะอาด:</span><span class="text-amber-400 font-bold">${h.cleanScore} / 10</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">การบริการ:</span><span class="text-amber-400 font-bold">${h.serviceScore} / 10</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">ความคุ้มค่า:</span><span class="text-amber-400 font-bold">${h.valueScore} / 10</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <h4 class="text-xs font-bold text-white mb-1">💬 รีวิวผู้เข้าพักจริง</h4>
+                    <p class="text-xs text-slate-300 italic">"${h.comment}"</p>
+                </div>
+
+                <div class="pt-2 flex flex-col gap-2">
+                    <a href="${h.mapUrl}" target="_blank" class="w-full py-2.5 bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/30 text-xs font-bold rounded-xl text-center transition">
+                        📍 ดูตำแหน่งบน Google Maps
+                    </a>
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="https://www.agoda.com" target="_blank" class="py-2.5 bg-slate-800 text-slate-200 text-xs font-bold rounded-xl text-center border border-slate-700 hover:bg-slate-700">
+                            เปิดดูใน Agoda
+                        </a>
+                        <a href="https://www.trip.com" target="_blank" class="py-2.5 bg-slate-800 text-slate-200 text-xs font-bold rounded-xl text-center border border-slate-700 hover:bg-slate-700">
+                            เปิดดูใน Trip.com
+                        </a>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('modal-detail').classList.add('hidden');
+        }
+
+        // Change Image Logic
+        function openChangeImageModal(id) {
+            editingHotelId = id;
+            document.getElementById('custom-image-url').value = '';
+            document.getElementById('modal-image').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('modal-image').classList.add('hidden');
+            editingHotelId = null;
+        }
+
+        function selectPresetImg(url) {
+            document.getElementById('custom-image-url').value = url;
+        }
+
+        function saveHotelImage() {
+            const url = document.getElementById('custom-image-url').value.trim();
+            if (!url) {
+                alert('กรุณาเลือกรูปภาพหรือวาง URL รูปภาพก่อนครับ');
+                return;
+            }
+            const h = hotelsData.find(item => item.id === editingHotelId);
+            if (h) {
+                h.image = url;
+                renderHotels();
+                closeImageModal();
+            }
+        }
+
+        // Render Hotel Cards (Optimized for Mobile Touch)
+        function renderHotels() {
+            const grid = document.getElementById('hotels-grid');
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            const area = document.getElementById('filter-area').value;
+            const minSize = document.getElementById('filter-size').value;
+            const sort = document.getElementById('filter-sort').value;
+
+            let filtered = hotelsData.filter(h => {
+                const matchSearch = h.name.toLowerCase().includes(search) || h.tag.toLowerCase().includes(search);
+                const matchArea = area === 'ALL' || h.area === area;
+                const matchSize = minSize === 'ALL' || h.size >= parseInt(minSize);
+                return matchSearch && matchArea && matchSize;
+            });
+
+            // Sorting Logic
+            if (sort === 'price-asc') filtered.sort((a,b) => a.price - b.price);
+            if (sort === 'price-desc') filtered.sort((a,b) => b.price - a.price);
+            if (sort === 'size-desc') filtered.sort((a,b) => b.size - a.size);
+            if (sort === 'score-desc') filtered.sort((a,b) => b.score - a.score);
+
+            grid.innerHTML = filtered.map(h => {
+                const isSelected = selectedHotels.includes(h.id);
+                return `
+                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between border ${isSelected ? 'border-sky-400 ring-2 ring-sky-400/20' : 'border-slate-800'}">
+                        <div>
+                            <div class="relative h-44 sm:h-48 overflow-hidden">
+                                <img src="${h.image}" alt="${h.name}" class="w-full h-full object-cover">
+                                <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-sky-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-sky-400/30">
+                                    ${h.tag}
+                                </span>
+                                <span class="absolute top-2.5 right-2.5 bg-amber-500 text-slate-950 text-[11px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shadow">
+                                    ⭐️ ${h.score}
+                                </span>
+                            </div>
+
+                            <div class="p-4 space-y-2.5">
+                                <h3 class="font-bold text-white text-base leading-snug">${h.name}</h3>
+                                <p class="text-xs text-slate-400 italic leading-relaxed">"${h.comment}"</p>
+                                
+                                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+                                    <div class="bg-slate-900/60 p-2 rounded-lg text-center border border-slate-800">
+                                        <span class="block text-[10px] text-slate-400">ขนาดห้อง</span>
+                                        <strong class="text-sky-400 font-bold text-sm">${h.size} m²</strong>
+                                    </div>
+                                    <div class="bg-slate-900/60 p-2 rounded-lg text-center border border-slate-800">
+                                        <span class="block text-[10px] text-slate-400">ราคา/คืน</span>
+                                        <strong class="text-emerald-400 font-bold text-sm">฿${h.price.toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Touch-Friendly Tap Target Button (Min height 44px) -->
+                        <div class="p-4 pt-0">
+                            <button onclick="toggleSelect(${h.id})" class="w-full py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 ${isSelected ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700'}">
+                                <span>${isSelected ? '✓ เลือกโรงแรมนี้แล้ว' : '+ เลือกเปรียบเทียบ'}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle Hotel Selection
+        function toggleSelect(id) {
+            if (selectedHotels.includes(id)) {
+                selectedHotels = selectedHotels.filter(item => item !== id);
+            } else {
+                selectedHotels.push(id);
+            }
+            updateCompareBar();
+            renderHotels();
+        }
+
+        function updateCompareBar() {
+            const bar = document.getElementById('mobile-action-bar');
+            const count = document.getElementById('compare-count');
+            count.innerText = selectedHotels.length;
+            if (selectedHotels.length > 0) {
+                bar.classList.remove('hidden');
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function clearSelected() {
+            selectedHotels = [];
+            updateCompareBar();
+            renderHotels();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-area').value = 'ALL';
+            document.getElementById('filter-size').value = 'ALL';
+            document.getElementById('filter-sort').value = 'default';
+            renderHotels();
+        }
+
+        // Mobile Responsive Compare Modal
+        function openCompareModal() {
+            const modal = document.getElementById('modal-compare');
+            const body = document.getElementById('modal-compare-body');
+            const selectedData = hotelsData.filter(h => selectedHotels.includes(h.id));
+
+            if (selectedData.length === 0) return;
+
+            body.innerHTML = `
+                <div class="overflow-x-auto touch-scroll">
+                    <table class="w-full text-left border-collapse text-xs min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="p-2.5">โรงแรม</th>
+                                <th class="p-2.5">ขนาดห้อง</th>
+                                <th class="p-2.5">ราคา / คืน</th>
+                                <th class="p-2.5">คะแนน</th>
+                                <th class="p-2.5">ย่านทำเล</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            ${selectedData.map(h => `
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">${h.name}</td>
+                                    <td class="p-2.5 text-sky-400 font-semibold">${h.size} m²</td>
+                                    <td class="p-2.5 text-emerald-400 font-semibold">฿${h.price.toLocaleString('th-TH', {minimumFractionDigits:2})}</td>
+                                    <td class="p-2.5 text-amber-400">⭐️ ${h.score}</td>
+                                    <td class="p-2.5 text-slate-300">${h.area}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeCompareModal() {
+            document.getElementById('modal-compare').classList.add('hidden');
+        }
+
+        // Copy LINE Summary
+        function copyLineSummary() {
+            const selectedData = selectedHotels.length > 0 
+                ? hotelsData.filter(h => selectedHotels.includes(h.id))
+                : hotelsData;
+
+            let text = `🇯🇵 สรุปตัวเลือกที่พักโอซาก้า 2026 (${selectedData.length} โรงแรม)\n\n`;
+            selectedData.forEach((h, index) => {
+                text += `${index + 1}. ${h.name}\n`;
+                text += `   📐 ขนาดห้อง: ${h.size} ตร.ม. | 💵 ราคา: ฿${h.price.toLocaleString('th-TH', {minimumFractionDigits: 2})}\n`;
+                text += `   ⭐️ คะแนน: ${h.score}/10 | จุดเด่น: ${h.tag}\n\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert("คัดลอกข้อความสรุปสำหรับส่ง LINE เรียบร้อยแล้วครับ!");
+            });
+        }
+
+        // Real-time Countdown Timer (Target: Oct 1, 2026)
+        const targetDate = new Date("2026-10-01T00:00:00").getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            if (distance > 0) {
+                document.getElementById("timer-days").innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                document.getElementById("timer-hours").innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                document.getElementById("timer-minutes").innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById("timer-seconds").innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+            }
+        }, 1000);
+
+        // Initial Render
+        renderHotels();
+    </script>
+</body>
+</html>
