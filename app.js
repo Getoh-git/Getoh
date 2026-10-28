@@ -155,11 +155,11 @@ function detail(id){
     ${revHtml(h)}
     <button class="btn ${on?"o":""}" style="margin-top:10px" onclick="pick(${id});closeSheet()">${on?"✓ เลือกแล้ว (แตะเพื่อเอาออก)":"+ เลือกเปรียบเทียบ"}</button>
     <a class="btn o" href="${esc(map)}" target="_blank" rel="noopener">📍 ดูบน Google Maps</a>
-    <div class="g2" style="margin-top:8px"><button class="btn o" onclick="form(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`);
+    <div class="g2" style="margin-top:8px"><button class="btn o" onclick="openForm(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`);
 }
 
 // ---------- เพิ่ม / แก้ไข / ลบที่พัก ----------
-function form(id){
+function openForm(id){
   const h=id?find(id):null;
   const areas=[...new Set(all().map(x=>x.area).filter(Boolean))];
   openSheet(h?"✏️ แก้ไขที่พัก":"➕ เพิ่มที่พัก",`<div class="fm">
