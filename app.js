@@ -105,10 +105,9 @@ const price=h=>h.price!=null?baht(h.price):"–";
 let sel=[],area="ALL";
 
 function tab(t){
-  $("p-count").classList.toggle("hide",t!=="count");
-  $("p-hotels").classList.toggle("hide",t!=="hotels");
-  $("n-count").classList.toggle("on",t==="count");
-  $("n-hotels").classList.toggle("on",t==="hotels");
+  for(const x of ["count","hotels","map"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
+  if(t!=="map"&&placing)endPlace();
+  if(t==="map"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
   scrollTo(0,0);
 }
 function openSheet(t,html){$("st").textContent=t;$("sb").innerHTML=html;$("ov").classList.remove("hide");document.body.style.overflow="hidden"}
@@ -118,9 +117,10 @@ function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElem
 function chips(){
   const A=["ALL",...new Set(all().map(h=>h.area).filter(Boolean))];
   if(!A.includes(area))area="ALL";
-  $("chips").innerHTML=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":esc(a)}</button>`).join("");
+  const CH=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":esc(a)}</button>`).join("");
+  $("chips").innerHTML=CH;$("mchips").innerHTML=CH;
 }
-$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
+for(const c of ["chips","mchips"])$(c).addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
 
 function card(h){
   const on=sel.includes(h.id);
@@ -140,6 +140,7 @@ function draw(){
   $("n").textContent=sel.length;
   $("act").classList.toggle("hide",!sel.length);
   $("n-hotels").innerHTML=`<span>🏨</span>เลือกโรงแรม (${all().length})`;
+  if(map)mapDraw();
 }
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
 
@@ -165,6 +166,7 @@ function detail(id){
     ${revHtml(h)}
     <button class="btn ${on?"o":""}" style="margin-top:10px" onclick="pick(${id});closeSheet()">${on?"✓ เลือกแล้ว (แตะเพื่อเอาออก)":"+ เลือกเปรียบเทียบ"}</button>
     <a class="btn o" href="${esc(map)}" target="_blank" rel="noopener">📍 ดูบน Google Maps</a>
+    <button class="btn o" style="margin-top:8px" onclick="${hasLL(h)?`showOnMap(${id})`:`placeFor(${id})`}">🗺️ ${hasLL(h)?"ดูบนแผนที่ทริป":"ปักหมุดบนแผนที่ทริป"}</button>
     <div class="g2" style="margin-top:8px"><button class="btn o" onclick="openForm(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`);
   loadPhotos(id);
 }
@@ -195,7 +197,8 @@ function saveForm(id){
   let map=$("f-map").value.trim();if(!/^https?:\/\//i.test(map))map="";
   let score=num($("f-score").value);if(score!=null)score=Math.min(10,Math.max(0,score));
   const o={name,area:$("f-area").value.trim()||"อื่น ๆ",size:num($("f-size").value),price:num($("f-price").value),score,tag:$("f-tag").value.trim()||"ที่พักที่เพิ่มเอง",cm:$("f-cm").value.trim(),map,reviews};
-  const old=id?find(id):null;
+  const old=id?find(id):null,ll=parseLL(map);
+  if(ll){o.lat=ll[0];o.lng=ll[1]}
   putHotel(id||Date.now(),{...(old||{}),...o});
   closeSheet();
 }
@@ -296,6 +299,72 @@ async function delPhoto(id,k,btn){
   catch(e){(phCache[id]=phCache[id]||{})[k]=prev;photoSet.add(id);renderPhotos(id);draw();toast("ลบรูปไม่สำเร็จ")}
 }
 
+// ---------- แผนที่ ----------
+let map=null,layer=null,placing=null,prevMk=null,mapFit=false;
+const hasLL=h=>Number.isFinite(h.lat)&&Number.isFinite(h.lng);
+function parseLL(u){
+  u=String(u||"");
+  const m=u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||u.match(/[?&](?:q|ll|query)=(-?\d+\.\d+)(?:,|%2C)(-?\d+\.\d+)/);
+  if(!m)return null;
+  const a=+m[1],b=+m[2];
+  return a>=30&&a<=40&&b>=128&&b<=146?[a,b]:null; // เฉพาะพิกัดในญี่ปุ่น
+}
+const filt=()=>{const q=$("q").value.toLowerCase(),min=+$("size").value;return all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||h.area===area)&&(h.size||0)>=min)};
+function initMap(){
+  if(map)return true;
+  if(typeof L==="undefined"){$("mnote").textContent="โหลดแผนที่ไม่ได้ (ต้องต่ออินเทอร์เน็ต)";return false}
+  map=L.map("map").setView([34.6687,135.5013],13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+  layer=L.layerGroup().addTo(map);
+  map.on("click",e=>{if(placing)setLL(placing,e.latlng.lat,e.latlng.lng)});
+  return true;
+}
+function mapDraw(){
+  if(!map)return;
+  layer.clearLayers();
+  const base=filt(),pin=base.filter(hasLL),un=base.filter(h=>!hasLL(h));
+  pin.forEach(h=>{
+    const ic=L.divIcon({className:"",html:`<div class="pin" style="background:${colorOf(h.area)}">${h.price!=null?"฿"+(h.price/1000).toFixed(1)+"k":"•"}</div>`,iconSize:[54,26],iconAnchor:[27,13]});
+    L.marker([h.lat,h.lng],{icon:ic}).addTo(layer).bindPopup(`<b>${esc(h.name)}</b><br>${price(h)} · ⭐️ ${h.score!=null?h.score:"–"} · ${h.size?h.size+" m²":"–"}<br><a href="#" onclick="detail(${h.id});return false">ดูรายละเอียด</a> · <a href="#" onclick="placeFor(${h.id});return false">ย้ายหมุด</a>`);
+  });
+  if(!mapFit&&pin.length){map.fitBounds(L.latLngBounds(pin.map(h=>[h.lat,h.lng])),{padding:[30,30],maxZoom:16});mapFit=true}
+  $("mcount").textContent=`ปักหมุดแล้ว ${pin.length} · ยังไม่ปัก ${un.length}`;
+  $("munpin").innerHTML=un.map(h=>`<div class="card" style="display:flex;gap:8px;align-items:center;padding:10px;margin-bottom:8px"><div style="flex:1;min-width:0"><b style="font-size:15px">${esc(h.name)}</b><div class="rc">${esc(h.area||"")}</div></div><button class="btn o" style="width:auto;min-height:40px;font-size:13px" onclick="findLL(${h.id})">🔎 ค้นหา</button><button class="btn" style="width:auto;min-height:40px;font-size:13px" onclick="placeFor(${h.id})">📍 ปัก</button></div>`).join("");
+}
+function placeFor(id){
+  const h=find(id);if(!h)return;
+  closeSheet();tab("map");if(!map)return;
+  placing=id;map.closePopup();map.getContainer().style.cursor="crosshair";
+  $("mnote").innerHTML=`📍 แตะบนแผนที่ตำแหน่งของ <b>${esc(h.name)}</b> <button class="chip on" onclick="endPlace()">ยกเลิก</button>`;
+}
+function endPlace(){
+  placing=null;if(prevMk){prevMk.remove();prevMk=null}
+  if(map)map.getContainer().style.cursor="";
+  $("mnote").textContent="แตะหมุดเพื่อดูรายละเอียด · ตัวกรองด้านบนใช้ร่วมกับแท็บเลือกโรงแรม";
+}
+function setLL(id,lat,lng){
+  const h=find(id);endPlace();if(!h)return;
+  putHotel(id,{...h,lat:+lat.toFixed(6),lng:+lng.toFixed(6)});
+}
+function showOnMap(id){
+  const h=find(id);closeSheet();tab("map");if(!map||!h||!hasLL(h))return;
+  setTimeout(()=>{map.invalidateSize();map.setView([h.lat,h.lng],17)},90);
+}
+async function findLL(id){
+  const h=find(id);if(!h)return;
+  toast("กำลังค้นหาตำแหน่ง...");
+  try{
+    const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&bounded=1&viewbox=135.35,34.8,135.65,34.5&q="+encodeURIComponent(h.name+" Osaka"));
+    const d=await r.json();
+    if(!Array.isArray(d)||!d.length){toast("ไม่พบชื่อนี้ กด 📍 ปัก แล้วแตะบนแผนที่เอง");return}
+    const lat=+d[0].lat,lng=+d[0].lon;
+    placeFor(id);if(!map)return;
+    map.setView([lat,lng],17);
+    prevMk=L.circleMarker([lat,lng],{radius:12,color:"#f59e0b",weight:3,fillOpacity:.15}).addTo(map);
+    toast("เจอตำแหน่งใกล้เคียง ตรวจแล้วแตะจุดที่ถูกต้อง");
+  }catch(e){toast("ค้นหาไม่ได้ กด 📍 ปัก แล้วแตะบนแผนที่เอง")}
+}
+
 // ---------- จัดการข้อมูล ----------
 function manage(){
   let old=[];try{old=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(old))old=[]}catch(e){old=[]}
@@ -320,6 +389,7 @@ async function importList(a){
     const rvs=Array.isArray(r.reviews)?r.reviews.filter(x=>Array.isArray(x)&&typeof x[1]==="string").slice(0,30).map(x=>["+-~".includes(x[0])?x[0]:"~",String(x[1]).slice(0,300),String(x[2]||"").slice(0,40)]):[];
     const map=typeof r.map==="string"&&/^https?:\/\//i.test(r.map)?r.map:"";
     const body={name:r.name.trim().slice(0,120),area:String(r.area||"อื่น ๆ").slice(0,40),size:num(r.size),price:num(r.price),score:num(r.score),tag:String(r.tag||"ที่พักที่เพิ่มเอง").slice(0,60),cm:String(r.cm||"").slice(0,200),map,reviews:rvs};
+    if(num(r.lat)!=null&&num(r.lng)!=null){body.lat=num(r.lat);body.lng=num(r.lng)}
     jobs.push(db("PUT","/"+(Date.now()+i++),body));have.add(body.name.toLowerCase());
   }
   await Promise.all(jobs);await sync();return jobs.length;

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Osaka Trip 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--line:#334155;--tx:#f8fafc;--mut:#94a3b8;--sky:#38bdf8;--grn:#34d399;--amb:#fbbf24;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
@@ -51,7 +52,7 @@ input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);bo
 .pick{flex:none;align-self:center;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:transparent;font-size:20px;cursor:pointer}
 .sel .pick{background:var(--sky);border-color:var(--sky);color:#082f49}
 /* nav + action bar */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:1fr 1fr;background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:1fr 1fr 1fr;background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{min-height:58px;background:none;border:0;color:var(--mut);font-size:13px;cursor:pointer}
 nav button.on{color:var(--sky);font-weight:700}nav button span{display:block;font-size:20px}
 #act{position:fixed;left:10px;right:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:30;background:#020617;border:1px solid var(--sky);border-radius:16px;padding:8px;display:flex;gap:8px;align-items:center}
@@ -93,6 +94,8 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 .phg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.phg.note{display:block}.phg .btn{grid-column:1/-1}
 .phi{position:relative}
 .phi img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;background:var(--bg);cursor:zoom-in}
+#map{position:relative;z-index:0;height:58vh;min-height:320px;border-radius:16px;border:1px solid var(--line);margin-top:10px}
+.pin{width:54px;height:26px;box-sizing:border-box;color:#fff;font:700 12px/22px 'Sarabun',system-ui,sans-serif;text-align:center;border-radius:13px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.55);white-space:nowrap}
 .phx{position:absolute;top:6px;right:6px;min-width:36px;height:36px;border-radius:18px;border:0;background:rgba(2,6,23,.78);color:#fff;font-size:15px;cursor:pointer}
 </style>
 </head>
@@ -149,6 +152,18 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
   </div>
 </section>
 
+<section id="p-map" class="hide">
+  <div class="bar">
+    <div class="chips" id="mchips"></div>
+    <div class="note" id="mnote" style="margin:6px 0 0">แตะหมุดเพื่อดูรายละเอียด · ตัวกรองด้านบนใช้ร่วมกับแท็บเลือกโรงแรม</div>
+  </div>
+  <div class="wrap" style="padding-top:0">
+    <div id="map"></div>
+    <div class="count" id="mcount"></div>
+    <div id="munpin"></div>
+  </div>
+</section>
+
 <div id="act" class="hide">
   <em>เลือก <b id="n">0</b></em>
   <button class="btn" onclick="compare()">📊 เปรียบเทียบ</button>
@@ -160,13 +175,15 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 <nav>
   <button id="n-count" class="on" onclick="tab('count')"><span>⏳</span>นับถอยหลัง</button>
   <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>เลือกโรงแรม (18)</button>
+  <button id="n-map" onclick="tab('map')"><span>🗺️</span>แผนที่</button>
 </nav>
 
 <div id="ov" class="ov hide" onclick="if(event.target===this)closeSheet()">
   <div class="sheet"><header><h2 id="st"></h2><button class="x" onclick="closeSheet()" aria-label="ปิด">✕</button></header><div id="sb"></div></div>
 </div>
 
-<script src="hotels.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="hotels.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
