@@ -90,6 +90,10 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 .fm label{display:block;font-size:13px;color:var(--mut);margin-bottom:10px}
 .fm input,.fm textarea{display:block;width:100%;margin-top:4px;min-height:46px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--tx);font-size:16px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.phg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.phg.note{display:block}.phg .btn{grid-column:1/-1}
+.phi{position:relative}
+.phi img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;background:var(--bg);cursor:zoom-in}
+.phx{position:absolute;top:6px;right:6px;min-width:36px;height:36px;border-radius:18px;border:0;background:rgba(2,6,23,.78);color:#fff;font-size:15px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -162,7 +166,7 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
   <div class="sheet"><header><h2 id="st"></h2><button class="x" onclick="closeSheet()" aria-label="ปิด">✕</button></header><div id="sb"></div></div>
 </div>
 
-<script src="hotels.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="hotels.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

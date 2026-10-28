@@ -60,11 +60,14 @@ const BASE_IDS=new Set(OSAKA.hotels.map(h=>h.id));
 let remote={},online=null; // remote: id -> ข้อมูลจาก Firebase (ที่เพิ่ม/แก้/ลบ)
 try{remote=JSON.parse(localStorage.getItem(CACHE)||"{}")||{}}catch(e){remote={}}
 const cacheSave=()=>{try{localStorage.setItem(CACHE,JSON.stringify(remote))}catch(e){}};
-async function db(method,path,body){
-  const r=await fetch(`${DB}/hotels${path}.json`,{method,headers:body!==undefined?{"Content-Type":"application/json"}:undefined,body:body!==undefined?JSON.stringify(body):undefined});
+async function dbx(method,path,body,qs=""){
+  const r=await fetch(`${DB}${path}.json${qs}`,{method,headers:body!==undefined?{"Content-Type":"application/json"}:undefined,body:body!==undefined?JSON.stringify(body):undefined});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return r.json();
 }
+const db=(method,path,body)=>dbx(method,"/hotels"+path,body);
+let photoSet=new Set(),phCache={}; // photoSet = id โรงแรมที่มีรูป, phCache = รูปที่โหลดแล้ว
+const MAXPH=4;
 function norm(k,v){
   const id=+k;if(!Number.isFinite(id)||!v||typeof v!=="object")return null;
   if(v.deleted)return {id,deleted:true};
@@ -77,7 +80,13 @@ async function sync(quiet){
     for(const k in d){const n=norm(k,d[k]);if(n)m[n.id]=n}
     const changed=JSON.stringify(m)!==JSON.stringify(remote);
     remote=m;online=true;cacheSave();
-    if(changed){sel=sel.filter(x=>find(x));chips();draw()}
+    let pchanged=false;
+    try{
+      const p=(await dbx("GET","/photos",undefined,"?shallow=true"))||{};
+      const ns=new Set(Object.keys(p).map(Number));
+      pchanged=[...ns].sort().join()!==[...photoSet].sort().join();photoSet=ns;
+    }catch(e){}
+    if(changed||pchanged){sel=sel.filter(x=>find(x));chips();draw()}
   }catch(e){if(online!==false&&!quiet)toast("เชื่อมต่อฐานข้อมูลไม่ได้ แสดงข้อมูลที่เก็บไว้ในเครื่อง");online=false}
 }
 const all=()=>{
@@ -117,7 +126,7 @@ function card(h){
   const on=sel.includes(h.id);
   return `<div class="card h ${on?"sel":""}" onclick="detail(${h.id})">
     <div class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></div>
-    <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")}</div><div class="rc">${rcount(h)}${h.custom?" · เพิ่มเอง":""}</div>
+    <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")}</div><div class="rc">${rcount(h)}${photoSet.has(h.id)?" · 📷":""}${h.custom?" · เพิ่มเอง":""}</div>
       <div class="meta"><span>📐 ${h.size?h.size+" m²":"–"}</span><span class="pr">${price(h)}</span></div></div>
     <button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"+"}</button></div>`;
 }
@@ -152,10 +161,12 @@ function detail(id){
     <div class="kv"><span>ขนาดห้อง</span><b>${h.size?h.size+" ตร.ม.":"–"}</b></div>
     <div class="kv"><span>คะแนนรวม</span><b style="color:var(--amb)">${h.score!=null?"⭐️ "+h.score+" / 10":"–"}</b></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
+    <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
     ${revHtml(h)}
     <button class="btn ${on?"o":""}" style="margin-top:10px" onclick="pick(${id});closeSheet()">${on?"✓ เลือกแล้ว (แตะเพื่อเอาออก)":"+ เลือกเปรียบเทียบ"}</button>
     <a class="btn o" href="${esc(map)}" target="_blank" rel="noopener">📍 ดูบน Google Maps</a>
     <div class="g2" style="margin-top:8px"><button class="btn o" onclick="openForm(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`);
+  loadPhotos(id);
 }
 
 // ---------- เพิ่ม / แก้ไข / ลบที่พัก ----------
@@ -203,7 +214,8 @@ async function removeHotel(id){
   const prev=remote[id],isBase=BASE_IDS.has(id);
   if(isBase)remote[id]={id,deleted:true};else delete remote[id];
   sel=sel.filter(x=>x!==id);cacheSave();chips();draw();
-  try{await db(isBase?"PUT":"DELETE","/"+id,isBase?{deleted:true}:undefined);toast("ลบแล้ว ✓");online=true}
+  try{await db(isBase?"PUT":"DELETE","/"+id,isBase?{deleted:true}:undefined);toast("ลบแล้ว ✓");online=true;
+    if(photoSet.has(id)){photoSet.delete(id);delete phCache[id];dbx("DELETE","/photos/"+id).catch(()=>{})}}
   catch(e){if(prev)remote[id]=prev;else delete remote[id];cacheSave();chips();draw();toast("ลบไม่สำเร็จ ตรวจอินเทอร์เน็ตหรือกฎฐานข้อมูล")}
 }
 async function restoreBase(){
@@ -211,6 +223,77 @@ async function restoreBase(){
   if(!gone.length){toast("ไม่มีโรงแรมเดิมที่ถูกลบ");return}
   try{await Promise.all(gone.map(h=>db("DELETE","/"+h.id)));await sync();closeSheet();toast(`กู้คืน ${gone.length} แห่งแล้ว`)}
   catch(e){toast("กู้คืนไม่สำเร็จ")}
+}
+
+// ---------- รูปภาพ ----------
+const okImg=v=>typeof v==="string"&&v.length<600000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(v);
+const okKey=k=>/^[A-Za-z0-9_]+$/.test(k);
+function shrink(file,max,q){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{
+      const sc=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");
+      c.width=Math.max(1,Math.round(im.width*sc));c.height=Math.max(1,Math.round(im.height*sc));
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",q));
+    };
+    im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("img"))};
+    im.src=url;
+  });
+}
+async function loadPhotos(id){
+  const box=$("ph-box");if(!box)return;
+  try{
+    const d=(await dbx("GET","/photos/"+id))||{};
+    phCache[id]=d;
+    if(Object.keys(d).length)photoSet.add(id);else photoSet.delete(id);
+    renderPhotos(id);
+  }catch(e){
+    const b=$("ph-box");if(b&&b.dataset.id==id)b.textContent="โหลดรูปไม่ได้ ตรวจกฎ Firebase ว่ามีข้อ photos หรือยัง";
+  }
+}
+function renderPhotos(id){
+  const box=$("ph-box");if(!box||box.dataset.id!=id)return;
+  const d=phCache[id]||{},ks=Object.keys(d).filter(k=>okKey(k)&&okImg(d[k])).sort();
+  box.className="phg";
+  box.innerHTML=ks.map(k=>`<div class="phi"><img src="${d[k]}" alt="" onclick="lightbox(${id},'${k}')"><button class="phx" aria-label="ลบรูป" onclick="delPhoto(${id},'${k}',this)">✕</button></div>`).join("")+
+    (ks.length<MAXPH?`<button class="btn o" onclick="addPhoto(${id})">📷 เพิ่มรูป (${ks.length}/${MAXPH})</button>`:`<div class="note" style="grid-column:1/-1">ครบ ${MAXPH} รูปแล้ว ลบรูปเก่าก่อนถึงจะเพิ่มได้</div>`);
+}
+function lightbox(id,k){
+  const src=(phCache[id]||{})[k];if(!okImg(src))return;
+  const o=document.createElement("div");
+  o.style.cssText="position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out";
+  const im=document.createElement("img");im.src=src;im.style.cssText="max-width:100%;max-height:100%;border-radius:8px";
+  o.appendChild(im);o.onclick=()=>o.remove();document.body.appendChild(o);
+}
+function addPhoto(id){
+  const have=Object.keys(phCache[id]||{}).length;
+  if(have>=MAXPH){toast(`ครบ ${MAXPH} รูปแล้ว`);return}
+  const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;
+  inp.onchange=async()=>{
+    const fs=[...inp.files].slice(0,MAXPH-have);if(!fs.length)return;
+    toast("กำลังอัปโหลดรูป...");let ok=0;
+    for(let i=0;i<fs.length;i++){
+      try{
+        let u=await shrink(fs[i],800,.72);
+        if(u.length>220000)u=await shrink(fs[i],640,.6);
+        if(u.length>400000)throw new Error("big");
+        const k="p"+Date.now()+"_"+i;
+        await dbx("PUT","/photos/"+id+"/"+k,u);
+        (phCache[id]=phCache[id]||{})[k]=u;ok++;
+      }catch(e){toast(e.message==="img"?"เปิดไฟล์รูปนี้ไม่ได้ (ลองรูป JPG/PNG)":"อัปโหลดไม่สำเร็จ ตรวจกฎ Firebase ข้อ photos")}
+    }
+    if(ok){photoSet.add(id);renderPhotos(id);draw();toast(`เพิ่ม ${ok} รูปแล้ว ✓`)}
+  };
+  inp.click();
+}
+async function delPhoto(id,k,btn){
+  if(!btn.dataset.s){btn.dataset.s=1;btn.textContent="ลบ?";btn.style.width="auto";btn.style.padding="0 10px";return}
+  const prev=(phCache[id]||{})[k];
+  if(phCache[id])delete phCache[id][k];
+  if(!Object.keys(phCache[id]||{}).length)photoSet.delete(id);
+  renderPhotos(id);draw();
+  try{await dbx("DELETE","/photos/"+id+"/"+k);toast("ลบรูปแล้ว ✓")}
+  catch(e){(phCache[id]=phCache[id]||{})[k]=prev;photoSet.add(id);renderPhotos(id);draw();toast("ลบรูปไม่สำเร็จ")}
 }
 
 // ---------- จัดการข้อมูล ----------
