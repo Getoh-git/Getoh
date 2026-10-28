@@ -54,12 +54,37 @@ function tick(){
 }
 
 // ===================== Hotels =====================
-const KEY="osaka_custom_hotels_v1";
-let custom=[];
-try{custom=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){custom=[]}
-if(!Array.isArray(custom))custom=[];
-const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(custom))}catch(e){toast("บันทึกในเครื่องนี้ไม่ได้")}};
-const all=()=>[...OSAKA.hotels,...custom];
+const DB="https://osaka-trip-b03a0-default-rtdb.asia-southeast1.firebasedatabase.app";
+const KEY="osaka_custom_hotels_v1",CACHE="osaka_remote_cache_v2"; // KEY = ข้อมูลเก่าแบบ localStorage (ใช้ย้ายขึ้นฐานข้อมูล)
+const BASE_IDS=new Set(OSAKA.hotels.map(h=>h.id));
+let remote={},online=null; // remote: id -> ข้อมูลจาก Firebase (ที่เพิ่ม/แก้/ลบ)
+try{remote=JSON.parse(localStorage.getItem(CACHE)||"{}")||{}}catch(e){remote={}}
+const cacheSave=()=>{try{localStorage.setItem(CACHE,JSON.stringify(remote))}catch(e){}};
+async function db(method,path,body){
+  const r=await fetch(`${DB}/hotels${path}.json`,{method,headers:body!==undefined?{"Content-Type":"application/json"}:undefined,body:body!==undefined?JSON.stringify(body):undefined});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.json();
+}
+function norm(k,v){
+  const id=+k;if(!Number.isFinite(id)||!v||typeof v!=="object")return null;
+  if(v.deleted)return {id,deleted:true};
+  const r=v.reviews,arr=Array.isArray(r)?r:(r&&typeof r==="object"?Object.values(r):[]);
+  return {...v,id,reviews:arr.map(x=>Array.isArray(x)?x:Object.values(x||{}))};
+}
+async function sync(quiet){
+  try{
+    const d=(await db("GET",""))||{},m={};
+    for(const k in d){const n=norm(k,d[k]);if(n)m[n.id]=n}
+    const changed=JSON.stringify(m)!==JSON.stringify(remote);
+    remote=m;online=true;cacheSave();
+    if(changed){sel=sel.filter(x=>find(x));chips();draw()}
+  }catch(e){if(online!==false&&!quiet)toast("เชื่อมต่อฐานข้อมูลไม่ได้ แสดงข้อมูลที่เก็บไว้ในเครื่อง");online=false}
+}
+const all=()=>{
+  const base=OSAKA.hotels.filter(h=>!(remote[h.id]&&remote[h.id].deleted)).map(h=>remote[h.id]?{...h,...remote[h.id],id:h.id}:h);
+  const extra=Object.values(remote).filter(h=>!BASE_IDS.has(h.id)&&!h.deleted).sort((a,b)=>a.id-b.id).map(h=>({...h,custom:true}));
+  return [...base,...extra];
+};
 const find=id=>all().find(h=>h.id===id);
 const COL={Namba:"#0284c7",Ebisu:"#059669","Shin-Imamiya":"#7c3aed",Umeda:"#d97706"},PAL=["#db2777","#0d9488","#dc2626","#4f46e5","#ca8a04","#0891b2"];
 const colorOf=a=>COL[a]||PAL[[...String(a||"")].reduce((s,c)=>(s*31+c.charCodeAt(0))%PAL.length,0)];
@@ -130,7 +155,7 @@ function detail(id){
     ${revHtml(h)}
     <button class="btn ${on?"o":""}" style="margin-top:10px" onclick="pick(${id});closeSheet()">${on?"✓ เลือกแล้ว (แตะเพื่อเอาออก)":"+ เลือกเปรียบเทียบ"}</button>
     <a class="btn o" href="${esc(map)}" target="_blank" rel="noopener">📍 ดูบน Google Maps</a>
-    ${h.custom?`<div class="g2" style="margin-top:8px"><button class="btn o" onclick="form(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`:""}`);
+    <div class="g2" style="margin-top:8px"><button class="btn o" onclick="form(${id})">✏️ แก้ไข</button><button class="btn o" onclick="delHotel(${id},this)">🗑 ลบ</button></div>`);
 }
 
 // ---------- เพิ่ม / แก้ไข / ลบที่พัก ----------
@@ -158,42 +183,75 @@ function saveForm(id){
   const reviews=$("f-rv").value.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const s="+-~".includes(l[0])?l[0]:"~";return [s,(s===l[0]?l.slice(1):l).trim(),src]}).filter(r=>r[1]);
   let map=$("f-map").value.trim();if(!/^https?:\/\//i.test(map))map="";
   let score=num($("f-score").value);if(score!=null)score=Math.min(10,Math.max(0,score));
-  const o={name,area:$("f-area").value.trim()||"อื่น ๆ",size:num($("f-size").value),price:num($("f-price").value),score,tag:$("f-tag").value.trim()||"ที่พักที่เพิ่มเอง",cm:$("f-cm").value.trim(),map,reviews,custom:true};
-  if(id){const i=custom.findIndex(h=>h.id===id);if(i>=0)custom[i]={...custom[i],...o}}
-  else custom.push({id:Math.max(1000,...custom.map(h=>h.id))+1,...o});
-  persist();closeSheet();chips();draw();toast("บันทึกแล้ว");
+  const o={name,area:$("f-area").value.trim()||"อื่น ๆ",size:num($("f-size").value),price:num($("f-price").value),score,tag:$("f-tag").value.trim()||"ที่พักที่เพิ่มเอง",cm:$("f-cm").value.trim(),map,reviews};
+  const old=id?find(id):null;
+  putHotel(id||Date.now(),{...(old||{}),...o});
+  closeSheet();
+}
+async function putHotel(id,o){
+  const {id:_i,custom:_c,deleted:_d,...body}=o;
+  const prev=remote[id];
+  remote[id]=norm(id,body);cacheSave();chips();draw();
+  try{await db("PUT","/"+id,body);toast("บันทึกแล้ว ✓");online=true}
+  catch(e){if(prev)remote[id]=prev;else delete remote[id];cacheSave();chips();draw();toast("บันทึกไม่สำเร็จ ตรวจอินเทอร์เน็ตหรือกฎฐานข้อมูล")}
 }
 function delHotel(id,btn){
   if(!btn.dataset.s){btn.dataset.s=1;btn.textContent="แตะอีกครั้งเพื่อยืนยันลบ";return}
-  custom=custom.filter(h=>h.id!==id);sel=sel.filter(x=>x!==id);
-  persist();closeSheet();chips();draw();toast("ลบแล้ว");
+  removeHotel(id);closeSheet();
+}
+async function removeHotel(id){
+  const prev=remote[id],isBase=BASE_IDS.has(id);
+  if(isBase)remote[id]={id,deleted:true};else delete remote[id];
+  sel=sel.filter(x=>x!==id);cacheSave();chips();draw();
+  try{await db(isBase?"PUT":"DELETE","/"+id,isBase?{deleted:true}:undefined);toast("ลบแล้ว ✓");online=true}
+  catch(e){if(prev)remote[id]=prev;else delete remote[id];cacheSave();chips();draw();toast("ลบไม่สำเร็จ ตรวจอินเทอร์เน็ตหรือกฎฐานข้อมูล")}
+}
+async function restoreBase(){
+  const gone=OSAKA.hotels.filter(h=>remote[h.id]&&remote[h.id].deleted);
+  if(!gone.length){toast("ไม่มีโรงแรมเดิมที่ถูกลบ");return}
+  try{await Promise.all(gone.map(h=>db("DELETE","/"+h.id)));await sync();closeSheet();toast(`กู้คืน ${gone.length} แห่งแล้ว`)}
+  catch(e){toast("กู้คืนไม่สำเร็จ")}
 }
 
-// ---------- นำเข้า / ส่งออกข้อมูลที่เพิ่มเอง ----------
+// ---------- จัดการข้อมูล ----------
 function manage(){
-  openSheet("⚙️ จัดการข้อมูล",`<p class="note">ที่พักที่เพิ่มเอง ${custom.length} แห่ง · เก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น (เครื่องอื่นหรือคนอื่นจะไม่เห็น)</p>
-    <button class="btn" onclick="copyData()">📋 คัดลอกข้อมูลที่เพิ่มไว้ (JSON)</button>
-    <label class="note" style="display:block;margin-top:14px">วาง JSON เพื่อนำเข้า (ย้ายข้อมูลมาจากเครื่องอื่น)</label>
+  let old=[];try{old=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(old))old=[]}catch(e){old=[]}
+  const added=all().filter(h=>h.custom).length,gone=OSAKA.hotels.filter(h=>remote[h.id]&&remote[h.id].deleted).length;
+  openSheet("⚙️ จัดการข้อมูล",`<p class="note">${online===false?"⚠️ ออฟไลน์ ใช้ข้อมูลที่เก็บไว้ในเครื่อง":"🟢 เชื่อมต่อฐานข้อมูลกลางแล้ว"} · ที่พักที่ทุกคนเพิ่ม ${added} แห่ง · โรงแรมเดิมที่ถูกลบ ${gone} แห่ง<br>ทุกคนที่เปิดลิงก์นี้เห็นข้อมูลชุดเดียวกัน อัปเดตอัตโนมัติทุก 20 วินาที</p>
+    <button class="btn o" onclick="sync().then(()=>toast('รีเฟรชแล้ว'))">🔄 รีเฟรชข้อมูลตอนนี้</button>
+    <button class="btn" style="margin-top:8px" onclick="copyData()">📋 คัดลอกสำรองที่พักที่เพิ่ม (JSON)</button>
+    ${gone?`<button class="btn o" style="margin-top:8px" onclick="restoreBase()">↩️ กู้คืนโรงแรมเดิมที่ลบ (${gone})</button>`:""}
+    ${old.length?`<button class="btn g" style="margin-top:8px" onclick="migrateOld()">⬆️ อัปโหลดที่พักในเครื่องนี้ (${old.length}) ขึ้นฐานข้อมูลกลาง</button>`:""}
+    <label class="note" style="display:block;margin-top:14px">วาง JSON เพื่อนำเข้า</label>
     <div class="fm"><textarea id="imp" rows="5" placeholder='[{"name":"...","area":"Namba"}]'></textarea></div>
-    <button class="btn o" onclick="importData()">⬆️ นำเข้า</button>
-    <p class="note">อยากให้ที่พักอยู่ถาวรสำหรับทุกคน: วางรายการที่คัดลอกลงในอาร์เรย์ hotels ในไฟล์ hotels.js แล้ว commit</p>`);
+    <button class="btn o" onclick="importData()">⬆️ นำเข้า</button>`);
 }
 function copyData(){
-  const t=JSON.stringify(custom.map(({id,...r})=>r),null,2);
+  const t=JSON.stringify(all().filter(h=>h.custom).map(({id,custom,...r})=>r),null,2);
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกแล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
-function importData(){
-  let a;try{a=JSON.parse($("imp").value)}catch(e){toast("JSON ไม่ถูกต้อง");return}
-  if(!Array.isArray(a)){toast("ต้องเป็นรายการ [ ... ]");return}
-  const have=new Set(all().map(h=>h.name.toLowerCase()));let n=0;
+async function importList(a){
+  const have=new Set(all().map(h=>h.name.toLowerCase()));const jobs=[];let i=0;
   for(const r of a.slice(0,200)){
     if(!r||typeof r.name!=="string"||!r.name.trim()||have.has(r.name.trim().toLowerCase()))continue;
     const rvs=Array.isArray(r.reviews)?r.reviews.filter(x=>Array.isArray(x)&&typeof x[1]==="string").slice(0,30).map(x=>["+-~".includes(x[0])?x[0]:"~",String(x[1]).slice(0,300),String(x[2]||"").slice(0,40)]):[];
     const map=typeof r.map==="string"&&/^https?:\/\//i.test(r.map)?r.map:"";
-    custom.push({id:Math.max(1000,...custom.map(h=>h.id))+1,name:r.name.trim().slice(0,120),area:String(r.area||"อื่น ๆ").slice(0,40),size:num(r.size),price:num(r.price),score:num(r.score),tag:String(r.tag||"ที่พักที่เพิ่มเอง").slice(0,60),cm:String(r.cm||"").slice(0,200),map,reviews:rvs,custom:true});
-    have.add(r.name.trim().toLowerCase());n++;
+    const body={name:r.name.trim().slice(0,120),area:String(r.area||"อื่น ๆ").slice(0,40),size:num(r.size),price:num(r.price),score:num(r.score),tag:String(r.tag||"ที่พักที่เพิ่มเอง").slice(0,60),cm:String(r.cm||"").slice(0,200),map,reviews:rvs};
+    jobs.push(db("PUT","/"+(Date.now()+i++),body));have.add(body.name.toLowerCase());
   }
-  persist();chips();draw();closeSheet();toast(`นำเข้า ${n} แห่ง`);
+  await Promise.all(jobs);await sync();return jobs.length;
+}
+async function importData(){
+  let a;try{a=JSON.parse($("imp").value)}catch(e){toast("JSON ไม่ถูกต้อง");return}
+  if(!Array.isArray(a)){toast("ต้องเป็นรายการ [ ... ]");return}
+  try{const n=await importList(a);closeSheet();toast(`นำเข้า ${n} แห่ง`)}catch(e){toast("นำเข้าไม่สำเร็จ")}
+}
+async function migrateOld(){
+  try{
+    const a=JSON.parse(localStorage.getItem(KEY)||"[]");
+    const n=await importList(a);
+    localStorage.removeItem(KEY);closeSheet();toast(`อัปโหลด ${n} แห่งแล้ว`);
+  }catch(e){toast("อัปโหลดไม่สำเร็จ")}
 }
 
 // ---------- เปรียบเทียบ / ส่ง LINE ----------
@@ -214,3 +272,6 @@ function copyLine(){
 }
 
 setInterval(tick,1000);tick();chips();draw();
+sync();
+setInterval(()=>{if(!document.hidden)sync(true)},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync(true)});
