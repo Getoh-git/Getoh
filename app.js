@@ -28,17 +28,17 @@ function fmtR(ms){
   const m=Math.max(0,Math.floor(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);
   return "-"+(d?`${d}D ${h}H`:h?`${h}H ${m%60}M`:`${m%60}M`);
 }
-function flightCard(f,now){
+function flightCard(f,now,ix){
   let st,p=0,tg;
   if(now<f.ap){st=`ไปสนามบินใน ${dur(f.ap-now)}`;tg=f.dep-now}
   else if(now<f.dep){st=`ควรอยู่สนามบินแล้ว · ออกใน ${dur(f.dep-now)}`;tg=f.dep-now}
   else if(now<f.arr){p=(now-f.dep)/(f.arr-f.dep);st=`อยู่บนเครื่อง · ถึงใน ${dur(f.arr-now)}`;tg=f.arr-now}
   else{p=1;st="ลงจอดแล้ว ✓";tg=0}
-  return `<div class="fc"><div class="fh"><span>${f.title} · ${f.code}</span><span>${f.info.split(" · ")[0]}</span></div>
+  return `<div class="fc"><div class="fh"><span>${f.title}${f.code?" · "+f.code:""}</span><span>${f.info.split(" · ")[0]}</span></div>
    <div class="fr"><div>${dots(f.from,"#fff")}<b>${CITY[f.from]}</b><small>${wd(f.dep,f.from)} ${f.depD} · ${f.depT}</small></div><span class="ar">→</span>
    <div>${dots(f.to,"#5fd100")}<b>${CITY[f.to]}</b><small>${wd(f.arr,f.to)} ${f.arrD} · ${f.arrT}</small></div></div>
    <div class="fe"><div><b>ETA ${f.arrT}</b><small>${ZONE[f.to]}</small></div><div class="or">${st}</div></div>
-   <div class="ft">${orbit(p,f.code)}<code>${fmtR(tg)}</code></div>
+   <div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div>
    <div class="fa">🛄 แนะนำถึงสนามบิน <b>${f.apT}</b> (ก่อนเครื่องออก 3 ชม.)</div></div>`;
 }
 function tick(){
@@ -50,7 +50,7 @@ function tick(){
   $("ts").textContent=String(Math.floor(v%6e4/1e3)).padStart(2,"0");
   $("tlabel").textContent=nx?`เหลือเวลาจนถึงเครื่องออก (${nx.title})`:"ทริปนี้จบแล้ว กลับถึงบ้านเรียบร้อย 🏠";
   $("tnext").textContent=nx?`${nx.from} ➔ ${nx.to} · ${nx.depD} เวลา ${nx.depT}`:"";
-  $("flights").innerHTML=F.map(f=>flightCard(f,now)).join("");
+  $("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("");
 }
 
 // ===================== Hotels =====================
@@ -72,7 +72,10 @@ function norm(k,v){
   const id=+k;if(!Number.isFinite(id)||!v||typeof v!=="object")return null;
   if(v.deleted)return {id,deleted:true};
   const r=v.reviews,arr=Array.isArray(r)?r:(r&&typeof r==="object"?Object.values(r):[]);
-  return {...v,id,reviews:arr.map(x=>Array.isArray(x)?x:Object.values(x||{}))};
+  const o={...v,id,reviews:arr.map(x=>Array.isArray(x)?x:Object.values(x||{}))};
+  for(const k of["size","price","score","loc","cl","sv","vl","lat","lng"])if(k in o)o[k]=num(o[k]); // กันข้อความแปลกปลอมจากฐานข้อมูล
+  if(typeof o.map!=="string"||!/^https?:\/\//i.test(o.map))o.map="";
+  return o;
 }
 async function sync(quiet){
   try{
@@ -499,7 +502,7 @@ function compare(){
 }
 function copyLine(){
   const L=sel.length?all().filter(h=>sel.includes(h.id)):all();
-  let t=`🇯🇵 สรุปที่พักโอซาก้า 2026 (${L.length} โรงแรม)\n\n`;
+  let t=`🇯🇵 สรุปที่พักโอซาก้า 2027 (${L.length} โรงแรม)\n\n`;
   L.forEach((h,i)=>{t+=`${i+1}. ${h.name}\n   📐 ${h.size?h.size+" ตร.ม.":"-"} | 💵 ${price(h)}\n   ⭐️ ${h.score!=null?h.score+"/10":"-"} | ${h.tag||""}\n\n`});
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกข้อความสำหรับ LINE แล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
@@ -508,3 +511,44 @@ setInterval(tick,1000);tick();chips();draw();
 sync();
 setInterval(()=>{if(!document.hidden)sync(true)},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync(true)});
+
+// ---------- อากาศโอซาก้า ----------
+const WX="https://api.open-meteo.com/v1/forecast?latitude=34.6937&longitude=135.5023&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia%2FTokyo&forecast_days=16";
+const NORMAL={hi:9,lo:2}; // ค่าเฉลี่ยหลายปีของต้นเดือนกุมภาพันธ์ที่โอซาก้า (สูงสุด ~9°C ต่ำสุด ~2°C)
+const wxIcon=c=>c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":c<=86?"🌨️":"⛈️";
+const tcol=t=>{const k=Math.max(0,Math.min(1,(t+2)/30));return `hsl(${215-k*190},82%,${58-k*6}%)`}; // ฟ้า (หนาว) → ส้ม (อุ่น)
+function thermo(t){
+  const k=Math.max(.06,Math.min(1,(t+5)/40)),h=60*k;
+  return `<svg viewBox="0 0 26 80" width="26" height="80" aria-hidden="true"><rect x="9" y="2" width="8" height="60" rx="4" fill="none" stroke="#475569" stroke-width="2"/><rect x="11" y="${62-h}" width="4" height="${h}" fill="${tcol(t)}"/><circle cx="13" cy="67" r="9" fill="${tcol(t)}"/></svg>`;
+}
+function wxBars(D){
+  const n=D.length,cw=300/n,top=26,H=96,lo0=Math.min(0,...D.map(d=>d.lo))-1,hi0=Math.max(16,...D.map(d=>d.hi))+1,y=t=>top+(hi0-t)/(hi0-lo0)*H;
+  const tx=(x,yy,st,s)=>`<text x="${x}" y="${yy}" text-anchor="middle" style="${st}">${s}</text>`;
+  let s=`<svg viewBox="0 0 300 182" width="100%" role="img" aria-label="กราฟอุณหภูมิสูงสุดและต่ำสุดรายวัน"><defs>`;
+  D.forEach((d,i)=>s+=`<linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tcol(d.hi)}"/><stop offset="1" stop-color="${tcol(d.lo)}"/></linearGradient>`);
+  s+="</defs>";
+  D.forEach((d,i)=>{const x=cw*i+cw/2,y1=y(d.hi),y2=y(d.lo);
+    s+=`<rect x="${x-9}" y="${y1}" width="18" height="${Math.max(8,y2-y1)}" rx="9" fill="url(#wg${i})"/>`+
+      tx(x,y1-7,"fill:var(--tx);font:700 13px Sarabun,sans-serif",Math.round(d.hi)+"°")+
+      tx(x,Math.max(y2,y1+8)+17,"fill:var(--mut);font:13px Sarabun,sans-serif",Math.round(d.lo)+"°")+
+      (d.ic?tx(x,158,"font:16px sans-serif",d.ic):"")+
+      tx(x,176,"fill:var(--mut);font:12px Sarabun,sans-serif",d.lb)});
+  return s+"</svg>";
+}
+async function wx(){
+  const box=$("wx");if(!box)return;
+  const TH=["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."],J=t=>Math.floor((t+324e5)/864e5)*864e5,days=[];
+  for(let t=J(F[0].arr);t<=J(F[F.length-1].dep);t+=864e5){const d=new Date(t);days.push({k:d.toISOString().slice(0,10),lb:`${TH[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth()+1}`})}
+  let cur=null;const fc={};
+  try{const r=await fetch(WX);if(r.ok){const j=await r.json();cur=j.current;j.daily.time.forEach((k,i)=>fc[k]={hi:j.daily.temperature_2m_max[i],lo:j.daily.temperature_2m_min[i],ic:wxIcon(j.daily.weather_code[i]),code:j.daily.weather_code[i]})}}catch(e){}
+  const live=days.every(d=>fc[d.k]);
+  const D=days.map(d=>live?{...fc[d.k],lb:d.lb}:{hi:NORMAL.hi,lo:NORMAL.lo,lb:d.lb,ic:""});
+  const avg=D.reduce((s,d)=>s+d.hi,0)/D.length,rain=live&&D.some(d=>d.code>=51);
+  const tip=avg<8?"หนาวมาก: ฮีทเทค + เสื้อกันหนาวหนา + ผ้าพันคอ ถุงมือ":avg<13?"หนาว: ฮีทเทค + โค้ทหรือแจ็กเก็ตหนา + ผ้าพันคอ":avg<18?"เย็น: เสื้อหนาวบางหรือแจ็กเก็ต":"อากาศไม่หนาว: เสื้อแขนยาวบางก็พอ";
+  box.innerHTML=`<div class="card" style="margin-top:12px"><b>🌡️ อากาศโอซาก้า</b>
+    ${cur?`<div class="wxn">${thermo(cur.temperature_2m)}<div><div class="wxt" style="color:${tcol(cur.temperature_2m)}">${Math.round(cur.temperature_2m)}°C ${wxIcon(cur.weather_code)}</div><div class="note" style="margin:0">ตอนนี้ที่โอซาก้า · รู้สึกเหมือน ${Math.round(cur.apparent_temperature)}°C</div></div></div>`:`<div class="note">ดึงอุณหภูมิปัจจุบันไม่ได้ (ต้องต่ออินเทอร์เน็ต)</div>`}
+    <div class="note" style="margin-top:10px">${live?"พยากรณ์ช่วงทริป":"ค่าเฉลี่ยหลายปีช่วงต้นกุมภาพันธ์ (พยากรณ์จริงจะขึ้นเมื่อเหลือไม่เกิน 16 วันก่อนไปถึง)"}</div>
+    ${wxBars(D)}
+    <div class="note">👕 ${tip}${rain?" · มีโอกาสฝน/หิมะ พกร่มด้วย":""}</div></div>`;
+}
+wx();setInterval(wx,18e5);

@@ -2,12 +2,12 @@
 // แก้ไฟล์นี้แล้ว commit ขึ้น GitHub ข้อมูลจะอัปเดตทันที
 //
 // ไฟลท์: ap = เวลาที่แนะนำให้ถึงสนามบิน, dep = เครื่องออก, arr = เครื่องลง (ใส่ timezone ให้ครบ เช่น +07:00 / +09:00)
+// ไม่เก็บรหัสจอง (PNR) ในไฟล์นี้ เพราะรีโพอาจเป็นสาธารณะ
 // โรงแรม: reviews = [["+" | "-" | "~", "ข้อความ", "แหล่งที่มา"], ...]  (+ ชม, - ติ, ~ ทั้งสองด้าน)
 window.OSAKA_CONFIG = {
   flights: [
     {
       "title": "ขาไป",
-      "code": "AKWTQB",
       "info": "Thai AirAsia X XJ612 · Airbus A330-300 · DMK T1 ➔ KIX T1",
       "from": "DMK",
       "to": "KIX",
@@ -22,7 +22,6 @@ window.OSAKA_CONFIG = {
     },
     {
       "title": "ขากลับ",
-      "code": "3KX4Q9",
       "info": "Airbus A321 · KIX T2 ➔ BKK สุวรรณภูมิ",
       "from": "KIX",
       "to": "BKK",
