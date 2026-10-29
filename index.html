@@ -157,6 +157,20 @@ html,body{background:var(--bg)}
 .rtl{font-size:13px;color:var(--amb);font-weight:600;margin-top:4px}
 .pq{display:grid;gap:4px;margin-top:6px;font-size:13px}.pq span{border-radius:8px;padding:5px 8px;background:var(--bg)}
 .pq .g{border-left:3px solid var(--grn)}.pq .b{border-left:3px solid #f87171}
+/* v19: ปรับหน้าแผนวัน/เตรียมตัวให้สวยและใช้ง่าย */
+#prep label{display:block;font-size:13px;color:var(--mut);margin-bottom:10px}
+#prep input,#prep select{display:block;width:100%;flex:1;margin-top:4px;min-height:46px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;color:var(--tx)}
+.pinfo{margin-top:10px;padding:10px 14px;border-radius:14px;background:var(--acc);color:#fff;font-size:14px}
+.tl{position:relative;margin:14px 0 14px;padding-left:28px}
+.tl:before{content:"";position:absolute;left:9px;top:10px;bottom:10px;width:2px;background:var(--line)}
+.nd{position:relative;font-size:13px;color:var(--mut);padding:6px 0}
+.nd:before,.stp:before{content:"";position:absolute;left:-24px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--bg);border:2px solid var(--acc)}
+.stp{position:relative;display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 14px;cursor:pointer;margin:4px 0}
+.stp:before{background:var(--acc);left:-24px}
+.stp .tt{flex:none;min-width:54px;text-align:center;padding:6px 8px;border-radius:999px;background:var(--sky);color:#1a2308;font-weight:700;font-size:14px}
+.stp .sb{flex:1;min-width:0}.stp .sb b{display:block;font-size:16px}.stp .sb small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+.stp .ed{color:var(--mut)}
+.lg{display:inline-block;margin:4px 0;padding:6px 12px;border-radius:999px;border:1px dashed var(--acc);color:var(--acc);font-size:13px;text-decoration:none}
 </style>
 </head>
 <body>
@@ -255,10 +269,10 @@ html,body{background:var(--bg)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="hotels.js?v=18"></script>
-<script src="app.js?v=18"></script>
-<script src="prep.js?v=18"></script>
-<script src="plan.js?v=18"></script>
-<script src="style.js?v=18"></script>
+<script src="hotels.js?v=19"></script>
+<script src="app.js?v=19"></script>
+<script src="prep.js?v=19"></script>
+<script src="plan.js?v=19"></script>
+<script src="style.js?v=19"></script>
 </body>
 </html>
