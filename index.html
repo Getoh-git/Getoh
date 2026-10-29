@@ -101,6 +101,35 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 .sw{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.4);flex:none}
 .pal{display:flex;height:36px;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin:10px 0 4px}
 .pal div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+/* theme: cream + forest green + lime */
+:root{--bg:#ECEAD6;--card:#fff;--line:#DAD7BD;--tx:#16210f;--mut:#6b705c;--sky:#B8CC2C;--acc:#1d4a29;--grn:#2f6b1c;--amb:#b7791f;color-scheme:light}
+.card{border-radius:24px}.btn{background:var(--sky);color:#1a2308;border-radius:999px}
+.btn.g{background:var(--acc);color:#fff}.btn.o{background:#fff;color:var(--tx);border:1px solid var(--line)}
+.tag,.dist strong{color:var(--acc)}.timer div{background:#F6F5E6}#ts{color:var(--acc)!important}
+.bar input[type=search],.row2 select,input[type=date],.fm input,.fm textarea{background:#fff;border-color:var(--line);color:var(--tx)}
+.chip{background:#fff;color:var(--tx);border-color:var(--line)}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.pick{background:#fff;border-color:var(--line);color:var(--tx)}.sel .pick{background:var(--acc);border-color:var(--acc);color:#fff}
+.h.sel{border-color:var(--acc);box-shadow:0 0 0 2px rgba(29,74,41,.2)}.pr{color:var(--grn)}.pr small{font-size:12px;font-weight:400;color:var(--mut)}
+.tot{display:block;font-style:normal;font-size:12px;font-weight:400;color:var(--mut);text-align:right}
+.fv{flex:none;align-self:center;min-width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--amb);font-size:18px;cursor:pointer}
+nav{left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-bottom:0;border:0;border-radius:28px;background:#12301a;overflow:hidden}
+nav button{color:#b9c7b0}nav button.on{background:var(--sky);color:#12301a;border-radius:22px;margin:5px;min-height:48px}
+#act{bottom:calc(80px + env(safe-area-inset-bottom,0px));background:#12301a;border-color:#12301a;color:#fff;border-radius:28px}
+#act .btn{background:#fff;color:#12301a}#act .btn.g{background:var(--sky)}#act .x{background:#fff;color:#12301a}
+.sheet{background:#E8EFE0}.x{background:#fff;color:var(--tx)}.sheet .kv{border-color:#cfd8c4}.cmp,.rv{background:#fff}.sheet .note{color:var(--mut)}
+#toast{background:#12301a;color:#fff}
+.tk{display:flex;background:#fff;border:1px solid var(--line);border-radius:26px;overflow:hidden;margin-top:12px}
+.tkl{flex:none;width:46px;background:var(--sky);display:flex;align-items:center;justify-content:center}
+.tkl span{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:700;font-size:18px;letter-spacing:.08em;color:#33400a}
+.tkr{flex:1;min-width:0}.tkm{padding:14px 14px 10px}.tkh,.tkt{display:flex;justify-content:space-between;align-items:center}
+.tkh b{font-size:30px;line-height:1}.tkh small,.tkt small{display:block;font-size:12px;color:var(--mut)}
+.tkp{width:36px;height:36px;border-radius:50%;background:#ECEAD6;display:flex;align-items:center;justify-content:center}
+.tkt{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.tkt b{font-size:19px}
+.tks{margin-top:10px;font-size:13px;font-weight:700;color:var(--acc)}
+.tkf{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;background:#F3F57A;padding:10px 14px;font-size:12px}.tkf small{display:block;color:#6b6a2a}.tkf b{font-size:13px}
+.pl{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}.pl span{background:#fff;border-radius:999px;padding:6px 12px;font-size:14px}
+.bk{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:24px;padding:12px 14px;margin:8px 0}
+.bk b{font-size:24px}.bk .btn{width:auto;margin:0;padding:0 22px}
 </style>
 </head>
 <body>
@@ -201,8 +230,8 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="hotels.js?v=8"></script>
-<script src="app.js?v=8"></script>
-<script src="style.js?v=8"></script>
+<script src="hotels.js?v=9"></script>
+<script src="app.js?v=9"></script>
+<script src="style.js?v=9"></script>
 </body>
 </html>

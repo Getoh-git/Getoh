@@ -4,6 +4,7 @@ const OSAKA=window.OSAKA_CONFIG;
 const baht=v=>"฿"+Number(v).toLocaleString("th-TH",{minimumFractionDigits:2});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const F=OSAKA.flights.map(f=>({...f,ap:+new Date(f.ap),dep:+new Date(f.dep),arr:+new Date(f.arr)}));
+const JD=t=>Math.floor((t+324e5)/864e5),NIGHTS=Math.max(1,JD(F[F.length-1].dep)-JD(F[0].arr));
 function dur(ms){
   const m=Math.max(0,Math.floor(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);
   return (d?d+" วัน ":"")+(d||h?h+" ชม. ":"")+m%60+" นาที";
@@ -19,10 +20,10 @@ function dots(t,col){
 }
 function orbit(p,id){
   const x=14+p*272;
-  return `<svg viewBox="0 0 300 44" height="44"><defs><linearGradient id="g${id}"><stop offset="0" stop-color="#2f7d00"/><stop offset="1" stop-color="#7be000"/></linearGradient><clipPath id="c${id}"><rect x="0" y="0" width="${x}" height="44"/></clipPath></defs>
-  <ellipse cx="150" cy="22" rx="145" ry="14" fill="#2a2b2e"/>
+  return `<svg viewBox="0 0 300 44" height="44"><defs><linearGradient id="g${id}"><stop offset="0" stop-color="#12301a"/><stop offset="1" stop-color="#B8CC2C"/></linearGradient><clipPath id="c${id}"><rect x="0" y="0" width="${x}" height="44"/></clipPath></defs>
+  <ellipse cx="150" cy="22" rx="145" ry="14" fill="#E3E3CC"/>
   <ellipse cx="150" cy="22" rx="145" ry="14" fill="url(#g${id})" clip-path="url(#c${id})"/>
-  <g transform="translate(${x} 22) scale(.9)"><polygon fill="#fff" points="10,0 4,-2 -2,-2 -8,-9 -11,-9 -7,-2 -11,-2 -13,-5 -15,-5 -13,0 -15,5 -13,5 -11,2 -7,2 -11,9 -8,9 -2,2 4,2"/></g></svg>`;
+  <g transform="translate(${x} 22) scale(.9)"><polygon fill="#12301a" points="10,0 4,-2 -2,-2 -8,-9 -11,-9 -7,-2 -11,-2 -13,-5 -15,-5 -13,0 -15,5 -13,5 -11,2 -7,2 -11,9 -8,9 -2,2 4,2"/></g></svg>`;
 }
 function fmtR(ms){
   const m=Math.max(0,Math.floor(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);
@@ -34,12 +35,12 @@ function flightCard(f,now,ix){
   else if(now<f.dep){st=`ควรอยู่สนามบินแล้ว · ออกใน ${dur(f.dep-now)}`;tg=f.dep-now}
   else if(now<f.arr){p=(now-f.dep)/(f.arr-f.dep);st=`อยู่บนเครื่อง · ถึงใน ${dur(f.arr-now)}`;tg=f.arr-now}
   else{p=1;st="ลงจอดแล้ว ✓";tg=0}
-  return `<div class="fc"><div class="fh"><span>${f.title}${f.code?" · "+f.code:""}</span><span>${f.info.split(" · ")[0]}</span></div>
-   <div class="fr"><div>${dots(f.from,"#fff")}<b>${CITY[f.from]}</b><small>${wd(f.dep,f.from)} ${f.depD} · ${f.depT}</small></div><span class="ar">→</span>
-   <div>${dots(f.to,"#5fd100")}<b>${CITY[f.to]}</b><small>${wd(f.arr,f.to)} ${f.arrD} · ${f.arrT}</small></div></div>
-   <div class="fe"><div><b>ETA ${f.arrT}</b><small>${ZONE[f.to]}</small></div><div class="or">${st}</div></div>
-   <div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div>
-   <div class="fa">🛄 แนะนำถึงสนามบิน <b>${f.apT}</b> (ก่อนเครื่องออก 3 ชม.)</div></div>`;
+  const P=f.info.split(" · ");
+  return `<div class="tk"><div class="tkl"><span>${f.title}</span></div><div class="tkr"><div class="tkm">
+   <div class="tkh"><div><b>${f.from}</b><small>${CITY[f.from]}</small></div><span class="tkp">✈️</span><div style="text-align:right"><b>${f.to}</b><small>${CITY[f.to]}</small></div></div>
+   <div class="tkt"><div><b>${f.depT}</b><small>${wd(f.dep,f.from)} ${f.depD}</small></div><div style="text-align:right"><b>${f.arrT}</b><small>${wd(f.arr,f.to)} ${f.arrD} · ${ZONE[f.to]}</small></div></div>
+   <div class="tks">${st}</div><div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div></div>
+   <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${esc(P[0])}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
 }
 function tick(){
   const now=Date.now(),nx=F.find(f=>now<f.dep);
@@ -106,6 +107,9 @@ const rcount=h=>rv(h).length?`💬 ${rv(h).length} คอมเมนต์ห�
 const rsum=h=>rv(h).length?`👍${rv(h).filter(x=>x[0]==="+").length} · 👎${rv(h).filter(x=>x[0]==="-").length}`:"ยังไม่มีข้อมูล";
 const price=h=>h.price!=null?baht(h.price):"–";
 let sel=[],area="ALL";
+const total=h=>h.price!=null?baht(h.price*NIGHTS):"–";
+let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs")||"[]"))}catch(e){}
+function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
 
 function tab(t){
   for(const x of ["count","hotels","map","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
@@ -118,9 +122,9 @@ function closeSheet(){$("ov").classList.add("hide");document.body.style.overflow
 function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElement("div");t.id="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
 
 function chips(){
-  const A=["ALL",...new Set(all().map(h=>h.area).filter(Boolean))];
+  const A=["ALL","FAV",...new Set(all().map(h=>h.area).filter(Boolean))];
   if(!A.includes(area))area="ALL";
-  const CH=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":esc(a)}</button>`).join("");
+  const CH=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":a==="FAV"?"⭐ ที่ชอบ":esc(a)}</button>`).join("");
   $("chips").innerHTML=CH;$("mchips").innerHTML=CH;
 }
 for(const c of ["chips","mchips"])$(c).addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
@@ -130,12 +134,13 @@ function card(h){
   return `<div class="card h ${on?"sel":""}" onclick="detail(${h.id})">
     <div class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></div>
     <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")}</div><div class="rc">${rcount(h)}${photoSet.has(h.id)?" · 📷":""}${h.custom?" · เพิ่มเอง":""}</div>
-      <div class="meta"><span>📐 ${h.size?h.size+" m²":"–"}</span><span class="pr">${price(h)}</span></div></div>
+      <div class="meta"><span>📐 ${h.size?h.size+" m²":"–"}</span><span class="pr">${price(h)}<small> /คืน</small><em class="tot">รวม ${NIGHTS} คืน ${total(h)}</em></span></div></div>
+    <button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button>
     <button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"+"}</button></div>`;
 }
 function draw(){
   const q=$("q").value.toLowerCase(),min=+$("size").value,s=$("sort").value;
-  const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||h.area===area)&&(h.size||0)>=min);
+  const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
   const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];
   if(f)L.sort(f);
   $("count").textContent=`พบ ${L.length} โรงแรม · แตะการ์ดเพื่อดูรายละเอียด`;
@@ -161,9 +166,8 @@ function detail(id){
   const map=h.map||"https://maps.google.com/?q="+encodeURIComponent(h.name+" Osaka");
   openSheet(h.name,`
     <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
-    <div class="kv"><span>ราคา / คืน</span><b style="color:var(--grn)">${price(h)}</b></div>
-    <div class="kv"><span>ขนาดห้อง</span><b>${h.size?h.size+" ตร.ม.":"–"}</b></div>
-    <div class="kv"><span>คะแนนรวม</span><b style="color:var(--amb)">${h.score!=null?"⭐️ "+h.score+" / 10":"–"}</b></div>
+    <div class="pl"><span>📍 ${esc(h.area||"–")}</span><span>📐 ${h.size?h.size+" ตร.ม.":"–"}</span><span>⭐️ ${h.score!=null?h.score+"/10":"–"}</span><button class="fv" style="width:auto;padding:0 12px" onclick="fav(${id});detail(${id})">${favs.has(id)?"★ ชอบแล้ว":"☆ ชอบ"}</button></div>
+    <div class="bk"><div><small class="note" style="margin:0">ราคาเริ่มต้น</small><div><b>${price(h)}</b> /คืน</div><div class="note" style="margin:0">รวม ${NIGHTS} คืน ${total(h)}</div></div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
     <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
     ${revHtml(h)}
@@ -312,7 +316,7 @@ function parseLL(u){
   const a=+m[1],b=+m[2];
   return a>=30&&a<=40&&b>=128&&b<=146?[a,b]:null; // เฉพาะพิกัดในญี่ปุ่น
 }
-const filt=()=>{const q=$("q").value.toLowerCase(),min=+$("size").value;return all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||h.area===area)&&(h.size||0)>=min)};
+const filt=()=>{const q=$("q").value.toLowerCase(),min=+$("size").value;return all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min)};
 function initMap(){
   if(map)return true;
   if(typeof L==="undefined"){$("mnote").textContent="โหลดแผนที่ไม่ได้ (ต้องต่ออินเทอร์เน็ต)";return false}
