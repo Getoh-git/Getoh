@@ -146,6 +146,17 @@ nav button{color:#b9c7b0}nav button.on{background:var(--sky);color:#12301a;borde
 .bk{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:24px;padding:12px 14px;margin:8px 0}
 .bk b{font-size:24px}.bk .btn{width:auto;margin:0;padding:0 22px}
 html,body{background:var(--bg)}
+/* v15: การ์ดโรงแรมแบบมีรูป + แผนที่รวมในแท็บเดียว */
+#map{height:38vh;min-height:250px}
+.h{display:block;position:relative;padding:0;overflow:hidden}
+.ph{position:relative;height:150px;background:linear-gradient(135deg,#dfe8d3,#c9d8bd);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px}
+.ph .im,.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.h .sc{position:absolute;left:10px;top:10px;width:auto;flex-direction:row;gap:2px;padding:6px 10px;border-radius:999px;z-index:1}
+.h .fv{position:absolute;right:10px;top:10px;z-index:1;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);font-size:20px;color:#d97706}
+.h .hb{padding:12px}.h .pick{align-self:auto}
+.rtl{font-size:13px;color:var(--amb);font-weight:600;margin-top:4px}
+.pq{display:grid;gap:4px;margin-top:6px;font-size:13px}.pq span{border-radius:8px;padding:5px 8px;background:var(--bg)}
+.pq .g{border-left:3px solid var(--grn)}.pq .b{border-left:3px solid #f87171}
 </style>
 </head>
 <body>
@@ -198,20 +209,12 @@ html,body{background:var(--bg)}
     </div>
   </div>
   <div class="wrap" style="padding-top:0">
-    <div class="count" id="count"></div>
-    <div id="list"></div>
-  </div>
-</section>
-
-<section id="p-map" class="hide">
-  <div class="bar">
-    <div class="chips" id="mchips"></div>
-    <div class="note" id="mnote" style="margin:6px 0 0">แตะหมุดเพื่อดูรายละเอียด · ตัวกรองด้านบนใช้ร่วมกับแท็บเลือกโรงแรม</div>
-  </div>
-  <div class="wrap" style="padding-top:0">
-    <div id="mauto" style="margin-top:10px"></div>
+    <div class="note" id="mnote" style="margin:8px 0 0">แตะหมุดเพื่อดูรายละเอียด · ตัวกรองด้านบนใช้กับทั้งรายการและแผนที่</div>
+    <div id="mauto" style="margin-top:8px"></div>
     <div id="map"></div>
     <div class="count" id="mcount"></div>
+    <div class="count" id="count"></div>
+    <div id="list"></div>
     <div id="munpin"></div>
   </div>
 </section>
@@ -237,8 +240,7 @@ html,body{background:var(--bg)}
 
 <nav>
   <button id="n-count" class="on" onclick="tab('count')"><span>⏳</span>นับถอยหลัง</button>
-  <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>โรงแรม (18)</button>
-  <button id="n-map" onclick="tab('map')"><span>🗺️</span>แผนที่</button>
+  <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>โรงแรม·แผนที่</button>
   <button id="n-style" onclick="tab('style')"><span>👗</span>แต่งตัว</button>
 </nav>
 
@@ -247,8 +249,8 @@ html,body{background:var(--bg)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="hotels.js?v=14"></script>
-<script src="app.js?v=14"></script>
-<script src="style.js?v=14"></script>
+<script src="hotels.js?v=15"></script>
+<script src="app.js?v=15"></script>
+<script src="style.js?v=15"></script>
 </body>
 </html>

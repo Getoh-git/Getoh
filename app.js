@@ -106,18 +106,19 @@ const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
 const rv=h=>h.reviews||[];
 const rcount=h=>rv(h).length?`💬 ${rv(h).length} คอมเมนต์ห้อง`:"⚪ ยังไม่มีคอมเมนต์ห้อง";
 const rsum=h=>rv(h).length?`👍${rv(h).filter(x=>x[0]==="+").length} · 👎${rv(h).filter(x=>x[0]==="-").length}`:"ยังไม่มีข้อมูล";
-const price=h=>h.price!=null?baht(h.price):"–";
+const price=h=>h.price!=null?"฿"+Math.round(h.price).toLocaleString("th-TH"):"–"; // ราคารวมทั้งทริป (NIGHTS คืน)
 let sel=[],area="ALL";
-const total=h=>h.price!=null?baht(h.price*NIGHTS):"–";
+const night=h=>h.price!=null?"฿"+Math.round(h.price/NIGHTS).toLocaleString("th-TH"):"–";
 let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs")||"[]"))}catch(e){}
 function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
 
-function tab(t){
-  for(const x of ["count","hotels","map","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
-  if(t!=="map"&&placing)endPlace();
-  if(t==="map"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
-  scrollTo(0,0);
+function tab(t,keep){
+  for(const x of ["count","hotels","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
+  if(t!=="hotels"&&placing)endPlace();
+  if(t==="hotels"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
+  if(!keep)scrollTo(0,0);
 }
+const toMap=()=>{tab("hotels",1);const m=$("map");if(m)m.scrollIntoView({behavior:"smooth",block:"start"})};
 function openSheet(t,html){$("st").textContent=t;$("sb").innerHTML=html;$("ov").classList.remove("hide");document.body.style.overflow="hidden"}
 function closeSheet(){$("ov").classList.add("hide");document.body.style.overflow=""}
 function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElement("div");t.id="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
@@ -126,39 +127,56 @@ function chips(){
   const A=["ALL","FAV",...new Set(all().map(h=>h.area).filter(Boolean))];
   if(!A.includes(area))area="ALL";
   const CH=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":a==="FAV"?"⭐ ที่ชอบ":esc(a)}</button>`).join("");
-  $("chips").innerHTML=CH;$("mchips").innerHTML=CH;
+  $("chips").innerHTML=CH;
 }
-for(const c of ["chips","mchips"])$(c).addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
+for(const c of ["chips"])$(c).addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
 
+const rtLine=h=>h.rt&&h.rt.length?`⭐ ${h.rt[0][1]}/10 · ${esc(h.rt[0][0])} ${Number(h.rt[0][2]).toLocaleString("th-TH")} รีวิว${h.rt.length>1?` (+${h.rt.length-1} เว็บ)`:""}`:"";
+const firstRv=(h,s)=>{const r=rv(h).find(x=>x[0]===s);return r?r[1]:""};
+let thumb={};
+const imgTag=src=>`<img src="${src}" alt="" loading="lazy">`;
+async function loadThumb(id){
+  if(id in thumb)return;thumb[id]="";
+  try{
+    const d=(await dbx("GET","/photos/"+id,undefined,"?orderBy=%22$key%22&limitToFirst=1"))||{};
+    const k=Object.keys(d).find(k=>okKey(k)&&okImg(d[k]));
+    if(k){thumb[id]=d[k];const e=$("im-"+id);if(e)e.innerHTML=imgTag(d[k])}
+  }catch(e){delete thumb[id]}
+}
 function card(h){
-  const on=sel.includes(h.id);
+  const on=sel.includes(h.id),src=thumb[h.id]||h.img||"",p=firstRv(h,"+"),n=firstRv(h,"-"),rl=rtLine(h);
   return `<div class="card h ${on?"sel":""}" onclick="detail(${h.id})">
-    <div class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></div>
-    <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")}</div><div class="rc">${rcount(h)}${photoSet.has(h.id)?" · 📷":""}${h.custom?" · เพิ่มเอง":""}</div>
-      <div class="meta"><span>📐 ${h.size?h.size+" m²":"–"}</span><span class="pr">${price(h)}<small> /คืน</small><em class="tot">รวม ${NIGHTS} คืน ${total(h)}</em></span></div></div>
-    <button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button>
-    <button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"+"}</button></div>`;
+    <div class="ph"><span class="im" id="im-${h.id}">${src?imgTag(esc(src)):""}</span>${src?"":"🏨 ยังไม่มีรูป · แตะเพื่อเพิ่ม"}
+      <span class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></span>
+      <button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button></div>
+    <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
+      ${rl?`<div class="rtl">${rl}</div>`:""}
+      <div class="rc">${rsum(h)} · 📐 ${h.size?h.size+" m²":"–"}${h.custom?" · เพิ่มเอง":""}</div>
+      ${p||n?`<div class="pq">${p?`<span class="g">👍 ${esc(p)}</span>`:""}${n?`<span class="b">👎 ${esc(n)}</span>`:""}</div>`:""}
+      <div class="meta"><span class="pr">${price(h)}<small> รวม ${NIGHTS} คืน</small><em class="tot">≈ ${night(h)} /คืน</em></span>
+        <span style="display:flex;gap:8px">${hasLL(h)?`<button class="pick" aria-label="ดูบนแผนที่" onclick="event.stopPropagation();showOnMap(${h.id})">📍</button>`:""}<button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"+"}</button></span></div></div></div>`;
 }
 function draw(){
   const q=$("q").value.toLowerCase(),min=+$("size").value,s=$("sort").value;
   const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
   const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];
   if(f)L.sort(f);
-  $("count").textContent=`พบ ${L.length} โรงแรม · ราคาโรงแรมเดิม ณ ${OSAKA.priceDate||"-"} · แตะการ์ดเพื่อดูรายละเอียด`;
+  $("count").textContent=`พบ ${L.length} โรงแรม · ราคารวม ${NIGHTS} คืน ณ ${OSAKA.priceDate||"-"} · แตะการ์ดเพื่อดูรายละเอียด`;
   $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมที่ตรงเงื่อนไข</div>`;
+  L.forEach(h=>{if(photoSet.has(h.id))loadThumb(h.id)});
   $("n").textContent=sel.length;
   $("act").classList.toggle("hide",!sel.length);
-  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
+  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม·แผนที่ (${all().length})`;
   if(map)mapDraw();
 }
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
 
 function revHtml(h){
-  const r=rv(h),cls={"+":"p","-":"n","~":"m"};
-  return `<div class="rvh">💬 คอมเมนต์เกี่ยวกับห้องพัก</div>`+
-   (r.length?r.map(x=>`<div class="rv ${cls[x[0]]||"m"}">${esc(x[1])}<small>${esc(x[2]||"")}</small></div>`).join(""):`<div class="note">ยังไม่มีคอมเมนต์ห้อง</div>`)+
-   `<div class="note">${h.custom?"คอมเมนต์ที่คุณเพิ่มเอง":"สรุปเป็นภาษาไทยจากรีวิวจริงบนเว็บจองที่พัก ดึงเมื่อ 28 ต.ค. 2026 ไม่ใช่ข้อความต้นฉบับ"}</div>
-    <a class="btn o" href="https://www.google.com/search?q=${encodeURIComponent(h.name+" Osaka hotel reviews")}" target="_blank" rel="noopener">🔎 ค้นรีวิวเพิ่มบน Google</a>`;
+  const r=rv(h),g=k=>r.filter(x=>x[0]===k),R=(a,c)=>a.map(x=>`<div class="rv ${c}">${esc(x[1])}<small>${esc(x[2]||"")}</small></div>`).join("")||`<div class="note">ยังไม่มีข้อมูล</div>`,q=encodeURIComponent(h.name+" Osaka");
+  const rt=h.rt&&h.rt.length?`<div class="rvh">⭐ คะแนนรีวิวจากเว็บจอง</div>`+h.rt.map(x=>`<div class="kv"><span>${esc(x[0])}</span><b>${x[1]}/10 · ${Number(x[2]).toLocaleString("th-TH")} รีวิว</b></div>`).join("")+`<div class="note">แต่ละเว็บใช้เกณฑ์ไม่เหมือนกัน ดูหลายแหล่งประกอบกัน</div>`:"";
+  return rt+`<div class="rvh">👍 แง่บวก (${g("+").length})</div>${R(g("+"),"p")}<div class="rvh">👎 แง่ลบ (${g("-").length})</div>${R(g("-"),"n")}`+(g("~").length?`<div class="rvh">⚖️ ข้อสังเกตอื่น ๆ</div>${R(g("~"),"m")}`:"")+
+   `<div class="note">${h.custom?"คอมเมนต์ที่คุณเพิ่มเอง":"สรุปเป็นภาษาไทยจากรีวิวจริงบนเว็บจองที่พัก ไม่ใช่ข้อความต้นฉบับ"}</div>
+    <div class="g2"><a class="btn o" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">🔎 รีวิว Google</a><a class="btn o" href="https://www.booking.com/searchresults.html?ss=${q}" target="_blank" rel="noopener">🛎 ดูใน Booking</a></div>`;
 }
 function detail(id){
   const h=find(id);if(!h)return;
@@ -168,7 +186,7 @@ function detail(id){
   openSheet(h.name,`
     <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
     <div class="pl"><span>📍 ${esc(h.area||"–")}</span><span>📐 ${h.size?h.size+" ตร.ม.":"–"}</span><span>⭐️ ${h.score!=null?h.score+"/10":"–"}</span><button class="fv" style="width:auto;padding:0 12px" onclick="fav(${id});detail(${id})">${favs.has(id)?"★ ชอบแล้ว":"☆ ชอบ"}</button></div>
-    <div class="bk"><div><small class="note" style="margin:0">ราคาเริ่มต้น</small><div><b>${price(h)}</b> /คืน</div><div class="note" style="margin:0">รวม ${NIGHTS} คืน ${total(h)}</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
+    <div class="bk"><div><small class="note" style="margin:0">ราคารวม ${NIGHTS} คืน</small><div><b style="font-size:20px">${price(h)}</b></div><div class="note" style="margin:0">≈ ${night(h)} /คืน</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
     <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
     ${revHtml(h)}
@@ -186,7 +204,7 @@ function openForm(id){
   openSheet(h?"✏️ แก้ไขที่พัก":"➕ เพิ่มที่พัก",`<div class="fm">
     <label>ชื่อที่พัก *<input id="f-name" maxlength="120"></label>
     <label>ย่าน (เลือกหรือพิมพ์ใหม่)<input id="f-area" list="f-areas" maxlength="40" placeholder="เช่น Namba"><datalist id="f-areas">${areas.map(a=>`<option value="${esc(a)}">`).join("")}</datalist></label>
-    <div class="g2"><label>ขนาดห้อง (ตร.ม.)<input id="f-size" type="number" inputmode="decimal" min="0"></label><label>ราคา/คืน (บาท)<input id="f-price" type="number" inputmode="decimal" min="0"></label></div>
+    <div class="g2"><label>ขนาดห้อง (ตร.ม.)<input id="f-size" type="number" inputmode="decimal" min="0"></label><label>ราคารวม ${NIGHTS} คืน (บาท)<input id="f-price" type="number" inputmode="decimal" min="0"></label></div>
     <div class="g2"><label>คะแนนรวม (0-10)<input id="f-score" type="number" inputmode="decimal" step="0.1" min="0" max="10"></label><label>จุดเด่นสั้น ๆ<input id="f-tag" maxlength="60"></label></div>
     <label>ลิงก์ Google Maps หรือเว็บจอง (ไม่บังคับ)<input id="f-map" type="url" inputmode="url" placeholder="https://..."></label>
     <label>โน้ต<input id="f-cm" maxlength="200"></label>
@@ -255,7 +273,7 @@ async function loadPhotos(id){
   const box=$("ph-box");if(!box)return;
   try{
     const d=(await dbx("GET","/photos/"+id))||{};
-    phCache[id]=d;
+    phCache[id]=d;{const k=Object.keys(d).filter(k=>okKey(k)&&okImg(d[k])).sort()[0];thumb[id]=k?d[k]:"";draw()}
     if(Object.keys(d).length)photoSet.add(id);else photoSet.delete(id);
     renderPhotos(id);
   }catch(e){
@@ -333,7 +351,7 @@ function mapDraw(){
   const base=filt(),pin=base.filter(hasLL),un=base.filter(h=>!hasLL(h));
   pin.forEach(h=>{
     const ic=L.divIcon({className:"",html:`<div class="pin" style="background:${colorOf(h.area)}">${h.price!=null?"฿"+(h.price/1000).toFixed(1)+"k":"•"}</div>`,iconSize:[54,26],iconAnchor:[27,13]});
-    L.marker([h.lat,h.lng],{icon:ic}).addTo(layer).bindPopup(`<b>${esc(h.name)}</b><br>${price(h)} · ⭐️ ${h.score!=null?h.score:"–"} · ${h.size?h.size+" m²":"–"}<br><a href="#" onclick="detail(${h.id});return false">ดูรายละเอียด</a> · <a href="#" onclick="placeFor(${h.id});return false">ย้ายหมุด</a>`);
+    L.marker([h.lat,h.lng],{icon:ic}).addTo(layer).bindPopup(`<b>${esc(h.name)}</b><br>รวม ${NIGHTS} คืน ${price(h)} · ⭐️ ${h.score!=null?h.score:"–"} · ${h.size?h.size+" m²":"–"}<br><a href="#" onclick="detail(${h.id});return false">ดูรายละเอียด</a> · <a href="#" onclick="placeFor(${h.id});return false">ย้ายหมุด</a>`);
   });
   if(!mapFit&&pin.length){map.fitBounds(L.latLngBounds(pin.map(h=>[h.lat,h.lng])),{padding:[30,30],maxZoom:16});mapFit=true}
   $("mcount").textContent=`ปักหมุดแล้ว ${pin.length} · ยังไม่ปัก ${un.length}`;
@@ -342,7 +360,7 @@ function mapDraw(){
 }
 function placeFor(id){
   const h=find(id);if(!h)return;
-  closeSheet();tab("map");if(!map)return;
+  closeSheet();toMap();if(!map)return;
   placing=id;map.closePopup();map.getContainer().style.cursor="crosshair";
   $("mnote").innerHTML=`📍 แตะบนแผนที่ตำแหน่งของ <b>${esc(h.name)}</b> <button class="chip on" onclick="endPlace()">ยกเลิก</button>`;
 }
@@ -356,7 +374,7 @@ function setLL(id,lat,lng){
   putHotel(id,{...h,lat:+lat.toFixed(6),lng:+lng.toFixed(6)});
 }
 function showOnMap(id){
-  const h=find(id);closeSheet();tab("map");if(!map||!h||!hasLL(h))return;
+  const h=find(id);closeSheet();toMap();if(!map||!h||!hasLL(h))return;
   setTimeout(()=>{map.invalidateSize();map.setView([h.lat,h.lng],17)},90);
 }
 // ---------- ปักหมุดอัตโนมัติ (ตรวจผลก่อนยืนยัน) ----------
@@ -499,7 +517,8 @@ async function migrateOld(){
 function compare(){
   const L=all().filter(h=>sel.includes(h.id)).sort((a,b)=>(a.price??1e12)-(b.price??1e12));
   openSheet("📊 เปรียบเทียบ",L.map((h,i)=>{const best=i===0&&h.price!=null;return `<div class="cmp ${best?"best":""}"><h3>${esc(h.name)}${best?" 🏆 ถูกสุด":""}</h3>
-    <div class="kv"><span>ราคา/คืน</span><b style="color:var(--grn)">${price(h)}</b></div>
+    <div class="kv"><span>ราคารวม ${NIGHTS} คืน</span><b style="color:var(--grn)">${price(h)} <small>(≈${night(h)}/คืน)</small></b></div>
+    <div class="kv"><span>รีวิวเว็บจอง</span><b>${h.rt&&h.rt.length?h.rt.map(x=>x[1]).join(" / "):"–"}</b></div>
     <div class="kv"><span>ขนาดห้อง</span><b>${h.size?h.size+" m²":"–"}</b></div>
     <div class="kv"><span>คะแนน</span><b style="color:var(--amb)">${h.score!=null?"⭐️ "+h.score:"–"}</b></div>
     <div class="kv"><span>ย่าน</span><b>${esc(h.area||"")}</b></div>
@@ -508,7 +527,7 @@ function compare(){
 function copyLine(){
   const L=sel.length?all().filter(h=>sel.includes(h.id)):all();
   let t=`🇯🇵 สรุปที่พักโอซาก้า 2027 (${L.length} โรงแรม)\n\n`;
-  L.forEach((h,i)=>{t+=`${i+1}. ${h.name}\n   📐 ${h.size?h.size+" ตร.ม.":"-"} | 💵 ${price(h)}\n   ⭐️ ${h.score!=null?h.score+"/10":"-"} | ${h.tag||""}\n\n`});
+  L.forEach((h,i)=>{t+=`${i+1}. ${h.name}\n   📐 ${h.size?h.size+" ตร.ม.":"-"} | 💵 รวม ${NIGHTS} คืน ${price(h)}\n   ⭐️ ${h.score!=null?h.score+"/10":"-"} | ${h.tag||""}\n\n`});
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกข้อความสำหรับ LINE แล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
 
