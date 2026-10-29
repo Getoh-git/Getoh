@@ -300,7 +300,7 @@ async function delPhoto(id,k,btn){
 }
 
 // ---------- แผนที่ ----------
-let map=null,layer=null,placing=null,prevMk=null,mapFit=false;
+let map=null,layer=null,placing=null,prevMk=null,mapFit=false,auto=null;
 const hasLL=h=>Number.isFinite(h.lat)&&Number.isFinite(h.lng);
 function parseLL(u){
   u=String(u||"");
@@ -329,6 +329,7 @@ function mapDraw(){
   });
   if(!mapFit&&pin.length){map.fitBounds(L.latLngBounds(pin.map(h=>[h.lat,h.lng])),{padding:[30,30],maxZoom:16});mapFit=true}
   $("mcount").textContent=`ปักหมุดแล้ว ${pin.length} · ยังไม่ปัก ${un.length}`;
+  if(!auto){const n=all().filter(h=>!hasLL(h)).length;$("mauto").innerHTML=n?`<button class="btn g" onclick="autoPin()">🪄 ปักหมุดอัตโนมัติให้ทั้ง ${n} แห่ง</button>`:""}
   $("munpin").innerHTML=un.map(h=>`<div class="card" style="display:flex;gap:8px;align-items:center;padding:10px;margin-bottom:8px"><div style="flex:1;min-width:0"><b style="font-size:15px">${esc(h.name)}</b><div class="rc">${esc(h.area||"")}</div></div><button class="btn o" style="width:auto;min-height:40px;font-size:13px" onclick="findLL(${h.id})">🔎 ค้นหา</button><button class="btn" style="width:auto;min-height:40px;font-size:13px" onclick="placeFor(${h.id})">📍 ปัก</button></div>`).join("");
 }
 function placeFor(id){
@@ -349,6 +350,65 @@ function setLL(id,lat,lng){
 function showOnMap(id){
   const h=find(id);closeSheet();tab("map");if(!map||!h||!hasLL(h))return;
   setTimeout(()=>{map.invalidateSize();map.setView([h.lat,h.lng],17)},90);
+}
+// ---------- ปักหมุดอัตโนมัติ (ตรวจผลก่อนยืนยัน) ----------
+async function geo(name){
+  try{
+    const q=name.replace(/\(.*?\)/g,"").trim()+" Osaka";
+    const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=jp&bounded=1&viewbox=135.35,34.8,135.65,34.5&q="+encodeURIComponent(q));
+    const d=await r.json();
+    const x=(Array.isArray(d)?d:[]).find(o=>["tourism","building"].includes(o.category));
+    return x?{lat:+x.lat,lng:+x.lon,label:String(x.display_name||"").split(",").slice(0,3).join(",")}:null;
+  }catch(e){return null}
+}
+const autoMsg=h=>{$("mauto").innerHTML=h};
+async function autoPin(){
+  if(auto||!initMap())return;
+  const todo=all().filter(h=>!hasLL(h));if(!todo.length)return;
+  auto={items:[],miss:[],stop:false};const A=auto;
+  for(let i=0;i<todo.length&&!A.stop;i++){
+    autoMsg(`<div class="card" style="padding:10px"><div class="note" style="margin:0 0 8px">🔎 กำลังค้นหา ${i+1}/${todo.length}: ${esc(todo[i].name)}</div><button class="btn o" style="min-height:40px" onclick="autoCancel()">ยกเลิก</button></div>`);
+    const r=await geo(todo[i].name);
+    if(A.stop)break;
+    if(r){
+      const mk=L.circleMarker([r.lat,r.lng],{radius:11,color:"#f59e0b",weight:3,fillColor:"#f59e0b",fillOpacity:.35}).addTo(map);
+      mk.bindPopup(`<b>${esc(todo[i].name)}</b><br>${esc(r.label)}<br><a href="#" onclick="autoDrop(${todo[i].id});return false">✕ ไม่เอาอันนี้</a>`);
+      A.items.push({id:todo[i].id,lat:r.lat,lng:r.lng,mk});
+    }else A.miss.push(todo[i].name);
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  if(A.stop)return;
+  if(A.items.length)map.fitBounds(L.latLngBounds(A.items.map(i=>[i.lat,i.lng])),{padding:[30,30],maxZoom:16});
+  autoShow();
+}
+function autoShow(){
+  if(!auto)return;
+  const n=auto.items.length,m=auto.miss.length;
+  autoMsg(n?`<div class="card" style="padding:10px"><div class="note" style="margin:0 0 8px">พบตำแหน่ง ${n} แห่ง${m?` · ไม่พบ ${m} แห่ง (ปักเองหรือกด 🔎 ในรายการใต้แผนที่)`:""}<br>ตรวจวงกลมสีส้มบนแผนที่ แตะวงกลมที่ผิดเพื่อลบออก แล้วกดยืนยัน</div><div class="g2"><button class="btn g" style="min-height:44px" onclick="autoConfirm()">✓ ยืนยัน ${n} แห่ง</button><button class="btn o" style="min-height:44px" onclick="autoCancel()">ยกเลิก</button></div></div>`
+    :`<div class="card" style="padding:10px"><div class="note" style="margin:0 0 8px">ค้นหาจากชื่อไม่พบเลย (ชื่อโรงแรมเล็ก ๆ มักไม่อยู่ในฐานข้อมูล OpenStreetMap) ใช้ปุ่ม 📍 ปัก หรือวางลิงก์ Google Maps ในฟอร์มแก้ไขแทน</div><button class="btn o" style="min-height:44px" onclick="autoCancel()">ปิด</button></div>`);
+}
+function autoDrop(id){
+  if(!auto)return;
+  const i=auto.items.findIndex(x=>x.id===id);
+  if(i>=0){auto.items[i].mk.remove();auto.items.splice(i,1);auto.miss.push((find(id)||{}).name||"");map.closePopup();autoShow()}
+}
+function autoCancel(){
+  if(!auto)return;
+  auto.stop=true;auto.items.forEach(i=>i.mk.remove());auto=null;mapDraw();
+}
+async function autoConfirm(){
+  if(!auto)return;
+  const items=auto.items;auto=null;items.forEach(i=>i.mk.remove());
+  autoMsg('<div class="note">กำลังบันทึก...</div>');
+  let ok=0;
+  await Promise.all(items.map(async it=>{
+    const h=find(it.id);if(!h)return;
+    const {id:_i,custom:_c,deleted:_d,...body}=h;
+    body.lat=+it.lat.toFixed(6);body.lng=+it.lng.toFixed(6);
+    try{await db("PUT","/"+it.id,body);remote[it.id]=norm(it.id,body);ok++}catch(e){}
+  }));
+  cacheSave();chips();draw();mapDraw();
+  toast(ok===items.length?`ปักหมุด ${ok} แห่งแล้ว ✓`:`ปักได้ ${ok}/${items.length} แห่ง ตรวจกฎ Firebase`);
 }
 async function findLL(id){
   const h=find(id);if(!h)return;
