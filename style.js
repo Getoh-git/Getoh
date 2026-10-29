@@ -173,6 +173,26 @@ function recommendMood(sc,mode){
   return {shirt:{c:shirt,why:`จากโทน ${M[0]} · ${sw}`},pants:{c:pants,why:`${pants.lab[0]<shirt.lab[0]?"เข้มกว่า":"อ่อนกว่า"}เสื้อชัดเจน ชุดไม่กลืนกัน`},
     socks:{c:socks,why:"สีที่เหลือในโทน ผูกชุดให้ครบพาเลต"},shoes:{c:shoes,why:`${shoes.lab[0]>pants.lab[0]?"สว่างกว่า":"เข้มกว่า"}กางเกง รองเท้าไม่จมไปกับขา`}};
 }
+// ---------- แผนที่ Mood (อุ่น–เย็น × อ่อน–เข้ม) ----------
+let MP=null;
+function moodLayout(){
+  if(MP)return MP;
+  const K=Object.keys(MOODS),A=K.map(k=>axPal(MOODS[k][2])),rg=v=>{const lo=Math.min(...v);return [lo,Math.max(Math.max(...v)-lo,1e-6)]};
+  const rx=rg(A.map(a=>-a.w)),ry=rg(A.map(a=>-a.s)),nx=w=>.12+.76*clamp((-w-rx[0])/rx[1],0,1),ny=s=>.12+.76*clamp((-s-ry[0])/ry[1],0,1);
+  const P=K.map((k,i)=>({k,x:nx(A[i].w),y:ny(A[i].s)}));
+  for(let it=0;it<90;it++)for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[j].x-P[i].x,dy=P[j].y-P[i].y,d=Math.hypot(dx,dy)||.001;if(d<.15){const f=(.15-d)/2/d;P[i].x-=dx*f;P[i].y-=dy*f;P[j].x+=dx*f;P[j].y+=dy*f}}
+  P.forEach(p=>{p.x=clamp(p.x,.12,.88);p.y=clamp(p.y,.12,.88)});
+  return MP={P,nx,ny};
+}
+function moodMap(fit,sc,photo){
+  const {P,nx,ny}=moodLayout();
+  const dots=P.map(p=>{const M=MOODS[p.k],c=M[2],on=p.k===mood;
+    return `<button onclick="styleMood('${p.k}')" aria-label="${M[0]} ${M[1]}" style="position:absolute;left:calc(${p.x*100}% - 17px);top:calc(${p.y*100}% - 17px);width:34px;height:34px;border-radius:50%;padding:0;cursor:pointer;border:${on?"3px solid #12301a":"2px solid #fff"};background:conic-gradient(#${c[0]} 0 25%,#${c[1]} 0 50%,#${c[2]} 0 75%,#${c[3]} 0);box-shadow:${on?"0 0 0 3px #B8CC2C":"0 1px 3px rgba(0,0,0,.25)"};z-index:${on?3:1}"></button><span style="position:absolute;left:calc(${p.x*100}% - 36px);width:72px;top:calc(${p.y*100}% + 19px);text-align:center;font-size:9px;font-weight:${on?700:500};pointer-events:none;color:#16210f;text-shadow:0 0 3px #fff,0 0 3px #fff">${fit.has(p.k)?"✓ ":""}${MOODS[p.k][0]}</span>`}).join("");
+  let pin="";if(photo){const a=axScene(sc);pin=`<span style="position:absolute;left:calc(${nx(a.w)*100}% - 11px);top:calc(${ny(a.s)*100}% - 26px);font-size:22px;z-index:4;pointer-events:none">📍</span>`}
+  const ax="position:absolute;font-size:11px;font-weight:700;color:var(--mut);pointer-events:none";
+  const cap=mood!=="auto"?`<b>${MOODS[mood][0]} ${MOODS[mood][1]}</b> · ${MOODS[mood][2].map(h=>"#"+h).join(" ")}`:`แตะวงกลมเพื่อเลือกโทน${photo?" · 📍 = ตำแหน่งสีของรูปนี้":""}`;
+  return `<div style="position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:6px auto 4px;background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden"><div style="position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed var(--line)"></div><div style="position:absolute;top:50%;left:0;right:0;border-top:1px dashed var(--line)"></div><span style="${ax};left:7px;top:50%;transform:translateY(-50%)">อุ่น</span><span style="${ax};right:7px;top:50%;transform:translateY(-50%)">เย็น</span><span style="${ax};top:5px;left:50%;transform:translateX(-50%)">อ่อน</span><span style="${ax};bottom:5px;left:50%;transform:translateX(-50%)">เข้ม</span>${dots}${pin}</div><div class="note" style="text-align:center;margin:4px 0 0">${cap}</div>`;
+}
 // ---------- หน้าจอ ----------
 const ROLES=[["shirt","เสื้อ"],["pants","กางเกง / กระโปรง"],["socks","ถุงเท้า"],["shoes","รองเท้า"]];
 let S=null,mode="contrast";
@@ -205,7 +225,7 @@ function render(){
     const pal=sc.pal.map(p=>`<div style="flex:${Math.max(p.share,0.05)};background:${p.hex};color:${p.lab[0]>60?"#111":"#fff"}">${p.share>=0.08?Math.round(p.share*100)+"%":""}</div>`).join("");
     h+=`<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center"><img src="${S.url}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:12px;flex:none"><div style="min-width:0"><b>สีในรูป</b><div class="note" style="margin:2px 0 0">${esc(sceneText(sc))}</div></div></div><div class="pal">${pal}</div></div>`;
   }
-  h+=`<div class="card" style="margin-top:12px"><b>🎨 Mood สี</b><div class="note" style="margin:2px 0 0">เลือกโทนสี ระบบจะจัดชุดจาก 4 สีของโทนนั้น (เลือก "ตามภาพ" เพื่อให้ดูจากสีในรูปอย่างเดียว)${S?" · ✓ = โทนที่เข้ากับสีในรูป คิดจากความอุ่น–เย็นและอ่อน–เข้ม":""}</div><div class="chips">${mchips}</div></div>`;
+  h+=`<div class="card" style="margin-top:12px"><b>🎨 Mood สี</b><div class="note" style="margin:2px 0 0">เลือกโทนสี ระบบจะจัดชุดจาก 4 สีของโทนนั้น (เลือก "ตามภาพ" เพื่อให้ดูจากสีในรูปอย่างเดียว)${S?" · ✓ = โทนที่เข้ากับสีในรูป คิดจากความอุ่น–เย็นและอ่อน–เข้ม":""}</div><div class="chips" style="padding:0 0 4px"><button class="chip ${mood==="auto"?"on":""}" onclick="styleMood('auto')">✨ ตามภาพ</button></div>${moodMap(fit,sc,!!S)}</div>`;
   if(o){
     const chips=Object.keys(MODES).map(k=>`<button class="chip ${k===mode?"on":""}" onclick="stylePick('${k}')">${MODES[k].label}</button>`).join("");
     const rows=ROLES.map(([k,label])=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)"><span class="sw" style="background:${o[k].c.hex}"></span><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--mut)">${label}</div><b>${esc(o[k].c.n)}</b> <span class="note" style="margin:0">${o[k].c.hex.toUpperCase()}</span><div class="note" style="margin:2px 0 0">${esc(o[k].why)}</div></div></div>`).join("");
