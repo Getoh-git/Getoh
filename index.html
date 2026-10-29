@@ -51,7 +51,7 @@ input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);bo
 .pick{flex:none;align-self:center;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:transparent;font-size:20px;cursor:pointer}
 .sel .pick{background:var(--sky);border-color:var(--sky);color:#082f49}
 /* nav + action bar */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{min-height:58px;background:none;border:0;color:var(--mut);font-size:13px;cursor:pointer}
 nav button.on{color:var(--sky);font-weight:700}nav button span{display:block;font-size:20px}
 #act{position:fixed;left:10px;right:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:30;background:#020617;border:1px solid var(--sky);border-radius:16px;padding:8px;display:flex;gap:8px;align-items:center}
@@ -230,6 +230,8 @@ html,body{background:var(--bg)}
   <div id="sres"></div>
 </section>
 
+<section id="p-prep" class="wrap hide"><div id="prep"></div></section>
+
 <div id="act" class="hide">
   <em>เลือก <b id="n">0</b></em>
   <button class="btn" onclick="compare()">📊 เปรียบเทียบ</button>
@@ -241,6 +243,7 @@ html,body{background:var(--bg)}
 <nav>
   <button id="n-count" class="on" onclick="tab('count')"><span>⏳</span>นับถอยหลัง</button>
   <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>โรงแรม·แผนที่</button>
+  <button id="n-prep" onclick="tab('prep')"><span>✈️</span>เตรียมตัว</button>
   <button id="n-style" onclick="tab('style')"><span>👗</span>แต่งตัว</button>
 </nav>
 
@@ -249,8 +252,9 @@ html,body{background:var(--bg)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="hotels.js?v=16"></script>
-<script src="app.js?v=16"></script>
-<script src="style.js?v=16"></script>
+<script src="hotels.js?v=17"></script>
+<script src="app.js?v=17"></script>
+<script src="prep.js?v=17"></script>
+<script src="style.js?v=17"></script>
 </body>
 </html>
