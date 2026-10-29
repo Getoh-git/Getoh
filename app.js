@@ -518,27 +518,33 @@ setInterval(()=>{if(!document.hidden)sync(true)},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync(true)});
 
 // ---------- อากาศโอซาก้า ----------
-const WX="https://api.open-meteo.com/v1/forecast?latitude=34.6937&longitude=135.5023&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia%2FTokyo&forecast_days=16";
+const WX="https://api.open-meteo.com/v1/forecast?latitude=34.6937&longitude=135.5023&current=temperature_2m,apparent_temperature,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia%2FTokyo&forecast_days=16";
 const NORMAL={hi:9,lo:2}; // ค่าเฉลี่ยหลายปีของต้นเดือนกุมภาพันธ์ที่โอซาก้า (สูงสุด ~9°C ต่ำสุด ~2°C)
-const wxIcon=c=>c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":c<=86?"🌨️":"⛈️";
+const wxIcon=(c,day=1)=>c===0?(day?"☀️":"🌙"):c<=2?(day?"🌤️":"☁️"):c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":c<=86?"🌨️":"⛈️";
 const tcol=t=>{const k=Math.max(0,Math.min(1,(t+2)/30));return `hsl(${215-k*190},82%,${58-k*6}%)`}; // ฟ้า (หนาว) → ส้ม (อุ่น)
-function thermo(t){
-  const k=Math.max(.06,Math.min(1,(t+5)/40)),h=60*k;
-  return `<svg viewBox="0 0 26 80" width="26" height="80" aria-hidden="true"><rect x="9" y="2" width="8" height="60" rx="4" fill="none" stroke="#475569" stroke-width="2"/><rect x="11" y="${62-h}" width="4" height="${h}" fill="${tcol(t)}"/><circle cx="13" cy="67" r="9" fill="${tcol(t)}"/></svg>`;
-}
-function wxBars(D){
-  const n=D.length,cw=300/n,top=26,H=96,lo0=Math.min(0,...D.map(d=>d.lo))-1,hi0=Math.max(16,...D.map(d=>d.hi))+1,y=t=>top+(hi0-t)/(hi0-lo0)*H;
-  const tx=(x,yy,st,s)=>`<text x="${x}" y="${yy}" text-anchor="middle" style="${st}">${s}</text>`;
-  let s=`<svg viewBox="0 0 300 182" width="100%" role="img" aria-label="กราฟอุณหภูมิสูงสุดและต่ำสุดรายวัน"><defs>`;
-  D.forEach((d,i)=>s+=`<linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tcol(d.hi)}"/><stop offset="1" stop-color="${tcol(d.lo)}"/></linearGradient>`);
-  s+="</defs>";
-  D.forEach((d,i)=>{const x=cw*i+cw/2,y1=y(d.hi),y2=y(d.lo);
-    s+=`<rect x="${x-9}" y="${y1}" width="18" height="${Math.max(8,y2-y1)}" rx="9" fill="url(#wg${i})"/>`+
-      tx(x,y1-7,"fill:var(--tx);font:700 13px Sarabun,sans-serif",Math.round(d.hi)+"°")+
-      tx(x,Math.max(y2,y1+8)+17,"fill:var(--mut);font:13px Sarabun,sans-serif",Math.round(d.lo)+"°")+
-      (d.ic?tx(x,158,"font:16px sans-serif",d.ic):"")+
-      tx(x,176,"fill:var(--mut);font:12px Sarabun,sans-serif",d.lb)});
-  return s+"</svg>";
+const wxText=c=>c==null?"":c===0?"ท้องฟ้าแจ่มใส":c<=2?"มีเมฆบางส่วน":c===3?"เมฆมาก":c<=48?"หมอก":c<=57?"ฝนปรอย":c<=67?"ฝนตก":c<=77?"หิมะตก":c<=82?"ฝนซู่":c<=86?"หิมะตกเป็นช่วง":"พายุฟ้าคะนอง";
+const SKY={ // [กลางวัน, กลางคืน] ไล่สีบน→ล่าง
+  cl:[["#2f6fd6","#7bb8f6"],["#0a1a3a","#2e4577"]],
+  cd:[["#5d7391","#9fb0c4"],["#262e3a","#46515f"]],
+  rn:[["#44556c","#7486a0"],["#1d2531","#38444f"]],
+  sn:[["#7890ab","#b7c6d8"],["#2d394a","#4e5d72"]]};
+const wxSky=(c,day)=>{
+  const k=c==null||c<=2?"cl":c===3||(c>=45&&c<=48)?"cd":(c>=71&&c<=77)||c===85||c===86?"sn":"rn";
+  const [a,b]=SKY[k][day?0:1];return `linear-gradient(180deg,${a},${b})`;
+};
+function wxCard(o){ // o: {cur,td,D,lab,tip,rain}
+  const {cur,td,D,lab,tip,rain}=o,day=cur?cur.is_day!==0:true,code=cur?cur.weather_code:null;
+  const mn=Math.min(...D.map(d=>d.lo))-1,mx=Math.max(...D.map(d=>d.hi))+1,sp=Math.max(1,mx-mn);
+  const rows=D.map(d=>{
+    const w=Math.max(10,(d.hi-d.lo)/sp*100),l=Math.min(100-w,(d.lo-mn)/sp*100);
+    return `<div class="wxr${d.ic?"":" est"}"><span class="wxd">${d.lb}</span><span class="wxi">${d.ic||"·"}</span><span class="wxl">${Math.round(d.lo)}°</span><span class="wxb"><i style="left:${l}%;width:${w}%;background:linear-gradient(90deg,${tcol(d.lo)},${tcol(d.hi)})"></i></span><span class="wxh">${Math.round(d.hi)}°</span></div>`}).join("");
+  return `<div class="wx" style="background:${wxSky(code,day)}">
+    <div class="wxc"><div class="wxcity">โอซาก้า</div>
+      <div class="wxnow">${cur?Math.round(cur.temperature_2m)+"°":"–"}</div>
+      <div class="wxcond">${cur?wxIcon(cur.weather_code,day?1:0)+" "+wxText(cur.weather_code):"ดึงอุณหภูมิปัจจุบันไม่ได้ (ออฟไลน์)"}</div>
+      <div class="wxhl">${td?`สูงสุด ${Math.round(td.hi)}° · ต่ำสุด ${Math.round(td.lo)}°`:""}${cur?`${td?" · ":""}รู้สึกเหมือน ${Math.round(cur.apparent_temperature)}°`:""}</div></div>
+    <div class="wxp"><div class="wxph">📅 ${lab}</div>${rows}</div>
+    <div class="wxt2">👕 ${tip}${rain?" · มีโอกาสฝน/หิมะ พกร่มด้วย":""}</div></div>`;
 }
 async function wx(){
   const box=$("wx");if(!box)return;
@@ -550,10 +556,8 @@ async function wx(){
   const D=days.map(d=>fc[d.k]?{...fc[d.k],lb:d.lb}:{hi:NORMAL.hi,lo:NORMAL.lo,lb:d.lb,ic:""});
   const avg=D.reduce((s,d)=>s+d.hi,0)/D.length,rain=D.some(d=>d.code>=51);
   const tip=avg<8?"หนาวมาก: ฮีทเทค + เสื้อกันหนาวหนา + ผ้าพันคอ ถุงมือ":avg<13?"หนาว: ฮีทเทค + โค้ทหรือแจ็กเก็ตหนา + ผ้าพันคอ":avg<18?"เย็น: เสื้อหนาวบางหรือแจ็กเก็ต":"อากาศไม่หนาว: เสื้อแขนยาวบางก็พอ";
-  box.innerHTML=`<div class="card" style="margin-top:12px"><b>🌡️ อากาศโอซาก้า</b>
-    ${cur?`<div class="wxn">${thermo(cur.temperature_2m)}<div><div class="wxt" style="color:${tcol(cur.temperature_2m)}">${Math.round(cur.temperature_2m)}°C ${wxIcon(cur.weather_code)}</div><div class="note" style="margin:0">ตอนนี้ที่โอซาก้า · รู้สึกเหมือน ${Math.round(cur.apparent_temperature)}°C</div></div></div>`:`<div class="note">ดึงอุณหภูมิปัจจุบันไม่ได้ (ต้องต่ออินเทอร์เน็ต)</div>`}
-    <div class="note" style="margin-top:10px">${!live?"ค่าเฉลี่ยหลายปีช่วงต้นกุมภาพันธ์ (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี (ไม่มีไอคอนอากาศ)`:"พยากรณ์ช่วงทริป"}</div>
-    ${wxBars(D)}
-    <div class="note">👕 ${tip}${rain?" · มีโอกาสฝน/หิมะ พกร่มด้วย":""}</div></div>`;
+  const lab=!live?"ค่าเฉลี่ยหลายปีช่วงทริป (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี`:"พยากรณ์ช่วงทริป";
+  const today=new Date(Date.now()+324e5).toISOString().slice(0,10);
+  box.innerHTML=wxCard({cur,td:fc[today],D,lab,tip,rain});
 }
 wx();setInterval(wx,18e5);
