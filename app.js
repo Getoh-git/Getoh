@@ -442,9 +442,29 @@ function copyData(){
   const t=JSON.stringify(all().filter(h=>h.custom).map(({id,custom,...r})=>r),null,2);
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกแล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
+const nk=t=>String(t||"").replace(/\(.*?\)|（.*?）/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+function lev(a,b){
+  const p=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){let prev=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t}}
+  return p[b.length];
+}
+function matchHotel(name){ // จับคู่ชื่อ: ตรงกันก่อน แล้วค่อยยอมให้สะกดคลาดเล็กน้อย (เฉพาะกรณีไม่กำกวม)
+  const k=nk(name);if(!k)return null;
+  const A=all(),ex=A.find(h=>nk(h.name)===k);if(ex)return ex;
+  let best=null,bd=99,tie=false;
+  for(const h of A){const d=lev(k,nk(h.name));if(d<bd){bd=d;best=h;tie=false}else if(d===bd)tie=true}
+  return best&&!tie&&bd<=Math.max(1,Math.floor(k.length*0.1))?best:null;
+}
 async function importList(a){
-  const have=new Set(all().map(h=>h.name.toLowerCase()));const jobs=[];let i=0;
+  const have=new Set(all().map(h=>h.name.toLowerCase()));const jobs=[];let i=0,upd=0;
   for(const r of a.slice(0,200)){
+    if(r&&typeof r.name==="string"&&num(r.lat)!=null&&num(r.lng)!=null){
+      const ex=matchHotel(r.name); // ชื่อตรงกับโรงแรมที่มีอยู่ → อัปเดตพิกัด ไม่สร้างซ้ำ
+      if(ex){
+        const {id:_i,custom:_c,deleted:_d,...b}=ex;b.lat=+num(r.lat).toFixed(6);b.lng=+num(r.lng).toFixed(6);
+        jobs.push(db("PUT","/"+ex.id,b));upd++;continue;
+      }
+    }
     if(!r||typeof r.name!=="string"||!r.name.trim()||have.has(r.name.trim().toLowerCase()))continue;
     const rvs=Array.isArray(r.reviews)?r.reviews.filter(x=>Array.isArray(x)&&typeof x[1]==="string").slice(0,30).map(x=>["+-~".includes(x[0])?x[0]:"~",String(x[1]).slice(0,300),String(x[2]||"").slice(0,40)]):[];
     const map=typeof r.map==="string"&&/^https?:\/\//i.test(r.map)?r.map:"";
@@ -452,18 +472,18 @@ async function importList(a){
     if(num(r.lat)!=null&&num(r.lng)!=null){body.lat=num(r.lat);body.lng=num(r.lng)}
     jobs.push(db("PUT","/"+(Date.now()+i++),body));have.add(body.name.toLowerCase());
   }
-  await Promise.all(jobs);await sync();return jobs.length;
+  await Promise.all(jobs);await sync();return {added:jobs.length-upd,upd};
 }
 async function importData(){
   let a;try{a=JSON.parse($("imp").value)}catch(e){toast("JSON ไม่ถูกต้อง");return}
   if(!Array.isArray(a)){toast("ต้องเป็นรายการ [ ... ]");return}
-  try{const n=await importList(a);closeSheet();toast(`นำเข้า ${n} แห่ง`)}catch(e){toast("นำเข้าไม่สำเร็จ")}
+  try{const {added,upd}=await importList(a);closeSheet();toast(`เพิ่มใหม่ ${added} · อัปเดตพิกัด ${upd} แห่ง`)}catch(e){toast("นำเข้าไม่สำเร็จ")}
 }
 async function migrateOld(){
   try{
     const a=JSON.parse(localStorage.getItem(KEY)||"[]");
-    const n=await importList(a);
-    localStorage.removeItem(KEY);closeSheet();toast(`อัปโหลด ${n} แห่งแล้ว`);
+    const {added}=await importList(a);
+    localStorage.removeItem(KEY);closeSheet();toast(`อัปโหลด ${added} แห่งแล้ว`);
   }catch(e){toast("อัปโหลดไม่สำเร็จ")}
 }
 
