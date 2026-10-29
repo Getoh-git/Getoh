@@ -52,7 +52,7 @@ input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);bo
 .pick{flex:none;align-self:center;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:transparent;font-size:20px;cursor:pointer}
 .sel .pick{background:var(--sky);border-color:var(--sky);color:#082f49}
 /* nav + action bar */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:1fr 1fr 1fr;background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);background:#020617;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{min-height:58px;background:none;border:0;color:var(--mut);font-size:13px;cursor:pointer}
 nav button.on{color:var(--sky);font-weight:700}nav button span{display:block;font-size:20px}
 #act{position:fixed;left:10px;right:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:30;background:#020617;border:1px solid var(--sky);border-radius:16px;padding:8px;display:flex;gap:8px;align-items:center}
@@ -97,6 +97,9 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 #map{position:relative;z-index:0;height:58vh;min-height:320px;border-radius:16px;border:1px solid var(--line);margin-top:10px}
 .pin{width:54px;height:26px;box-sizing:border-box;color:#fff;font:700 12px/22px 'Sarabun',system-ui,sans-serif;text-align:center;border-radius:13px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.55);white-space:nowrap}
 .phx{position:absolute;top:6px;right:6px;min-width:36px;height:36px;border-radius:18px;border:0;background:rgba(2,6,23,.78);color:#fff;font-size:15px;cursor:pointer}
+.sw{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.4);flex:none}
+.pal{display:flex;height:36px;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin:10px 0 4px}
+.pal div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
 </style>
 </head>
 <body>
@@ -165,6 +168,17 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
   </div>
 </section>
 
+<section id="p-style" class="wrap hide">
+  <h1>👗 แนะนำสีเสื้อผ้า</h1>
+  <p class="sub">อัปโหลดรูปสถานที่ ระบบดูสีในรูป แล้วแนะนำสีเสื้อ กางเกง/กระโปรง ถุงเท้า และรองเท้าที่เข้ากัน</p>
+  <div class="card">
+    <input type="file" id="sf" accept="image/*" hidden>
+    <button class="btn" onclick="document.getElementById('sf').click()">📷 เลือกรูปสถานที่</button>
+    <div class="note">รูปถูกประมวลผลในเครื่องของคุณเท่านั้น ไม่ได้อัปโหลดไปไหน</div>
+  </div>
+  <div id="sres"></div>
+</section>
+
 <div id="act" class="hide">
   <em>เลือก <b id="n">0</b></em>
   <button class="btn" onclick="compare()">📊 เปรียบเทียบ</button>
@@ -175,8 +189,9 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 
 <nav>
   <button id="n-count" class="on" onclick="tab('count')"><span>⏳</span>นับถอยหลัง</button>
-  <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>เลือกโรงแรม (18)</button>
+  <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>โรงแรม (18)</button>
   <button id="n-map" onclick="tab('map')"><span>🗺️</span>แผนที่</button>
+  <button id="n-style" onclick="tab('style')"><span>👗</span>แต่งตัว</button>
 </nav>
 
 <div id="ov" class="ov hide" onclick="if(event.target===this)closeSheet()">
@@ -184,7 +199,8 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="hotels.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="hotels.js?v=8"></script>
+<script src="app.js?v=8"></script>
+<script src="style.js?v=8"></script>
 </body>
 </html>

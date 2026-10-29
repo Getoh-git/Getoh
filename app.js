@@ -105,7 +105,7 @@ const price=h=>h.price!=null?baht(h.price):"–";
 let sel=[],area="ALL";
 
 function tab(t){
-  for(const x of ["count","hotels","map"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
+  for(const x of ["count","hotels","map","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
   if(t!=="map"&&placing)endPlace();
   if(t==="map"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
   scrollTo(0,0);
@@ -139,7 +139,7 @@ function draw(){
   $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมที่ตรงเงื่อนไข</div>`;
   $("n").textContent=sel.length;
   $("act").classList.toggle("hide",!sel.length);
-  $("n-hotels").innerHTML=`<span>🏨</span>เลือกโรงแรม (${all().length})`;
+  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
   if(map)mapDraw();
 }
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
