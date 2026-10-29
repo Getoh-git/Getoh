@@ -147,9 +147,18 @@ const MOODS={
   modern:["Modern","โมเดิร์น",["F5E8C7","9E7777","E5B299","7D5A50"]],futuristic:["Futuristic","ล้ำสมัย",["FFE459","F43B86","3D087B","11052C"]],
   natural:["Natural","ธรรมชาติ",["F4E5C2","0B8457","096C47","323232"]],exclusive:["Exclusive","หรูหรา",["E0C097","B85C38","5C3D2E","2D2424"]],
   popular:["Popular","ยอดนิยม",["9D9D9D","F8F0DF","FEFBF3","79B4B7"]],romantic:["Romantic","โรแมนติก",["F2AAAA","E36387","A6DCEF","251F44"]],
-  vintage:["Vintage","วินเทจ",["CAE4DB","CDC7BE","87A7B3","766161"]],traditional:["Traditional","คลาสสิก",["393232","E48257","F2EDD7","3A6351"]],
-  dark:["Dark","ดาร์ก",["525252","414141","CA3E47","311D3F"]]
+  vintage:["Vintage","วินเทจ",["CAE4DB","CDC7BE","87A7B3","766161"]],traditional:["Traditional","ดั้งเดิม",["393232","E48257","F2EDD7","3A6351"]],
+  dark:["Dark","ดาร์ก",["525252","414141","CA3E47","311D3F"]],
+  pretty:["Pretty","น่ารัก",["FFE3B8","FFF6DA","F5917F","7CC8B5"]],casual:["Casual","แคชชวล",["F4811F","FFE11A","1AA3B8","E8112D"]],
+  elegant:["Elegant","สง่างาม",["C9C9CE","DDB1C2","76917A","8E7A84"]],clear:["Clear","ใสสะอาด",["9ED8D5","FFFFFF","A4D8F0","8FB1E6"]],
+  coolcasual:["Cool Casual","คูลแคชชวล",["009B63","FFFFFF","00A3B0","0B4EA2"]],chic:["Chic","ชิค",["8A9A83","7A6674","D3C3E6","12113A"]],
+  gorgeous:["Gorgeous","หรูเด่น",["8E0F0F","D8A105","4A1E70","1E0F2E"]],classic:["Classic","เข้มขลัง",["8B5E3C","5A1E2E","3F5F2A","1F2A1B"]],
+  dynamic:["Dynamic","ไดนามิก",["E8112D","F08A1C","6B4A3A","1B1B1B"]],dandy:["Dandy","แดนดี้",["6B2338","8C8C8C","0F4D3F","B8C4A8"]]
 };
+// แกนอุ่น–เย็น (w) และอ่อน–เข้ม (s) คำนวณจากสีจริง ใช้จับคู่โทนกับสีในรูป
+const axPal=L=>{const m=L.map(h=>rgb2lab(...hex2rgb("#"+h))),f=i=>m.reduce((a,c)=>a+c[i],0)/m.length;return {w:clamp((f(2)+.5*f(1))/25,-1,1),s:clamp((f(0)-45)/30,-1,1)}};
+const axScene=sc=>({w:sc.anchor?clamp((sc.anchor.lab[2]+.5*sc.anchor.lab[1])/25,-1,1):sc.warm*.6,s:clamp((sc.L-45)/30,-1,1)});
+const fitMoods=sc=>{const a=axScene(sc);return new Set(Object.keys(MOODS).map(k=>{const p=axPal(MOODS[k][2]);return [k,Math.hypot(p.w-a.w,p.s-a.s)]}).sort((x,y)=>x[1]-y[1]).slice(0,3).map(x=>x[0]))};
 let mood="auto";
 const DEF={pal:[],L:55,C:0,h:null,anchor:null,warm:0};
 function recommendMood(sc,mode){
@@ -188,14 +197,15 @@ function sceneText(sc){
 function render(){
   const box=$("sres");if(!box)return;
   const sc=S?S.scene:DEF,o=(S||mood!=="auto")?recommend(sc,mode):null;
+  const fit=S?fitMoods(sc):new Set();
   const sw=h=>`<i style="width:14px;height:14px;border-radius:50%;background:#${h};margin-left:-4px;border:1px solid rgba(0,0,0,.18)"></i>`;
-  const mchips=`<button class="chip ${mood==="auto"?"on":""}" onclick="styleMood('auto')">✨ ตามภาพ</button>`+Object.keys(MOODS).map(k=>`<button class="chip ${k===mood?"on":""}" style="display:inline-flex;align-items:center;gap:8px" onclick="styleMood('${k}')"><span style="display:inline-flex;padding-left:4px">${MOODS[k][2].map(sw).join("")}</span>${MOODS[k][0]} ${MOODS[k][1]}</button>`).join("");
+  const mchips=`<button class="chip ${mood==="auto"?"on":""}" onclick="styleMood('auto')">✨ ตามภาพ</button>`+Object.keys(MOODS).map(k=>`<button class="chip ${k===mood?"on":""}" style="display:inline-flex;align-items:center;gap:8px" onclick="styleMood('${k}')"><span style="display:inline-flex;padding-left:4px">${MOODS[k][2].map(sw).join("")}</span>${fit.has(k)?"✓ ":""}${MOODS[k][0]} ${MOODS[k][1]}</button>`).join("");
   let h="";
   if(S){
     const pal=sc.pal.map(p=>`<div style="flex:${Math.max(p.share,0.05)};background:${p.hex};color:${p.lab[0]>60?"#111":"#fff"}">${p.share>=0.08?Math.round(p.share*100)+"%":""}</div>`).join("");
     h+=`<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center"><img src="${S.url}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:12px;flex:none"><div style="min-width:0"><b>สีในรูป</b><div class="note" style="margin:2px 0 0">${esc(sceneText(sc))}</div></div></div><div class="pal">${pal}</div></div>`;
   }
-  h+=`<div class="card" style="margin-top:12px"><b>🎨 Mood สี</b><div class="note" style="margin:2px 0 0">เลือกโทนสี ระบบจะจัดชุดจาก 4 สีของโทนนั้น (เลือก "ตามภาพ" เพื่อให้ดูจากสีในรูปอย่างเดียว)</div><div class="chips">${mchips}</div></div>`;
+  h+=`<div class="card" style="margin-top:12px"><b>🎨 Mood สี</b><div class="note" style="margin:2px 0 0">เลือกโทนสี ระบบจะจัดชุดจาก 4 สีของโทนนั้น (เลือก "ตามภาพ" เพื่อให้ดูจากสีในรูปอย่างเดียว)${S?" · ✓ = โทนที่เข้ากับสีในรูป คิดจากความอุ่น–เย็นและอ่อน–เข้ม":""}</div><div class="chips">${mchips}</div></div>`;
   if(o){
     const chips=Object.keys(MODES).map(k=>`<button class="chip ${k===mode?"on":""}" onclick="stylePick('${k}')">${MODES[k].label}</button>`).join("");
     const rows=ROLES.map(([k,label])=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)"><span class="sw" style="background:${o[k].c.hex}"></span><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--mut)">${label}</div><b>${esc(o[k].c.n)}</b> <span class="note" style="margin:0">${o[k].c.hex.toUpperCase()}</span><div class="note" style="margin:2px 0 0">${esc(o[k].why)}</div></div></div>`).join("");
