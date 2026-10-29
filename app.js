@@ -113,9 +113,10 @@ let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs"
 function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
 
 function tab(t,keep){
-  for(const x of ["count","hotels","prep","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
+  for(const x of ["count","hotels","plan","prep","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
   if(t!=="hotels"&&placing)endPlace();
   if(t==="hotels"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
+  if(t==="plan"&&typeof renderPlan==="function")renderPlan();
   if(t==="prep"&&typeof renderPrep==="function")renderPrep();
   if(!keep)scrollTo(0,0);
 }
@@ -167,7 +168,7 @@ function draw(){
   L.forEach(h=>{if(photoSet.has(h.id))loadThumb(h.id)});
   $("n").textContent=sel.length;
   $("act").classList.toggle("hide",!sel.length);
-  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม·แผนที่ (${all().length})`;
+  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
   if(map)mapDraw();
 }
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
