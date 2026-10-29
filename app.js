@@ -1,4 +1,4 @@
-// Osaka Trip 2026 - ตรรกะของหน้าเว็บ (ข้อมูลอยู่ใน hotels.js)
+// Osaka Trip 2027 - ตรรกะของหน้าเว็บ (ข้อมูลอยู่ใน hotels.js)
 const $=id=>document.getElementById(id);
 const OSAKA=window.OSAKA_CONFIG;
 const baht=v=>"฿"+Number(v).toLocaleString("th-TH",{minimumFractionDigits:2});
@@ -40,8 +40,9 @@ function flightCard(f,now,ix){
    <div class="tkh"><div><b>${f.from}</b><small>${CITY[f.from]}</small></div><span class="tkp">✈️</span><div style="text-align:right"><b>${f.to}</b><small>${CITY[f.to]}</small></div></div>
    <div class="tkt"><div><b>${f.depT}</b><small>${wd(f.dep,f.from)} ${f.depD}</small></div><div style="text-align:right"><b>${f.arrT}</b><small>${wd(f.arr,f.to)} ${f.arrD} · ${ZONE[f.to]}</small></div></div>
    <div class="tks">${st}</div><div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div></div>
-   <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${esc(P[0])}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
+   <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${f.no?esc(f.no):"ยังไม่ระบุ"}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
 }
+let lastFl=0;
 function tick(){
   const now=Date.now(),nx=F.find(f=>now<f.dep);
   const v=nx?nx.dep-now:0;
@@ -51,7 +52,7 @@ function tick(){
   $("ts").textContent=String(Math.floor(v%6e4/1e3)).padStart(2,"0");
   $("tlabel").textContent=nx?`เหลือเวลาจนถึงเครื่องออก (${nx.title})`:"ทริปนี้จบแล้ว กลับถึงบ้านเรียบร้อย 🏠";
   $("tnext").textContent=nx?`${nx.from} ➔ ${nx.to} · ${nx.depD} เวลา ${nx.depT}`:"";
-  $("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("");
+  if(!lastFl||now-lastFl>=6e4){lastFl=now;$("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("")} // การ์ดวาดใหม่ทุกนาที ไม่ใช่ทุกวินาที
 }
 
 // ===================== Hotels =====================
@@ -143,7 +144,7 @@ function draw(){
   const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
   const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];
   if(f)L.sort(f);
-  $("count").textContent=`พบ ${L.length} โรงแรม · แตะการ์ดเพื่อดูรายละเอียด`;
+  $("count").textContent=`พบ ${L.length} โรงแรม · ราคาโรงแรมเดิม ณ ${OSAKA.priceDate||"-"} · แตะการ์ดเพื่อดูรายละเอียด`;
   $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมที่ตรงเงื่อนไข</div>`;
   $("n").textContent=sel.length;
   $("act").classList.toggle("hide",!sel.length);
@@ -167,7 +168,7 @@ function detail(id){
   openSheet(h.name,`
     <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
     <div class="pl"><span>📍 ${esc(h.area||"–")}</span><span>📐 ${h.size?h.size+" ตร.ม.":"–"}</span><span>⭐️ ${h.score!=null?h.score+"/10":"–"}</span><button class="fv" style="width:auto;padding:0 12px" onclick="fav(${id});detail(${id})">${favs.has(id)?"★ ชอบแล้ว":"☆ ชอบ"}</button></div>
-    <div class="bk"><div><small class="note" style="margin:0">ราคาเริ่มต้น</small><div><b>${price(h)}</b> /คืน</div><div class="note" style="margin:0">รวม ${NIGHTS} คืน ${total(h)}</div></div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
+    <div class="bk"><div><small class="note" style="margin:0">ราคาเริ่มต้น</small><div><b>${price(h)}</b> /คืน</div><div class="note" style="margin:0">รวม ${NIGHTS} คืน ${total(h)}</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
     <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
     ${revHtml(h)}
@@ -545,13 +546,13 @@ async function wx(){
   for(let t=J(F[0].arr);t<=J(F[F.length-1].dep);t+=864e5){const d=new Date(t);days.push({k:d.toISOString().slice(0,10),lb:`${TH[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth()+1}`})}
   let cur=null;const fc={};
   try{const r=await fetch(WX);if(r.ok){const j=await r.json();cur=j.current;j.daily.time.forEach((k,i)=>fc[k]={hi:j.daily.temperature_2m_max[i],lo:j.daily.temperature_2m_min[i],ic:wxIcon(j.daily.weather_code[i]),code:j.daily.weather_code[i]})}}catch(e){}
-  const live=days.every(d=>fc[d.k]);
-  const D=days.map(d=>live?{...fc[d.k],lb:d.lb}:{hi:NORMAL.hi,lo:NORMAL.lo,lb:d.lb,ic:""});
-  const avg=D.reduce((s,d)=>s+d.hi,0)/D.length,rain=live&&D.some(d=>d.code>=51);
+  const have=days.filter(d=>fc[d.k]).length,live=have>0; // ใช้พยากรณ์จริงเท่าที่มี วันที่ยังไม่มีใช้ค่าเฉลี่ย
+  const D=days.map(d=>fc[d.k]?{...fc[d.k],lb:d.lb}:{hi:NORMAL.hi,lo:NORMAL.lo,lb:d.lb,ic:""});
+  const avg=D.reduce((s,d)=>s+d.hi,0)/D.length,rain=D.some(d=>d.code>=51);
   const tip=avg<8?"หนาวมาก: ฮีทเทค + เสื้อกันหนาวหนา + ผ้าพันคอ ถุงมือ":avg<13?"หนาว: ฮีทเทค + โค้ทหรือแจ็กเก็ตหนา + ผ้าพันคอ":avg<18?"เย็น: เสื้อหนาวบางหรือแจ็กเก็ต":"อากาศไม่หนาว: เสื้อแขนยาวบางก็พอ";
   box.innerHTML=`<div class="card" style="margin-top:12px"><b>🌡️ อากาศโอซาก้า</b>
     ${cur?`<div class="wxn">${thermo(cur.temperature_2m)}<div><div class="wxt" style="color:${tcol(cur.temperature_2m)}">${Math.round(cur.temperature_2m)}°C ${wxIcon(cur.weather_code)}</div><div class="note" style="margin:0">ตอนนี้ที่โอซาก้า · รู้สึกเหมือน ${Math.round(cur.apparent_temperature)}°C</div></div></div>`:`<div class="note">ดึงอุณหภูมิปัจจุบันไม่ได้ (ต้องต่ออินเทอร์เน็ต)</div>`}
-    <div class="note" style="margin-top:10px">${live?"พยากรณ์ช่วงทริป":"ค่าเฉลี่ยหลายปีช่วงต้นกุมภาพันธ์ (พยากรณ์จริงจะขึ้นเมื่อเหลือไม่เกิน 16 วันก่อนไปถึง)"}</div>
+    <div class="note" style="margin-top:10px">${!live?"ค่าเฉลี่ยหลายปีช่วงต้นกุมภาพันธ์ (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี (ไม่มีไอคอนอากาศ)`:"พยากรณ์ช่วงทริป"}</div>
     ${wxBars(D)}
     <div class="note">👕 ${tip}${rain?" · มีโอกาสฝน/หิมะ พกร่มด้วย":""}</div></div>`;
 }

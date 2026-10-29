@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "hotels": {
+      ".read": true,
+      "$id": {
+        ".write": "now < 1798761600000",
+        ".validate": "newData.hasChild('deleted') || (newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 120)",
+        "price": { ".validate": "newData.isNumber()" },
+        "size":  { ".validate": "newData.isNumber()" },
+        "score": { ".validate": "newData.isNumber()" },
+        "lat":   { ".validate": "newData.isNumber()" },
+        "lng":   { ".validate": "newData.isNumber()" }
+      }
+    },
+    "photos": {
+      ".read": true,
+      "$id": {
+        ".write": "now < 1798761600000",
+        "$pid": {
+          ".validate": "newData.isString() && newData.val().length < 600000 && newData.val().matches(/^data:image\\/(jpeg|png|webp);base64,/)"
+        }
+      }
+    }
+  }
+}
