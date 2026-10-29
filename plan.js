@@ -12,7 +12,20 @@ const trav=(a,b)=>{const k=hav(a,b)*1.3;return k<1?Math.round(k/4.5*60)+3:Math.r
 const dirUrl=(a,b)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(a)}&destination=${encodeURIComponent(b)}&travelmode=transit`;
 const lbl=t=>t.replace(/ Osaka$/,"");
 const leg=(a,b)=>a&&b?`<a class="lg" href="${esc(dirUrl(a,b))}" target="_blank" rel="noopener">🚆 ดูเส้นทางไป ${esc(lbl(b))} ›</a>`:"";
-async function geoPlace(n){try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=jp&bounded=1&viewbox=135.2,34.9,135.8,34.4&q="+encodeURIComponent(n.replace(/\(.*?\)/g,"").trim()));const d=await r.json();return d[0]?{lat:+d[0].lat,lng:+d[0].lon}:null}catch(e){return null}}
+const inBox=(la,ln)=>la>34.4&&la<34.9&&ln>135.2&&ln<135.8;
+async function geoPlace(n){ // ลองหลายแหล่งและหลายคำค้น: Photon (เข้าใจชื่ออังกฤษ/พิมพ์พลาดเล็กน้อย) ก่อน แล้วค่อย Nominatim
+  const q=n.replace(/\(.*?\)/g,"").trim();
+  for(const qq of [q,q+" Osaka"]){
+    try{const r=await fetch("https://photon.komoot.io/api/?limit=6&lang=en&q="+encodeURIComponent(qq));const d=await r.json();const f=(d.features||[]).find(f=>inBox(f.geometry.coordinates[1],f.geometry.coordinates[0]));if(f)return{lat:f.geometry.coordinates[1],lng:f.geometry.coordinates[0]}}catch(e){}
+    try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=en&countrycodes=jp&q="+encodeURIComponent(qq));const d=await r.json();const o=(Array.isArray(d)?d:[]).find(o=>inBox(+o.lat,+o.lon));if(o)return{lat:+o.lat,lng:+o.lon}}catch(e){}
+  }
+  return null}
+function plLink(i){
+  const p=PLACES[i],u=prompt(`วางลิงก์ Google Maps ของ "${p.n}"\n(เปิดที่นี้ใน Google Maps แล้วคัดลอกลิงก์เต็มจากแถบที่อยู่ ต้องมีเลขพิกัด)`);
+  if(!u)return;const ll=parseLL(u);
+  if(!ll)return toast("อ่านพิกัดจากลิงก์ไม่ได้ ใช้ลิงก์เต็มที่มี @เลข,เลข");
+  p.lat=ll[0];p.lng=ll[1];p.fail=false;placesSave();renderPlan();toast("ปักพิกัดแล้ว กด จัดแผนให้ ใหม่");
+}
 function plAddP(n){
   n=(n||$("pa-n").value).trim();if(!n)return;
   if(PLACES.some(p=>p.n.toLowerCase()===n.toLowerCase()))return toast("มีสถานที่นี้แล้ว");
@@ -24,7 +37,7 @@ async function planGo(){
   if(pbusy)return;if(!PLACES.length)return toast("เพิ่มสถานที่ก่อน");
   pbusy=true;
   try{
-    for(const p of PLACES){if(p.lat!=null)continue;pstat="กำลังค้นพิกัด "+p.n+"...";renderPlan();const g=await geoPlace(p.n);if(g){p.lat=g.lat;p.lng=g.lng}placesSave();await new Promise(r=>setTimeout(r,1100))}
+    for(const p of PLACES){if(p.lat!=null)continue;pstat="กำลังค้นพิกัด "+p.n+"...";renderPlan();const g=await geoPlace(p.n);if(g){p.lat=g.lat;p.lng=g.lng;p.fail=false}else p.fail=true;placesSave();await new Promise(r=>setTimeout(r,600))}
     const ok=PLACES.filter(p=>p.lat!=null),miss=PLACES.filter(p=>p.lat==null);
     const hid=(JSON.parse(localStorage.getItem("osaka_prep_v1")||"{}").bk||{}).hid,hh=all().find(x=>x.id===+hid),H=hh&&hasLL(hh)?[hh.lat,hh.lng]:NAMBA;
     let cur=H,rest=[...ok],tour=[];
@@ -46,7 +59,7 @@ async function planGo(){
     let r;for(let q=120;q<=720;q+=30){r=build(q);if(!r.left.length)break} // เริ่มจากวันเบา ๆ แล้วเพิ่มทีละน้อยจนจัดครบ
     if(r.left.length)r=build(1e9);
     PL=r.days;planDay=0;plSave();
-    pstat=`จัดแล้ว ${ok.length-r.left.length} แห่ง`+(r.left.length?` · ไม่พอเวลา: ${r.left.map(p=>p.n).join(", ")} (ลองลดเวลาหรือเอาบางที่ออก)`:"")+(miss.length?` · หาพิกัดไม่เจอ: ${miss.map(p=>p.n).join(", ")} (ลองพิมพ์ชื่ออังกฤษให้ชัดขึ้น)`:"")+(hh&&hasLL(hh)?"":" · ยังไม่ได้ปักหมุดโรงแรม ใช้ย่านนัมบะเป็นจุดเริ่ม");
+    pstat=`จัดแล้ว ${ok.length-r.left.length} แห่ง`+(r.left.length?` · ไม่พอเวลา: ${r.left.map(p=>p.n).join(", ")} (ลองลดเวลาหรือเอาบางที่ออก)`:"")+(miss.length?` · หาพิกัดไม่เจอ: ${miss.map(p=>p.n).join(", ")} (กด 📎 ข้างชื่อเพื่อวางลิงก์ Google Maps แทน)`:"")+(hh&&hasLL(hh)?"":" · ยังไม่ได้ปักหมุดโรงแรม ใช้ย่านนัมบะเป็นจุดเริ่ม");
   }finally{pbusy=false;renderPlan()}
 }
 const pday=d=>{planDay=d;renderPlan()};
@@ -68,7 +81,7 @@ function renderPlan(){
   <div class="card"><div class="rvh" style="margin-top:0">📍 สถานที่ที่อยากไป (${PLACES.length})</div>
     <div style="display:flex;gap:6px"><input id="pa-n" placeholder="ชื่อสถานที่ (พิมพ์อังกฤษ) เช่น Osaka Castle" onkeydown="if(event.key==='Enter')plAddP()"><button class="btn" style="width:auto;padding:0 18px" onclick="plAddP()">➕</button></div>
     ${sug.length?`<div class="chips">${sug.map(n=>`<button class="chip" onclick="plAddP('${n}')">+ ${n}</button>`).join("")}</div>`:""}
-    ${PLACES.map((p,i)=>`<div class="pr2"><span>${p.lat!=null?"📍":"⏳"} ${esc(p.n)}</span><select onchange="plDur(${i},this.value)">${DURS.map(x=>`<option value="${x[0]}" ${x[0]===p.d?"selected":""}>${x[1]}</option>`).join("")}</select><button class="x" onclick="plRm(${i})" aria-label="ลบ">✕</button></div>`).join("")}
+    ${PLACES.map((p,i)=>`<div class="pr2"><span>${p.lat!=null?"📍":p.fail?"⚠️":"⏳"} ${esc(p.n)}${p.lat==null&&p.fail?` <button class="chip" style="min-height:30px;padding:0 10px" onclick="plLink(${i})">📎 วางลิงก์</button>`:""}</span><select onchange="plDur(${i},this.value)">${DURS.map(x=>`<option value="${x[0]}" ${x[0]===p.d?"selected":""}>${x[1]}</option>`).join("")}</select><button class="x" onclick="plRm(${i})" aria-label="ลบ">✕</button></div>`).join("")}
     <button class="btn" style="margin-top:12px" onclick="planGo()" ${pbusy?"disabled":""}>${pbusy?"กำลังจัดแผน...":"🪄 จัดแผนให้"}</button>
     ${pstat?`<div class="note">${esc(pstat)}</div>`:""}</div>
   ${any?`<div class="chips">${PL.slice(0,N+1).map((_,i)=>`<button class="chip ${i===d?"on":""}" onclick="pday(${i})">วัน ${i+1} · ${fd(i)}</button>`).join("")}</div>
