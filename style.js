@@ -112,6 +112,7 @@ const MODES={
   safe:{label:"ปลอดภัย",desc:"สีกลางทั้งชุด มีสีฉากเป็นจุดเล็ก ๆ ที่ถุงเท้า"}
 };
 function recommend(sc,mode){
+  if(mood!=="auto")return recommendMood(sc,mode);
   const bright=sc.L>58,warm=sc.warm;
   const sceneName=sc.anchor?nameOf(sc.anchor.rgb):null;
   let shirt,shirtWhy;
@@ -139,6 +140,30 @@ function recommend(sc,mode){
   return {shirt:{c:shirt,why:shirtWhy},pants:{c:pants,why:pantsWhy},socks:{c:socks,why:socksWhy},shoes:{c:shoes,why:shoesWhy}};
 }
 
+// ---------- Mood สี (พาเลต 4 สีต่อโทน) ----------
+const MOODS={
+  warm:["Warm","อบอุ่น",["FFE194","FFB085","90AACB","F77575"]],cool:["Cool","เย็นสบาย",["CFE9F7","3282B8","00909E","010038"]],
+  soft:["Soft","ละมุน",["EEC089","D7D0B6","8A9DA4","4B4D63"]],powerful:["Powerful","พลัง",["FFCA03","F3950D","CD1818","0F2C67"]],
+  modern:["Modern","โมเดิร์น",["F5E8C7","9E7777","E5B299","7D5A50"]],futuristic:["Futuristic","ล้ำสมัย",["FFE459","F43B86","3D087B","11052C"]],
+  natural:["Natural","ธรรมชาติ",["F4E5C2","0B8457","096C47","323232"]],exclusive:["Exclusive","หรูหรา",["E0C097","B85C38","5C3D2E","2D2424"]],
+  popular:["Popular","ยอดนิยม",["9D9D9D","F8F0DF","FEFBF3","79B4B7"]],romantic:["Romantic","โรแมนติก",["F2AAAA","E36387","A6DCEF","251F44"]],
+  vintage:["Vintage","วินเทจ",["CAE4DB","CDC7BE","87A7B3","766161"]],traditional:["Traditional","คลาสสิก",["393232","E48257","F2EDD7","3A6351"]],
+  dark:["Dark","ดาร์ก",["525252","414141","CA3E47","311D3F"]]
+};
+let mood="auto";
+const DEF={pal:[],L:55,C:0,h:null,anchor:null,warm:0};
+function recommendMood(sc,mode){
+  const M=MOODS[mood],P=M[2].map(h=>{const rgb=hex2rgb("#"+h);return {n:nameOf(rgb),hex:"#"+h,rgb,lab:rgb2lab(...rgb)}});
+  const ref=sc.anchor?sc.anchor.lab:[sc.L,0,0],ch=c=>Math.hypot(c.lab[1],c.lab[2]),gap=(x,y)=>Math.abs(x.lab[0]-y.lab[0]);
+  const best=(L,f)=>L.reduce((a,b)=>f(b)>f(a)?b:a);
+  const shirt=mode==="contrast"?best(P,c=>dE(c.lab,ref)):mode==="match"?best(P,c=>-dE(c.lab,ref)):best(P,c=>-ch(c));
+  let rest=P.filter(c=>c!==shirt);
+  const pants=best(rest,c=>gap(c,shirt));rest=rest.filter(c=>c!==pants);
+  const shoes=best(rest,c=>gap(c,pants)),socks=rest.find(c=>c!==shoes);
+  const sw={contrast:"ต่างจากสีฉากมากที่สุดในโทนนี้",match:"ใกล้สีฉากที่สุดในโทนนี้",safe:"จัดน้อยที่สุดในโทนนี้ ใส่ง่าย"}[mode]+(sc.anchor?"":" (ยังไม่มีรูป จึงเทียบกับโทนกลาง)");
+  return {shirt:{c:shirt,why:`จากโทน ${M[0]} · ${sw}`},pants:{c:pants,why:`${pants.lab[0]<shirt.lab[0]?"เข้มกว่า":"อ่อนกว่า"}เสื้อชัดเจน ชุดไม่กลืนกัน`},
+    socks:{c:socks,why:"สีที่เหลือในโทน ผูกชุดให้ครบพาเลต"},shoes:{c:shoes,why:`${shoes.lab[0]>pants.lab[0]?"สว่างกว่า":"เข้มกว่า"}กางเกง รองเท้าไม่จมไปกับขา`}};
+}
 // ---------- หน้าจอ ----------
 const ROLES=[["shirt","เสื้อ"],["pants","กางเกง / กระโปรง"],["socks","ถุงเท้า"],["shoes","รองเท้า"]];
 let S=null,mode="contrast";
@@ -162,21 +187,24 @@ function sceneText(sc){
 }
 function render(){
   const box=$("sres");if(!box)return;
-  if(!S){box.innerHTML="";return}
-  const sc=S.scene,o=recommend(sc,mode);
-  const pal=sc.pal.map(p=>`<div style="flex:${Math.max(p.share,0.05)};background:${p.hex};color:${p.lab[0]>60?"#111":"#fff"}">${p.share>=0.08?Math.round(p.share*100)+"%":""}</div>`).join("");
-  const chips=Object.keys(MODES).map(k=>`<button class="chip ${k===mode?"on":""}" onclick="stylePick('${k}')">${MODES[k].label}</button>`).join("");
-  const rows=ROLES.map(([k,label])=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">
-<span class="sw" style="background:${o[k].c.hex}"></span>
-<div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--mut)">${label}</div><b>${esc(o[k].c.n)}</b> <span class="note" style="margin:0">${o[k].c.hex.toUpperCase()}</span><div class="note" style="margin:2px 0 0">${esc(o[k].why)}</div></div></div>`).join("");
-  box.innerHTML=`<div class="card" style="margin-top:12px">
-<div style="display:flex;gap:12px;align-items:center"><img src="${S.url}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:12px;flex:none"><div style="min-width:0"><b>สีในรูป</b><div class="note" style="margin:2px 0 0">${esc(sceneText(sc))}</div></div></div>
-<div class="pal">${pal}</div>
-<div class="chips" style="padding:6px 0 0">${chips}</div>
-<div class="note">${esc(MODES[mode].desc)}</div></div>
-<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:none">${figure(o)}</div><div style="flex:1;min-width:0">${rows}</div></div>
-<div class="note" style="margin-top:10px">ระบบดูเฉพาะสีในรูป ไม่ได้รู้จักชื่อสถานที่ และไม่ได้คิดสีผิวหรือแสงจริงตอนถ่าย ถ้าชุดมีลาย ให้ใช้สีที่แนะนำเป็นสีหลักของชุด</div></div>`;
+  const sc=S?S.scene:DEF,o=(S||mood!=="auto")?recommend(sc,mode):null;
+  const sw=h=>`<i style="width:14px;height:14px;border-radius:50%;background:#${h};margin-left:-4px;border:1px solid rgba(0,0,0,.18)"></i>`;
+  const mchips=`<button class="chip ${mood==="auto"?"on":""}" onclick="styleMood('auto')">✨ ตามภาพ</button>`+Object.keys(MOODS).map(k=>`<button class="chip ${k===mood?"on":""}" style="display:inline-flex;align-items:center;gap:8px" onclick="styleMood('${k}')"><span style="display:inline-flex;padding-left:4px">${MOODS[k][2].map(sw).join("")}</span>${MOODS[k][0]} ${MOODS[k][1]}</button>`).join("");
+  let h="";
+  if(S){
+    const pal=sc.pal.map(p=>`<div style="flex:${Math.max(p.share,0.05)};background:${p.hex};color:${p.lab[0]>60?"#111":"#fff"}">${p.share>=0.08?Math.round(p.share*100)+"%":""}</div>`).join("");
+    h+=`<div class="card" style="margin-top:12px"><div style="display:flex;gap:12px;align-items:center"><img src="${S.url}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:12px;flex:none"><div style="min-width:0"><b>สีในรูป</b><div class="note" style="margin:2px 0 0">${esc(sceneText(sc))}</div></div></div><div class="pal">${pal}</div></div>`;
+  }
+  h+=`<div class="card" style="margin-top:12px"><b>🎨 Mood สี</b><div class="note" style="margin:2px 0 0">เลือกโทนสี ระบบจะจัดชุดจาก 4 สีของโทนนั้น (เลือก "ตามภาพ" เพื่อให้ดูจากสีในรูปอย่างเดียว)</div><div class="chips">${mchips}</div></div>`;
+  if(o){
+    const chips=Object.keys(MODES).map(k=>`<button class="chip ${k===mode?"on":""}" onclick="stylePick('${k}')">${MODES[k].label}</button>`).join("");
+    const rows=ROLES.map(([k,label])=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)"><span class="sw" style="background:${o[k].c.hex}"></span><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--mut)">${label}</div><b>${esc(o[k].c.n)}</b> <span class="note" style="margin:0">${o[k].c.hex.toUpperCase()}</span><div class="note" style="margin:2px 0 0">${esc(o[k].why)}</div></div></div>`).join("");
+    const desc=mood==="auto"?MODES[mode].desc:`จัดชุดจากโทน ${MOODS[mood][0]} · ${S?"เลือกเสื้อแบบ"+MODES[mode].label:"ยังไม่ได้เลือกรูป จึงจัดจากโทนสีอย่างเดียว"}`;
+    h+=`<div class="card" style="margin-top:12px"><div class="chips" style="padding:0 0 6px">${chips}</div><div class="note" style="margin:0 0 8px">${esc(desc)}</div><div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:none">${figure(o)}</div><div style="flex:1;min-width:0">${rows}</div></div><div class="note" style="margin-top:10px">ระบบดูเฉพาะสีในรูป ไม่ได้รู้จักชื่อสถานที่ และไม่ได้คิดสีผิวหรือแสงจริงตอนถ่าย ชื่อสีเป็นการประมาณ ดูรหัสสีประกอบ ถ้าชุดมีลาย ให้ใช้สีที่แนะนำเป็นสีหลักของชุด</div></div>`;
+  }
+  box.innerHTML=h;
 }
+window.styleMood=k=>{if(k==="auto"||MOODS[k]){mood=k;render()}};
 window.stylePick=m=>{if(MODES[m]){mode=m;render()}};
 function load(file){
   const url=URL.createObjectURL(file),im=new Image();
@@ -195,6 +223,7 @@ function load(file){
   im.src=url;
 }
 const inp=$("sf");
+render();
 if(inp)inp.addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(f)load(f)});
 window.styleLab={analyzePixels,recommend,nameOf,setScene:(sc,url)=>{S={url:url||"",scene:sc};render()},getMode:()=>mode}; // สำหรับทดสอบ
 })();
