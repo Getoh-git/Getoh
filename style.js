@@ -193,6 +193,20 @@ function moodMap(fit,sc,photo){
   const cap=mood!=="auto"?`<b>${MOODS[mood][0]} ${MOODS[mood][1]}</b> · ${MOODS[mood][2].map(h=>"#"+h).join(" ")}`:`แตะวงกลมเพื่อเลือกโทน${photo?" · 📍 = ตำแหน่งสีของรูปนี้":""}`;
   return `<div style="position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:6px auto 4px;background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden"><div style="position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed var(--line)"></div><div style="position:absolute;top:50%;left:0;right:0;border-top:1px dashed var(--line)"></div><span style="${ax};left:7px;top:50%;transform:translateY(-50%)">อุ่น</span><span style="${ax};right:7px;top:50%;transform:translateY(-50%)">เย็น</span><span style="${ax};top:5px;left:50%;transform:translateX(-50%)">อ่อน</span><span style="${ax};bottom:5px;left:50%;transform:translateX(-50%)">เข้ม</span>${dots}${pin}</div><div class="note" style="text-align:center;margin:4px 0 0">${cap}</div>`;
 }
+// ---------- ค้นหาเสื้อผ้าจริงบน Pinterest ----------
+const ENC=[["black","#1b1b1b"],["charcoal","#4a4a4a"],["gray","#9a9a9a"],["light gray","#d0d0d0"],["white","#f5f5f5"],["cream","#f3e9cf"],["beige","#d8c3a5"],["tan","#c19a6b"],["brown","#6b4423"],["burgundy","#6d1a36"],["red","#d32f2f"],["coral","#f07a6a"],["pink","#f4a6b7"],["hot pink","#e0457b"],["orange","#f08a1c"],["mustard","#d8a105"],["yellow","#ffd93b"],["olive","#6b7a3a"],["sage green","#9caf88"],["green","#2e8b57"],["forest green","#1f4d2b"],["teal","#00898f"],["mint","#bfe3d0"],["sky blue","#a4d8f0"],["blue","#2f6fc4"],["navy","#12254a"],["lavender","#c7b6e3"],["purple","#5b2a86"]];
+const enName=hex=>{const l=rgb2lab(...hex2rgb(hex));return ENC.reduce((a,c)=>{const d=dE(l,rgb2lab(...hex2rgb(c[1])));return d<a[0]?[d,c[0]]:a},[1e9,""])[1]};
+let gen="";
+const pinUrl=q=>"https://www.pinterest.com/search/pins/?rs=typed&q="+encodeURIComponent(q);
+function pinBox(o){
+  const t=enName(o.shirt.c.hex),b=enName(o.pants.c.hex),f=enName(o.shoes.c.hex),g=gen?gen+"s":"";
+  const Q=[[`${t} shirt ${b} pants outfit ${g}`,"🔎 ค้นหาชุดนี้บน Pinterest"],[`${t} shirt ${g}`,"เสื้อ"],[`${b} pants ${g}`,"กางเกง"],[`${f} shoes ${g}`,"รองเท้า"]].map(x=>[x[0].replace(/\s+/g," ").trim(),x[1]]);
+  const gc=[["","ทั่วไป"],["men","ชาย"],["women","หญิง"]].map(x=>`<button class="chip ${gen===x[0]?"on":""}" onclick="styleGen('${x[0]}')">${x[1]}</button>`).join("");
+  return `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><b>ค้นหาเสื้อผ้าจริง</b><div class="chips" style="padding:6px 0">${gc}</div>
+  <a class="btn" href="${esc(pinUrl(Q[0][0]))}" target="_blank" rel="noopener">${Q[0][1]}</a>
+  <div class="chips" style="padding:8px 0 0">${Q.slice(1).map(x=>`<a class="chip" style="text-decoration:none;display:inline-flex;align-items:center" href="${esc(pinUrl(x[0]))}" target="_blank" rel="noopener">${x[1]}</a>`).join("")}</div>
+  <div class="note" style="margin:6px 0 0">คำค้น: ${esc(Q[0][0])}</div></div>`;
+}
 // ---------- หน้าจอ ----------
 const ROLES=[["shirt","เสื้อ"],["pants","กางเกง / กระโปรง"],["socks","ถุงเท้า"],["shoes","รองเท้า"]];
 let S=null,mode="contrast";
@@ -230,10 +244,11 @@ function render(){
     const chips=Object.keys(MODES).map(k=>`<button class="chip ${k===mode?"on":""}" onclick="stylePick('${k}')">${MODES[k].label}</button>`).join("");
     const rows=ROLES.map(([k,label])=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)"><span class="sw" style="background:${o[k].c.hex}"></span><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--mut)">${label}</div><b>${esc(o[k].c.n)}</b> <span class="note" style="margin:0">${o[k].c.hex.toUpperCase()}</span><div class="note" style="margin:2px 0 0">${esc(o[k].why)}</div></div></div>`).join("");
     const desc=mood==="auto"?MODES[mode].desc:`จัดชุดจากโทน ${MOODS[mood][0]} · ${S?"เลือกเสื้อแบบ"+MODES[mode].label:"ยังไม่ได้เลือกรูป จึงจัดจากโทนสีอย่างเดียว"}`;
-    h+=`<div class="card" style="margin-top:12px"><div class="chips" style="padding:0 0 6px">${chips}</div><div class="note" style="margin:0 0 8px">${esc(desc)}</div><div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:none">${figure(o)}</div><div style="flex:1;min-width:0">${rows}</div></div><div class="note" style="margin-top:10px">ระบบดูเฉพาะสีในรูป ไม่ได้รู้จักชื่อสถานที่ และไม่ได้คิดสีผิวหรือแสงจริงตอนถ่าย ชื่อสีเป็นการประมาณ ดูรหัสสีประกอบ ถ้าชุดมีลาย ให้ใช้สีที่แนะนำเป็นสีหลักของชุด</div></div>`;
+    h+=`<div class="card" style="margin-top:12px"><div class="chips" style="padding:0 0 6px">${chips}</div><div class="note" style="margin:0 0 8px">${esc(desc)}</div><div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:none">${figure(o)}</div><div style="flex:1;min-width:0">${rows}</div></div>${pinBox(o)}<div class="note" style="margin-top:10px">ระบบดูเฉพาะสีในรูป ไม่ได้รู้จักชื่อสถานที่ และไม่ได้คิดสีผิวหรือแสงจริงตอนถ่าย ชื่อสีเป็นการประมาณ ดูรหัสสีประกอบ ถ้าชุดมีลาย ให้ใช้สีที่แนะนำเป็นสีหลักของชุด</div></div>`;
   }
   box.innerHTML=h;
 }
+window.styleGen=g=>{gen=g;render()};
 window.styleMood=k=>{if(k==="auto"||MOODS[k]){mood=k;render()}};
 window.stylePick=m=>{if(MODES[m]){mode=m;render()}};
 function load(file){
