@@ -157,7 +157,7 @@ html,body{background:var(--bg)}
 .rtl{font-size:13px;color:var(--amb);font-weight:600;margin-top:4px}
 .pq{display:grid;gap:4px;margin-top:6px;font-size:13px}.pq span{border-radius:8px;padding:5px 8px;background:var(--bg)}
 .pq .g{border-left:3px solid var(--grn)}.pq .b{border-left:3px solid #f87171}
-/* v19: ปรับหน้าแผนวัน/เตรียมตัวให้สวยและใช้ง่าย */
+/* v19: ปรับหน้าเตรียมตัว/ชิราคาวาโกะให้สวยและใช้ง่าย */
 #prep label{display:block;font-size:13px;color:var(--mut);margin-bottom:10px}
 #prep input,#prep select{display:block;width:100%;flex:1;margin-top:4px;min-height:46px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;color:var(--tx)}
 .pinfo{margin-top:10px;padding:10px 14px;border-radius:14px;background:var(--acc);color:#fff;font-size:14px}
@@ -170,10 +170,11 @@ html,body{background:var(--bg)}
 .stp .tt{flex:none;min-width:54px;text-align:center;padding:6px 8px;border-radius:999px;background:var(--sky);color:#1a2308;font-weight:700;font-size:14px}
 .stp .sb{flex:1;min-width:0}.stp .sb b{display:block;font-size:16px}.stp .sb small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
 .stp .ed{color:var(--mut)}
-.lg{display:inline-block;margin:4px 0;padding:6px 12px;border-radius:999px;border:1px dashed var(--acc);color:var(--acc);font-size:13px;text-decoration:none}
 /* v20 */
-#plan input,#plan select{display:block;width:100%;min-height:46px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;color:var(--tx)}
-.pr2{display:grid;grid-template-columns:1fr 130px 40px;gap:6px;align-items:center;margin-top:8px}.pr2 span{font-weight:600;overflow:hidden;text-overflow:ellipsis}.pr2 select{font-size:13px;padding:6px}
+#plan select{display:block;width:100%;min-height:46px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;color:var(--tx)}
+.stp.s{cursor:default}.stp.s .tt{min-width:58px}
+nav button{font-size:12px;white-space:nowrap}
+#plan .tl{margin:10px 0}
 </style>
 </head>
 <body>
@@ -262,7 +263,7 @@ html,body{background:var(--bg)}
 <nav>
   <button id="n-count" class="on" onclick="tab('count')"><span>⏳</span>นับถอยหลัง</button>
   <button id="n-hotels" onclick="tab('hotels')"><span>🏨</span>โรงแรม</button>
-  <button id="n-plan" onclick="tab('plan')"><span>🗓</span>แผนวัน</button>
+  <button id="n-plan" onclick="tab('plan')"><span>🏯</span>ชิราคาวาโกะ</button>
   <button id="n-prep" onclick="tab('prep')"><span>✈️</span>เตรียมตัว</button>
   <button id="n-style" onclick="tab('style')"><span>👗</span>แต่งตัว</button>
 </nav>
@@ -275,7 +276,7 @@ html,body{background:var(--bg)}
 <script src="hotels.js?v=21"></script>
 <script src="app.js?v=21"></script>
 <script src="prep.js?v=21"></script>
-<script src="plan.js?v=21"></script>
+<script src="plan.js?v=22"></script>
 <script src="style.js?v=21"></script>
 </body>
 </html>
