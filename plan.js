@@ -155,6 +155,20 @@ function sgTable(){
     +(kz?trn(SGD.tbOut,"โอซาก้า ➔ คานาซาวะ","Thunderbird")+trn(SGD.tbBack,"คานาซาวะ ➔ โอซาก้า","Thunderbird"):trn(SGD.hidaOut,"นาโกย่า ➔ ทาคายาม่า","ไฮดะ")+trn(SGD.hidaBack,"ทาคายาม่า ➔ นาโกย่า","ไฮดะ"))
     +`<div class="note">◆ = วิ่งเฉพาะบางวัน · เวลาบางขบวนของวันเสาร์/วันหยุดต่างจากนี้ 1–2 นาที${kz?"":" · ส่วนชินคันเซ็นโอซาก้า↔นาโกย่าไม่อยู่ในไฟล์"}</div>`);
 }
+// ไม่มีเที่ยวที่เข้าเงื่อนไข: บอกเหตุผล + ปุ่มลองทางอื่น
+function sgEmpty(){
+  const C=sgCtx(),{ov,sg,L}=C,{b,ex,out,go,e}=L,maxD=NIGHTS-(ov?1:0);
+  const head=SG.d===0?`🛬 วันถึง เครื่องลง ${tm(F[0].arr,"Asia/Tokyo")} ออกจากโอซาก้าได้เร็วสุด ${sgT(e)} · `:"";
+  const outOk=go.some(B=>out.some(t=>t.d-ex>=e&&t.a+b<=B.d));
+  const why=!outOk?`หลังเวลา ${sgT(e)} ไม่มีรถไฟ+บัสไปชิราคาวาโกะที่ต่อทัน`
+    :!ov?`ไปถึงแล้วไม่มีบัสกลับที่ต่อรถไฟกลับโอซาก้าทันภายในวันเดียว (หรือเที่ยวสั้นกว่าที่ตั้งไว้ ${sgDur(SG.s)})`
+    :!sg?`ถึงชิราคาวาโกะช้าเกินกว่าจะนั่งบัสกลับมานอนที่เมืองได้ทัน`
+    :`วันที่ 2 กลับถึงโอซาก้าไม่ทันเวลาที่ตั้งไว้ ลองขยับเวลา "ต้องกลับถึงโอซาก้าก่อน" หรือเวลาออกวันที่ 2 ใน ⚙️ ตั้งค่าละเอียด`;
+  const bt=(t,f)=>`<button class="btn o" style="min-height:42px;font-size:14px;margin-top:6px" onclick="${f}">${t}</button>`;
+  return `<div class="card" style="margin-top:12px"><b>ไม่พบเที่ยวที่เข้าเงื่อนไขในวันนี้</b><div class="note" style="margin:4px 0 0">${head}${why}</div>
+    ${SG.d+1<=maxD?bt("➡️ ลองไปวันถัดไป ("+sgFd(SG.d+1)+")","sgSet('d',"+(SG.d+1)+")"):""}
+    ${!ov?bt("🌙 ลองค้าง 1 คืน","sgSet('n',1)"):!sg?bt("🏡 ลองพักที่ชิราคาวาโกะแทน","sgSet('o','sg')"):""}</div>`;
+}
 function renderPlan(){
   if(SG.n&&SG.d>=NIGHTS){SG.d=Math.max(0,NIGHTS-1);SG.P={};sgSave()}
   const{res,win,wk,e,l,kz,N,ov,sg}=sgBuild(),mid=kz?"คานาซาวะ":"ทาคายาม่า";SGO=res;
@@ -170,7 +184,8 @@ function renderPlan(){
     <div class="note" style="margin:0 0 4px">รูปแบบการเดินทาง</div>
     <div class="chips" style="padding-top:0"><button class="chip ${ov?"":"on"}" onclick="sgSet('n',0)">☀️ ไป-กลับวันเดียว</button><button class="chip ${ov?"on":""}" onclick="sgSet('n',1)">🌙 ค้าง 1 คืน</button></div>
     ${ov?`<div class="note" style="margin:0 0 4px">พักที่ไหน</div><div class="chips" style="padding-top:0"><button class="chip ${sg?"on":""}" onclick="sgSet('o','sg')">🏡 ที่ชิราคาวาโกะ</button><button class="chip ${sg?"":"on"}" onclick="sgSet('o','mid')">🏨 ที่${mid}</button></div>`:""}
-    <label>${ov?"วันที่ไป (คืนที่พัก)":"วันที่ไป"}<select onchange="sgSet('d',this.value)">${opt(days,SG.d,dlab)}</select></label>
+    <div class="note" style="margin:0 0 4px">${ov?"ไปวันไหน (นอนคืนนั้น แล้วกลับวันถัดไป)":"ไปวันไหน"}</div>
+    <div class="chips" style="padding-top:0">${days.map(x=>`<button class="chip ${x[0]===SG.d?"on":""}" onclick="sgSet('d',${x[0]})">${sgFd(x[0])}${x[0]===0?" · วันถึง":!ov&&x[0]===N?" · วันกลับ":""}</button>`).join("")}</div>
     <details class="dt" style="background:var(--bg)"><summary>⚙️ ตั้งค่าละเอียด (เส้นทาง · เวลา · เลือกขบวนเอง)</summary><div style="margin-top:10px">
     <div class="chips" style="padding-top:0"><button class="chip ${SG.mode==="auto"?"on":""}" onclick="sgSet('mode','auto')">🪄 ให้ระบบเลือก</button><button class="chip ${SG.mode==="manual"?"on":""}" onclick="sgSet('mode','manual')">✋ เลือกขบวนเอง</button></div>
     <div class="note" style="margin:0 0 4px">เส้นทาง</div>
@@ -187,7 +202,7 @@ function renderPlan(){
   ${info.map(x=>`<div class="pinfo">${x}</div>`).join("")}
   ${win?`<div class="pinfo" style="background:#12301a">❄️ ช่วง 1 ธ.ค.–31 มี.ค. ไฟล์ระบุว่าบัสบางเที่ยว (△) หยุด และไม่จอดป้ายโกกายามะ-สุกานุมะ ระบบตัดเที่ยวที่หยุดออกให้แล้ว</div>`:""}
   ${wk?`<div class="pinfo" style="background:#12301a">📅 ${(()=>{const C=sgCtx(),a=[];if(C.L.wk)a.push(sgFd(SG.d));if(ov&&C.L2.wk)a.push(sgFd(SG.d+1));return a.join(" และ ")})()} เป็นเสาร์/อาทิตย์ ระบบตัดบัสเที่ยว ◆ (ไม่วิ่งเสาร์ อาทิตย์ วันหยุด) ออกให้แล้ว วันหยุดนักขัตฤกษ์ให้เช็กเพิ่มเอง</div>`:""}
-  ${SG.mode==="manual"?sgManual():`${res.length?`<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px"><b>พบ ${res.length} แบบ</b><div class="chips" style="padding:0"><button class="chip ${SG.sort==="stay"?"on":""}" onclick="sgSet('sort','stay')">อยู่นานสุด</button><button class="chip ${SG.sort==="early"?"on":""}" onclick="sgSet('sort','early')">กลับเร็วสุด</button></div></div>`:`<div class="card" style="margin-top:12px">ไม่พบเที่ยวที่เข้าเงื่อนไข ลองลดเวลาที่อยู่ที่ชิราคาวาโกะ ขยับเวลากลับให้ดึกขึ้น${ov?" ปรับเวลาออกวันที่ 2 ให้เช้าขึ้น":""} หรือเลือกวันอื่น</div>`}
+  ${SG.mode==="manual"?sgManual():`${res.length?`<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px"><b>พบ ${res.length} แบบ</b><div class="chips" style="padding:0"><button class="chip ${SG.sort==="stay"?"on":""}" onclick="sgSet('sort','stay')">อยู่นานสุด</button><button class="chip ${SG.sort==="early"?"on":""}" onclick="sgSet('sort','early')">กลับเร็วสุด</button></div></div>`:sgEmpty()}
   ${shown.map((o,i)=>`<div class="card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${i===0?"⭐ ":""}แบบที่ ${i+1}${o.ov?"":" · อยู่ "+sgDur(o.stay)}</b><span class="note" style="margin:0">${o.ov?"ถึงหมู่บ้าน "+sgT(o.B.a)+" · ":""}กลับถึงโอซาก้า ${sgT(o.home)}</span></div>
     <div class="tl">${sgSteps(o,kz).map(s=>`<div class="stp s"><div class="tt">${s[0]}</div><div class="sb"><b>${esc(s[1])}</b>${s[2]?`<small>${esc(s[2])}</small>`:""}</div></div>`).join("")}</div>
     <button class="btn o" style="min-height:42px;font-size:14px" onclick="sgCopy(${SGO.indexOf(o)})">📋 คัดลอกแผนนี้ (ส่งเข้า LINE)</button><button class="btn o" style="min-height:42px;font-size:14px;margin-top:6px" onclick="sgAdopt(${SGO.indexOf(o)})">✏️ ปรับแผนนี้เอง</button></div>`).join("")}
