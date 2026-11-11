@@ -5,11 +5,21 @@
       "$id": {
         ".write": "now < 1798761600000",
         ".validate": "newData.hasChild('deleted') || (newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 120)",
-        "price": { ".validate": "newData.isNumber()" },
-        "size":  { ".validate": "newData.isNumber()" },
-        "score": { ".validate": "newData.isNumber()" },
-        "lat":   { ".validate": "newData.isNumber()" },
-        "lng":   { ".validate": "newData.isNumber()" }
+        "price": {
+          ".validate": "newData.isNumber()"
+        },
+        "size": {
+          ".validate": "newData.isNumber()"
+        },
+        "score": {
+          ".validate": "newData.isNumber()"
+        },
+        "lat": {
+          ".validate": "newData.isNumber()"
+        },
+        "lng": {
+          ".validate": "newData.isNumber()"
+        }
       }
     },
     "photos": {
@@ -19,6 +29,13 @@
         "$pid": {
           ".validate": "newData.isString() && newData.val().length < 600000 && newData.val().matches(/^data:image\\/(jpeg|png|webp);base64,/)"
         }
+      }
+    },
+    "plans": {
+      ".read": true,
+      "$id": {
+        ".write": "now < 1798761600000 && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['name','ts','days','d']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40 && newData.child('ts').isNumber()"
       }
     }
   }

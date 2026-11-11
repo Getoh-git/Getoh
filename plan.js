@@ -495,7 +495,7 @@ function renderTrip(){
   }).join("");
   const hotelBox=tpHotelBox(H),fitBox=tpFitBox(H);
   $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน → เลือกเมือง → แตะที่ที่อยากไป · ระบบจัดเวลาให้เอง</p>
-  ${hotelBox}
+  ${hotelBox}${plBox()}
   <div class="chips" style="flex-wrap:wrap;padding:0 0 8px">${dayChips}</div>
   <div class="card"><b>วัน ${i+1} · ${sgFd(i)}${i===0?" · วันถึง":last?" · วันกลับ":""}</b>
     <div class="tl">${rows}</div>
@@ -510,7 +510,166 @@ function renderTrip(){
   <button class="btn o" style="min-height:42px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   <div class="note">แผนเก็บไว้ในเครื่องนี้ (ยังไม่ซิงค์ข้ามเครื่อง) · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;
 }
-function renderPlan(){if(TP.v==="sg")renderSG();else renderTrip()}
+// ===== บันทึก / โหลดแผน (แชร์ผ่าน Firebase /plans): ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · แผนที่บันทึกแล้วแก้/เขียนทับ/ลบไม่ได้ (กฎใน firebase-rules.json ให้สร้างใหม่ได้อย่างเดียว) =====
+const PLK="osaka_plans_v1",PLRK="osaka_plans_cache_v1",PLHK="osaka_plans_hide_v1";
+const plLoadLS=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k)||"null");return v==null?d:v}catch(e){return d}};
+let PLM=plLoadLS(PLK,[]);if(!Array.isArray(PLM))PLM=[];                 // แผนที่บันทึกจากเครื่องนี้ (sh=1 เมื่ออัปโหลดแล้ว)
+let PLR=plLoadLS(PLRK,{});if(!PLR||typeof PLR!=="object"||Array.isArray(PLR))PLR={};   // แผนจากฐานข้อมูล (แคชไว้ดูตอนออฟไลน์)
+let PLH=new Set(plLoadLS(PLHK,[])),PLC=null,plLast=0,plBusy=false;
+const plInv=()=>{PLC=null};
+const plLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const plId=()=>"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const plWhen=ts=>ts?new Date(ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+const plCount=p=>p.days.reduce((n,d)=>n+d.it.filter(r=>!r.f).length,0);
+const plClone=o=>JSON.parse(JSON.stringify(o));
+// ลายนิ้วมือของแผนทำงาน (ที่เที่ยว+เวลา+ไปชิราคาวาโกะหรือไม่) ใช้เช็กว่าแผนทำงานตรงกับแผนที่บันทึกแล้วหรือยัง
+function plSig(D,sgOn){
+  const o=[];for(let i=0;i<=NIGHTS;i++)o.push(((D&&D[i]&&D[i].v)||[]).map(x=>[x.id,x.n,x.t,x.u,x.a||"",x.pin==null?-1:x.pin]));
+  return JSON.stringify([o,sgOn?1:0]);
+}
+// ล้างข้อมูลจากฐานข้อมูล (ใครก็เขียนได้) ให้เป็นชนิดและความยาวที่ปลอดภัยก่อนนำไปใช้/แสดง · Firebase ตัด array/object ว่างทิ้ง จึงเติมค่าเริ่มต้นกลับ
+function plClean(r,id){
+  try{
+    if(!r||typeof r!=="object"||!/^[A-Za-z0-9_]+$/.test(String(id)))return null;
+    const str=(v,n)=>String(v==null?"":v).slice(0,n),num=v=>Number.isFinite(+v)?+v:0;
+    const arr=v=>Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]);
+    const days=[];
+    for(let i=0;i<=NIGHTS;i++){
+      const d=arr(r.days)[i]||{};
+      days.push({l:str(d.l,30)||sgFd(i),it:arr(d.it).slice(0,60).filter(x=>x&&typeof x==="object").map(x=>x.f?{t:num(x.t),f:1,a:str(x.a,60),b:str(x.b,100)}:{t:num(x.t),u:num(x.u),n:str(x.n,60),e:str(x.e,8),h:str(x.h,100)})});
+    }
+    const rd=(r.d&&typeof r.d==="object")?r.d:{},rD=(rd.D&&typeof rd.D==="object")?rd.D:{},D={};
+    for(let i=0;i<=NIGHTS;i++){
+      const v=rD[i]&&rD[i].v;
+      D[i]={v:arr(v).slice(0,40).filter(x=>x&&typeof x==="object").map(x=>{
+        const t=num(x.t),o={id:str(x.id,40),n:str(x.n,60),e:str(x.e,8),t,u:Math.max(num(x.u),t+15),a:TPA[x.a]?x.a:"",h:str(x.h,100)};
+        if(x.pin!=null)o.pin=num(x.pin);return o})};
+    }
+    const rs=(rd.SG&&typeof rd.SG==="object")?rd.SG:{},SGc={};
+    ["d","e","l","s","ltd","n","m","pm"].forEach(k=>{if(rs[k]!=null)SGc[k]=num(rs[k])});
+    ["r","sort","mode","o"].forEach(k=>{if(rs[k]!=null)SGc[k]=str(rs[k],12)});
+    SGc.all=!!rs.all;SGc.P={};
+    if(rs.P&&typeof rs.P==="object")Object.keys(rs.P).forEach(k=>{if(/^[a-z]$/.test(k))SGc.P[k]=num(rs.P[k])});
+    const sgOn=rd.sgOn?1:0;
+    return{id:String(id),name:str(r.name,40)||"(ไม่มีชื่อ)",ts:num(r.ts),hid:str(r.hid,12),hn:str(r.hn,60),days,d:{D,sgOn,SG:SGc},sig:plSig(D,sgOn)};
+  }catch(e){return null}
+}
+function plBuild(){
+  const m={};
+  PLM.forEach(p=>{const c=p&&plClean(p,p.id);if(c)m[c.id]=c});
+  Object.keys(PLR).forEach(id=>{const c=plClean(PLR[id],id);if(c)m[id]=c});   // ฐานข้อมูลมาก่อน
+  PLC=m;return m;
+}
+const plFind=id=>(PLC||plBuild())[id]||null;
+const plAll=()=>Object.values(PLC||plBuild()).filter(p=>!PLH.has(p.id)).sort((x,y)=>y.ts-x.ts);
+const plShared=id=>!!PLR[id];
+function plName(el){
+  let n=((el&&el.value)||"").trim().slice(0,40);
+  if(!n){const ns=plAll().map(p=>p.name);let k=plAll().length+1;while(ns.includes("แผน "+k))k++;n="แผน "+k}
+  return n;
+}
+function plSnap(name){
+  const o=tpSgPlan(),H=tpHotel(),days=[];
+  for(let i=0;i<=NIGHTS;i++){
+    tpFlow(i,o);
+    days.push({l:sgFd(i),it:tpItems(i,o).map(r=>r.f?{t:r.t,f:1,a:r.a,b:r.b}:{t:r.t,u:r.u,n:r.x.n,e:r.x.e,h:r.x.h||""})});
+  }
+  tpSave();
+  return{id:plId(),name,ts:Date.now(),hid:(P.bk&&P.bk.hid)||"",hn:H?H.h.name:"",days,d:plClone({D:TP.D,sgOn:TP.sgOn,SG})};
+}
+// เก็บในเครื่องก่อนเสมอ แล้วอัปโหลดขึ้นฐานข้อมูล (สร้างใหม่ได้อย่างเดียว ไม่เขียนทับ) · อัปโหลดไม่ได้จะลองใหม่เองตอนซิงค์
+async function plUp(p){
+  const {sh,...body}=p;
+  try{await dbx("PUT","/plans/"+p.id,body);PLR[p.id]=body;p.sh=1;plLS(PLRK,PLR);plLS(PLK,PLM);plInv();return true}catch(e){return false}
+}
+async function plSave(){
+  const snap=plSnap(plName($("spn")));
+  if(!plCount(plClean(snap,snap.id))&&!TP.sgOn){toast("ยังไม่มีที่เที่ยวในแผน");return}
+  PLM.push(snap);if(!plLS(PLK,PLM)){PLM.pop();toast("บันทึกไม่สำเร็จ (พื้นที่ในเครื่องเต็ม?)");return}
+  plInv();renderPlan();
+  const ok=await plUp(snap);
+  toast(ok?"บันทึก \""+snap.name+"\" และแชร์ให้ทุกคนแล้ว (แก้ไขไม่ได้)":"บันทึกในเครื่องแล้ว แต่ยังแชร์ไม่ได้ (ออฟไลน์ หรือยังไม่ได้เปิดกฎ /plans ใน Firebase) จะลองใหม่ให้เอง");
+  renderPlan();
+}
+async function plSaveCopy(id){
+  const p=plFind(id);if(!p)return;
+  let n=plName($("svn"));
+  if(!((($("svn")||{}).value||"").trim()))n=p.name+" (สำเนา)";
+  const c={id:plId(),name:n,ts:Date.now(),hid:p.hid,hn:p.hn,days:plClone(p.days),d:plClone(p.d)};
+  PLM.push(c);if(!plLS(PLK,PLM)){PLM.pop();toast("บันทึกไม่สำเร็จ (พื้นที่ในเครื่องเต็ม?)");return}
+  plInv();TP.vid=c.id;tpSave();renderPlan();
+  const ok=await plUp(c);
+  toast(ok?"บันทึกเป็นแผนใหม่ \""+c.name+"\" และแชร์แล้ว":"บันทึกเป็นแผนใหม่ในเครื่องแล้ว (ยังแชร์ไม่ได้ จะลองใหม่ให้เอง)");renderPlan();
+}
+function plOpen(id){TP.v="saved";TP.vid=id;tpSave();renderPlan();scrollTo(0,0)}
+function plLoad(id){
+  const p=plFind(id);if(!p)return;
+  const cur=plSig(TP.D,TP.sgOn),has=Object.values(TP.D||{}).some(d=>d&&d.v&&d.v.length)||TP.sgOn;
+  if(has&&cur!==p.sig&&!plAll().some(q=>q.sig===cur)&&!confirm("โหลด \""+p.name+"\" มาเป็นแผนทำงานของคุณ? แผนที่กำลังทำอยู่ยังไม่ได้บันทึก และจะถูกแทนที่ (แผนที่บันทึกไว้ของใครก็ไม่เปลี่ยน)"))return;
+  TP.D=plClone(p.d.D);TP.sgOn=p.d.sgOn;
+  Object.assign(SG,plClone(p.d.SG));sgSave();
+  const hh=+p.hid;let hex=false;try{hex=!!hh&&all().some(h=>h.id===hh)}catch(e){}
+  if(hex&&typeof bkSet==="function"){
+    const cu=+(P.bk&&P.bk.hid);
+    if(!cu)bkSet("hid",String(hh));
+    else if(cu!==hh&&confirm("แผนนี้ใช้ที่พัก "+(p.hn||"โรงแรมอื่น")+"\nเปลี่ยนที่พักของทริปเป็นโรงแรมนี้ด้วยไหม?\n(ยกเลิก = คงที่พักเดิมของคุณ)"))bkSet("hid",String(hh));
+  }
+  TP.v="trip";TP.d=0;tpSave();renderPlan();scrollTo(0,0);
+  toast("โหลดมาเป็นแผนทำงานแล้ว แก้ได้เลย แล้วกดบันทึกเป็นแผนใหม่");
+}
+function plHide(id){
+  const p=plFind(id);if(!p||!confirm("ซ่อนแผน \""+p.name+"\" จากเครื่องนี้?\n(แผนยังอยู่ในฐานข้อมูล คนอื่นยังเห็นและโหลดได้)"))return;
+  PLH.add(id);plLS(PLHK,[...PLH]);if(TP.vid===id)TP.v="trip";tpSave();renderPlan();
+}
+function plUnhide(){PLH=new Set();plLS(PLHK,[]);renderPlan()}
+function plCopy(id){
+  const p=plFind(id);if(!p)return;
+  const L=["🗓️ "+p.name];if(p.hn)L.push("🏨 ที่พัก: "+p.hn);
+  p.days.forEach((d,i)=>{L.push("",`📅 วัน ${i+1} · ${d.l}`);if(!d.it.some(r=>!r.f))L.push("ยังไม่วางแผน");d.it.forEach(r=>L.push(r.f?`${sgT(r.t)} ${r.a}`:`${sgT(r.t)}-${sgT(r.u)} ${r.n}`))});
+  const t=L.join("\n");
+  navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast("คัดลอกแผนแล้ว"),()=>toast("คัดลอกไม่สำเร็จ")):toast("คัดลอกไม่ได้");
+}
+// ซิงค์กับฐานข้อมูล: ดึงแผนของทุกคน + อัปโหลดแผนที่ค้างในเครื่อง · วาดหน้าใหม่เฉพาะเมื่อรายการเปลี่ยน
+async function plSync(){
+  if(plBusy)return;plBusy=true;plLast=Date.now();
+  try{
+    const r=(await dbx("GET","/plans"))||{},before=Object.keys(PLR).sort().join();
+    PLR=(r&&typeof r==="object")?r:{};plInv();
+    for(const p of PLM){if(!PLR[p.id])await plUp(p);else p.sh=1}
+    plLS(PLRK,PLR);plLS(PLK,PLM);plInv();
+    if(Object.keys(PLR).sort().join()!==before){
+      const pn=$("p-plan");
+      if(pn&&!pn.classList.contains("hide")){const v=($("spn")||{}).value,w=($("svn")||{}).value;renderPlan();if(v&&$("spn"))$("spn").value=v;if(w&&$("svn"))$("svn").value=w}
+    }
+  }catch(e){}
+  plBusy=false;
+}
+const plBtn="min-height:36px;padding:0 10px;font-size:14px;flex:none";
+function plBox(){
+  const L=plAll(),hid=PLH.size;
+  const list=L.map(p=>`<div class="kv" style="flex-wrap:wrap;gap:6px;align-items:center"><div style="flex:1;min-width:150px"><b>${esc(p.name)}</b><div style="color:var(--mut);font-size:13px">${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · ${plWhen(p.ts)} · ${plCount(p)} ที่${p.hn?" · 🏨 "+esc(p.hn):""}</div></div><div style="display:flex;gap:6px"><button class="chip" style="${plBtn}" onclick="plOpen('${p.id}')">👁 ดู</button><button class="chip" style="${plBtn}" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="chip" style="${plBtn}" onclick="plHide('${p.id}')" aria-label="ซ่อน">🙈</button></div></div>`).join("");
+  return `<div class="card" style="margin-bottom:10px"><b>💾 บันทึกแผน</b>
+    <div style="display:flex;gap:8px;margin-top:6px"><input id="spn" maxlength="40" placeholder="ชื่อแผน (เช่น แผน A)" style="flex:1;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn g" style="width:auto;min-height:42px;padding:0 14px;font-size:14px" onclick="plSave()">บันทึกเป็นแผนใหม่</button></div>
+    <div class="note" style="margin:6px 0 0">🌐 แผนที่บันทึกแชร์ให้ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · 🔒 แผนที่บันทึกแล้วแก้ไม่ได้ (ของเราและของคนอื่น) ถ้าจะปรับให้ "โหลดมาแก้" แล้วบันทึกเป็นแผนใหม่</div>
+    ${list?`<details class="dt" style="margin-top:8px"><summary>แผนที่บันทึกไว้ (${L.length})</summary><div style="margin-top:6px">${list}</div></details>`:""}
+    ${hid?`<button class="chip" style="${plBtn};margin-top:8px" onclick="plUnhide()">↩️ แสดงแผนที่ซ่อนไว้ (${hid})</button>`:""}</div>`;
+}
+function renderSaved(){
+  const p=plFind(TP.vid);if(!p){TP.v="trip";renderTrip();return}
+  const days=p.days.map((d,i)=>{
+    const rows=d.it.map(r=>r.f?tpRow(sgT(r.t),esc(r.a),esc(r.b),"background:#f3f1e3"):tpRow(sgT(r.t)+"–"+sgT(r.u),esc(r.e+" "+r.n),r.h?esc(r.h):"","")).join("");
+    return `<div class="card" style="margin-bottom:10px"><b>วัน ${i+1} · ${esc(d.l)}</b><div class="tl">${rows||`<div class="note">ไม่มีรายการ</div>`}</div></div>`;
+  }).join("");
+  $("plan").innerHTML=`<button class="chip" style="margin-bottom:8px" onclick="tpView('trip')">← กลับแผนทำงาน</button><h1>👁 ${esc(p.name)}</h1>
+  <p class="sub">🔒 แก้ไขไม่ได้ · ${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · บันทึกเมื่อ ${plWhen(p.ts)}${p.hn?" · 🏨 "+esc(p.hn):""} · ${plCount(p)} ที่</p>
+  <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn" style="min-height:44px;font-size:14px" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="btn o" style="min-height:44px;font-size:14px" onclick="plCopy('${p.id}')">📋 คัดลอก</button></div>
+  ${days}
+  <div class="card" style="margin-bottom:10px"><b>💾 บันทึกสำเนาเป็นแผนใหม่</b><div style="display:flex;gap:8px;margin-top:6px"><input id="svn" maxlength="40" placeholder="ชื่อแผนใหม่ (เว้นว่าง = ชื่อเดิม + สำเนา)" style="flex:1;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn g" style="width:auto;min-height:42px;padding:0 14px;font-size:14px" onclick="plSaveCopy('${p.id}')">บันทึกใหม่</button></div></div>
+  <div class="note">แผนนี้เป็นภาพ ณ เวลาที่บันทึก ไม่เปลี่ยนตามข้อมูลโรงแรมหรือตารางรถที่แก้ภายหลัง · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;
+}
+plSync();setInterval(()=>{if(!document.hidden)plSync()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)plSync()});
+function renderPlan(){if(Date.now()-plLast>15000)plSync();if(TP.v==="sg")renderSG();else if(TP.v==="saved")renderSaved();else renderTrip()}
 function renderSG(){
   if(SG.n&&SG.d>=NIGHTS){SG.d=Math.max(0,NIGHTS-1);SG.P={};sgSave()}
   const{res,win,wk,e,l,kz,N,ov,sg,pre}=sgBuild(),mid=kz?"คานาซาวะ":"ทาคายาม่า";SGO=res;
