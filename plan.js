@@ -510,12 +510,12 @@ function renderTrip(){
   <button class="btn o" style="min-height:42px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   <div class="note">แผนเก็บไว้ในเครื่องนี้ (ยังไม่ซิงค์ข้ามเครื่อง) · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;
 }
-// ===== บันทึก / โหลดแผน (แชร์ผ่าน Firebase /plans): ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · แผนที่บันทึกแล้วแก้/เขียนทับ/ลบไม่ได้ (กฎใน firebase-rules.json ให้สร้างใหม่ได้อย่างเดียว) =====
-const PLK="osaka_plans_v1",PLRK="osaka_plans_cache_v1",PLHK="osaka_plans_hide_v1";
+// ===== บันทึก / โหลดแผน (แชร์ผ่าน Firebase /plans): ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · แผนที่บันทึกแล้วแก้/เขียนทับไม่ได้ แต่ลบได้ (กฎใน firebase-rules.json: สร้างใหม่หรือลบเท่านั้น) =====
+const PLK="osaka_plans_v1",PLRK="osaka_plans_cache_v1";
 const plLoadLS=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k)||"null");return v==null?d:v}catch(e){return d}};
 let PLM=plLoadLS(PLK,[]);if(!Array.isArray(PLM))PLM=[];                 // แผนที่บันทึกจากเครื่องนี้ (sh=1 เมื่ออัปโหลดแล้ว)
 let PLR=plLoadLS(PLRK,{});if(!PLR||typeof PLR!=="object"||Array.isArray(PLR))PLR={};   // แผนจากฐานข้อมูล (แคชไว้ดูตอนออฟไลน์)
-let PLH=new Set(plLoadLS(PLHK,[])),PLC=null,plLast=0,plBusy=false;
+let PLC=null,plLast=0,plBusy=false;
 const plInv=()=>{PLC=null};
 const plLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
 const plId=()=>"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -561,7 +561,7 @@ function plBuild(){
   PLC=m;return m;
 }
 const plFind=id=>(PLC||plBuild())[id]||null;
-const plAll=()=>Object.values(PLC||plBuild()).filter(p=>!PLH.has(p.id)).sort((x,y)=>y.ts-x.ts);
+const plAll=()=>Object.values(PLC||plBuild()).sort((x,y)=>y.ts-x.ts);
 const plShared=id=>!!PLR[id];
 function plName(el){
   let n=((el&&el.value)||"").trim().slice(0,40);
@@ -617,11 +617,14 @@ function plLoad(id){
   TP.v="trip";TP.d=0;tpSave();renderPlan();scrollTo(0,0);
   toast("โหลดมาเป็นแผนทำงานแล้ว แก้ได้เลย แล้วกดบันทึกเป็นแผนใหม่");
 }
-function plHide(id){
-  const p=plFind(id);if(!p||!confirm("ซ่อนแผน \""+p.name+"\" จากเครื่องนี้?\n(แผนยังอยู่ในฐานข้อมูล คนอื่นยังเห็นและโหลดได้)"))return;
-  PLH.add(id);plLS(PLHK,[...PLH]);if(TP.vid===id)TP.v="trip";tpSave();renderPlan();
+async function plDel(id){
+  const p=plFind(id);if(!p)return;
+  const sh=plShared(id);
+  if(!confirm("ลบแผน \""+p.name+"\" ?"+(sh?"\nแผนนี้แชร์อยู่ ลบแล้วคนอื่นจะไม่เห็นและโหลดไม่ได้อีก และกู้คืนไม่ได้":"")))return;
+  if(sh){try{await dbx("DELETE","/plans/"+id)}catch(e){toast("ลบไม่สำเร็จ (ออฟไลน์ หรือยังไม่ได้อัปเดตกฎ /plans ใน Firebase)");return}}
+  delete PLR[id];PLM=PLM.filter(x=>x.id!==id);plLS(PLRK,PLR);plLS(PLK,PLM);plInv();
+  if(TP.vid===id)TP.v="trip";tpSave();toast("ลบแผนแล้ว");renderPlan();
 }
-function plUnhide(){PLH=new Set();plLS(PLHK,[]);renderPlan()}
 function plCopy(id){
   const p=plFind(id);if(!p)return;
   const L=["🗓️ "+p.name];if(p.hn)L.push("🏨 ที่พัก: "+p.hn);
@@ -635,7 +638,7 @@ async function plSync(){
   try{
     const r=(await dbx("GET","/plans"))||{},before=Object.keys(PLR).sort().join();
     PLR=(r&&typeof r==="object")?r:{};plInv();
-    for(const p of PLM){if(!PLR[p.id])await plUp(p);else p.sh=1}
+    for(const p of PLM.slice()){if(PLR[p.id])p.sh=1;else if(p.sh)PLM=PLM.filter(x=>x!==p);else await plUp(p)}   // sh=1 แต่ไม่อยู่ในฐานข้อมูลแล้ว = มีคนลบไปแล้ว
     plLS(PLRK,PLR);plLS(PLK,PLM);plInv();
     if(Object.keys(PLR).sort().join()!==before){
       const pn=$("p-plan");
@@ -646,13 +649,13 @@ async function plSync(){
 }
 const plBtn="min-height:36px;padding:0 10px;font-size:14px;flex:none";
 function plBox(){
-  const L=plAll(),hid=PLH.size;
-  const list=L.map(p=>`<div class="kv" style="flex-wrap:wrap;gap:6px;align-items:center"><div style="flex:1;min-width:150px"><b>${esc(p.name)}</b><div style="color:var(--mut);font-size:13px">${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · ${plWhen(p.ts)} · ${plCount(p)} ที่${p.hn?" · 🏨 "+esc(p.hn):""}</div></div><div style="display:flex;gap:6px"><button class="chip" style="${plBtn}" onclick="plOpen('${p.id}')">👁 ดู</button><button class="chip" style="${plBtn}" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="chip" style="${plBtn}" onclick="plHide('${p.id}')" aria-label="ซ่อน">🙈</button></div></div>`).join("");
+  const L=plAll();
+  const list=L.map(p=>`<div class="kv" style="flex-wrap:wrap;gap:6px;align-items:center"><div style="flex:1;min-width:150px"><b>${esc(p.name)}</b><div style="color:var(--mut);font-size:13px">${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · ${plWhen(p.ts)} · ${plCount(p)} ที่${p.hn?" · 🏨 "+esc(p.hn):""}</div></div><div style="display:flex;gap:6px"><button class="chip" style="${plBtn}" onclick="plOpen('${p.id}')">👁 ดู</button><button class="chip" style="${plBtn}" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="chip" style="${plBtn}" onclick="plDel('${p.id}')" aria-label="ลบ">🗑</button></div></div>`).join("");
   return `<div class="card" style="margin-bottom:10px"><b>💾 บันทึกแผน</b>
     <div style="display:flex;gap:8px;margin-top:6px"><input id="spn" maxlength="40" placeholder="ชื่อแผน (เช่น แผน A)" style="flex:1;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn g" style="width:auto;min-height:42px;padding:0 14px;font-size:14px" onclick="plSave()">บันทึกเป็นแผนใหม่</button></div>
-    <div class="note" style="margin:6px 0 0">🌐 แผนที่บันทึกแชร์ให้ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · 🔒 แผนที่บันทึกแล้วแก้ไม่ได้ (ของเราและของคนอื่น) ถ้าจะปรับให้ "โหลดมาแก้" แล้วบันทึกเป็นแผนใหม่</div>
+    <div class="note" style="margin:6px 0 0">🌐 แผนที่บันทึกแชร์ให้ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · 🔒 แผนที่บันทึกแล้วแก้ไม่ได้ แต่ลบได้ (ใครมีลิงก์ก็ลบได้ กู้คืนไม่ได้) ถ้าจะปรับให้ "โหลดมาแก้" แล้วบันทึกเป็นแผนใหม่</div>
     ${list?`<details class="dt" style="margin-top:8px"><summary>แผนที่บันทึกไว้ (${L.length})</summary><div style="margin-top:6px">${list}</div></details>`:""}
-    ${hid?`<button class="chip" style="${plBtn};margin-top:8px" onclick="plUnhide()">↩️ แสดงแผนที่ซ่อนไว้ (${hid})</button>`:""}</div>`;
+</div>`;
 }
 function renderSaved(){
   const p=plFind(TP.vid);if(!p){TP.v="trip";renderTrip();return}
@@ -662,7 +665,7 @@ function renderSaved(){
   }).join("");
   $("plan").innerHTML=`<button class="chip" style="margin-bottom:8px" onclick="tpView('trip')">← กลับแผนทำงาน</button><h1>👁 ${esc(p.name)}</h1>
   <p class="sub">🔒 แก้ไขไม่ได้ · ${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · บันทึกเมื่อ ${plWhen(p.ts)}${p.hn?" · 🏨 "+esc(p.hn):""} · ${plCount(p)} ที่</p>
-  <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn" style="min-height:44px;font-size:14px" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="btn o" style="min-height:44px;font-size:14px" onclick="plCopy('${p.id}')">📋 คัดลอก</button></div>
+  <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn" style="min-height:44px;font-size:14px" onclick="plLoad('${p.id}')">📂 โหลดมาแก้</button><button class="btn o" style="min-height:44px;font-size:14px" onclick="plCopy('${p.id}')">📋 คัดลอก</button><button class="btn o" style="min-height:44px;font-size:14px;width:auto;flex:none;padding:0 14px" onclick="plDel('${p.id}')" aria-label="ลบ">🗑</button></div>
   ${days}
   <div class="card" style="margin-bottom:10px"><b>💾 บันทึกสำเนาเป็นแผนใหม่</b><div style="display:flex;gap:8px;margin-top:6px"><input id="svn" maxlength="40" placeholder="ชื่อแผนใหม่ (เว้นว่าง = ชื่อเดิม + สำเนา)" style="flex:1;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn g" style="width:auto;min-height:42px;padding:0 14px;font-size:14px" onclick="plSaveCopy('${p.id}')">บันทึกใหม่</button></div></div>
   <div class="note">แผนนี้เป็นภาพ ณ เวลาที่บันทึก ไม่เปลี่ยนตามข้อมูลโรงแรมหรือตารางรถที่แก้ภายหลัง · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;

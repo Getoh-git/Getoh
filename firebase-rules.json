@@ -34,7 +34,7 @@
     "plans": {
       ".read": true,
       "$id": {
-        ".write": "now < 1798761600000 && !data.exists() && newData.exists()",
+        ".write": "now < 1798761600000 && (!data.exists() || !newData.exists())",
         ".validate": "newData.hasChildren(['name','ts','days','d']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40 && newData.child('ts').isNumber()"
       }
     }
