@@ -258,11 +258,70 @@ const TPP={
   sg:["s-walk","s-wada","s-lunch","s-shiro"]
 };
 const TPH={kanazawa:"🚆 ไป-กลับจากโอซาก้าราว 2 ชม. 10–30 นาทีต่อเที่ยว (Thunderbird ไปสึรุกะ แล้วต่อชินคันเซ็น) ระบบเผื่อเวลาเดินทางให้แล้ว · ไม่มีรถตรงแล้วตั้งแต่ มี.ค. 2024"};
+// ===== เชื่อมกับระบบโรงแรม: ที่พักของทริป = โรงแรมที่เลือกไว้ในแท็บเตรียมตัว (P.bk.hid) =====
+// ใช้พิกัดโรงแรมจากแผนที่ (lat/lng) ถ้ายังไม่ปักหมุดจะใช้จุดกลางย่านโดยประมาณ · ตัวเลขเวลาเดินทางเป็นค่าประมาณจากระยะทางตรง
+const HC={Umeda:[34.7055,135.4983],Namba:[34.6660,135.5010],Ebisu:[34.6525,135.5063],"Shin-Imamiya":[34.6475,135.5000]};
+const OSK=[34.7025,135.4959];                                   // สถานีโอซาก้า (JR) ใช้เป็นจุดขึ้นรถไปเมืองอื่น
+const HAIR={Umeda:70,Namba:45,Ebisu:45,"Shin-Imamiya":40};     // ที่พัก → สนามบินคันไซ (นาที โดยประมาณ) ย่านอื่นใช้ 60
+const TPL={doton:[34.6687,135.5013],castle:[34.6873,135.5262],kuromon:[34.6615,135.5063],shinsekai:[34.6525,135.5063],umeda:[34.7052,135.4903],shop:[34.6720,135.5015],kaiyukan:[34.6545,135.4289],dendentown:[34.6595,135.5058],usj:[34.6654,135.4323]}; // พิกัดที่ในโอซาก้า
+const tpR=m=>Math.ceil(m/5)*5;
+const tpKm=(a,b)=>{const r=Math.PI/180,dl=(b[1]-a[1])*r,dp=(b[0]-a[0])*r,x=Math.sin(dp/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dl/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+const tpMove=km=>Math.min(60,Math.max(15,tpR(10+3.5*km)));   // เวลาเดินทางในเมือง (นาที) จากระยะ กม.
+function tpHotel(){
+  try{
+    const id=+(P.bk&&P.bk.hid);if(!id)return null;
+    const h=all().find(x=>x.id===id);if(!h)return null;
+    const ex=hasLL(h);
+    return{h,ex,ll:ex?[h.lat,h.lng]:(HC[h.area]||null),air:HAIR[h.area]||60};
+  }catch(e){return null}
+}
+const tpAcc=H=>H&&H.ll?Math.min(45,tpR(10+3.5*tpKm(H.ll,OSK))):20;   // ที่พัก → สถานีโอซาก้า (นาที)
+const tpEx=H=>H&&H.ll?Math.max(-10,tpAcc(H)-20):0;                   // ส่วนต่างจากค่ากลางที่ใช้ในตารางข้ามเมือง
+const tpGap=(pa,a,pl,cl)=>pa==="osaka"&&a==="osaka"&&pl&&cl?tpMove(tpKm(pl,cl)):tpBuf(pa,a);
+function tpHid(v){if(typeof bkSet==="function")bkSet("hid",v);renderPlan()}
+function tpChips(pk,H,i){
+  let L=TPC.filter(c=>c.a===pk).map(c=>({c,km:H&&H.ll&&TPL[c.id]?tpKm(H.ll,TPL[c.id]):null}));
+  if(H&&L.some(x=>x.km!=null))L.sort((p,q)=>(p.km==null)-(q.km==null)||p.km-q.km);   // ใกล้ที่พักก่อน
+  return L.map(({c,km})=>{const has=tpDL(i).some(x=>x.id===c.id);return `<button class="chip ${has?"on":""}" onclick="tpAdd('${c.id}')">${has?"✓ ":""}${c.e} ${c.n}${km!=null?` · ${km.toFixed(1)} กม.`:""}</button>`}).join("");
+}
+function tpHotelBox(H){
+  let hs=[];try{hs=all()}catch(e){}
+  if(!hs.length)return "";
+  const cur=H?H.h.id:0,fv=hs.filter(h=>favs.has(h.id)),rest=hs.filter(h=>!favs.has(h.id));
+  const op=a=>a.map(h=>`<option value="${h.id}" ${h.id===cur?"selected":""}>${esc(h.name)} · ${esc(h.area||"")}</option>`).join("");
+  const sel=`<select onchange="tpHid(this.value)" style="width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 10px;font-size:15px;background:#fff;margin-top:6px"><option value="">– ยังไม่เลือก (ใช้ค่ากลางโอซาก้า) –</option>${fv.length?`<optgroup label="★ ที่ชอบ">${op(fv)}</optgroup>`:""}<optgroup label="ทั้งหมด">${op(rest)}</optgroup></select>`;
+  const info=H?`<div class="note" style="margin:6px 0 0">${esc(H.h.area||"")} · ไปสถานีโอซาก้า ~${tpAcc(H)} นาที · ไปสนามบิน ~${H.air} นาที · ระบบใช้คำนวณเวลาเดินทางจากที่พัก (ตัวเลือกเดียวกับแท็บเตรียมตัว)</div>${H.ex?"":`<div class="note" style="margin:4px 0 0;color:#9a3412">⚠ โรงแรมนี้ยังไม่ได้ปักหมุด ใช้ตำแหน่งกลางย่านโดยประมาณ <button class="chip" style="min-height:32px;padding:0 10px" onclick="placeFor(${H.h.id})">📍 ปักหมุด</button></div>`}`:`<div class="note" style="margin:6px 0 0">เลือกโรงแรมแล้วระบบจะคำนวณเวลาเดินทางจากที่พัก แนะนำที่ใกล้ที่พัก และเผื่อเวลาไป-กลับสถานี/สนามบินให้</div>`;
+  return `<div class="card" style="margin-bottom:10px"><b>🏨 ที่พักของทริป</b>${sel}${info}</div>`;
+}
+// ที่พักไหนเดินทางสะดวกตามแผนที่วางไว้ (ดูจากที่ในโอซาก้าที่เลือก + วันไปเมืองอื่น)
+function tpFit(){
+  let hs=[];try{hs=all()}catch(e){}
+  const days=[];let far=0;
+  for(let i=0;i<=NIGHTS;i++){
+    const L=((TP.D[i]&&TP.D[i].v)||[]).slice().sort((p,q)=>p.t-q.t);
+    const os=L.filter(x=>x.a==="osaka"&&TPL[x.id]).map(x=>TPL[x.id]);
+    if(os.length)days.push({f:os[0],l:os[os.length-1]});
+    if(L.some(x=>x.a&&x.a!=="osaka"&&x.a!=="sg"))far++;
+  }
+  if(!days.length&&!far)return[];
+  return hs.map(h=>{
+    const ll=hasLL(h)?[h.lat,h.lng]:(HC[h.area]||null);if(!ll)return null;
+    const acc=Math.min(45,tpR(10+3.5*tpKm(ll,OSK)));
+    const m=days.reduce((a,d)=>a+tpMove(tpKm(ll,d.f))+tpMove(tpKm(d.l,ll)),0)+far*2*acc;
+    return{h,m};
+  }).filter(Boolean).sort((a,b)=>a.m-b.m);
+}
+function tpFitBox(H){
+  const R=tpFit();if(!R.length)return "";
+  const rows=R.slice(0,5).map(r=>`<div class="kv" onclick="detail(${r.h.id})" style="cursor:pointer"><span>${H&&H.h.id===r.h.id?"✓ ":""}<b>${esc(r.h.name)}</b> · ${esc(r.h.area||"")}</span><span style="text-align:right">~${sgDur(r.m)}${r.h.price!=null?` · ≈ ${night(r.h)}/คืน`:""}</span></div>`).join("");
+  return `<details class="dt" style="margin-top:12px"><summary>🧭 ที่พักไหนเดินทางสะดวกตามแผนนี้</summary><div style="margin-top:8px">${rows}<div class="note">เวลาเดินทางรวมจากที่พัก→ที่แรก และที่สุดท้าย→ที่พัก ของทุกวัน (ที่ในโอซาก้า) + ไป-กลับสถานีโอซาก้าในวันไปเมืองอื่น · คำนวณคร่าว ๆ จากระยะทางตรง ไม่ใช่ตารางรถไฟจริง · แตะเพื่อดูรายละเอียดโรงแรม</div></div></details>`;
+}
 // เวลาเดินทางระหว่างที่ (นาที โดยประมาณ): ย่านเดียวกัน 15 (ในหมู่บ้าน 10) · ข้ามเมืองตามตาราง · อื่นๆ 90 · ที่พักอยู่โอซาก้า
 const tpBuf=(a,b)=>a===b?(a==="sg"?10:15):({"kyoto|osaka":60,"kanazawa|osaka":150,"kanazawa|kyoto":150,"kanazawa|nara":210,"nara|osaka":50,"kyoto|nara":50}[[a,b].sort().join("|")]||90);
 function tpWin(i){
-  const m0=i===0?sgJ(F[0].arr)+150:0;                                   // วันแรก: เผื่อผ่านตม./รับกระเป๋า/เข้าเมือง
-  return{s:i===0?m0:540,e:i===NIGHTS?sgJ(F[F.length-1].ap)-135:1260,m0};  // วันสุดท้าย: ต้องออกจากเมืองไปสนามบิน
+  const H=tpHotel(),at=H?H.air:45;                                        // เวลาที่พัก↔สนามบิน (ค่ากลาง 45 นาที)
+  const m0=i===0?sgJ(F[0].arr)+150+(at-45):0;                            // วันแรก: เผื่อผ่านตม./รับกระเป๋า/เข้าเมือง
+  return{s:i===0?m0:540,e:i===NIGHTS?sgJ(F[F.length-1].ap)-(90+at):1260,m0};  // วันสุดท้าย: ต้องออกจากเมืองไปสนามบิน
 }
 // แผนรุ่นก่อนเก็บเป็น "เวลาที่ใช้" (m) แปลงเป็นเวลาเริ่ม/จบให้อัตโนมัติ
 try{for(const k in TP.D){
@@ -294,23 +353,27 @@ function tpVWin(i,o){
 // จัดเวลาให้อัตโนมัติ: เรียงตามลำดับในรายการ ต่อจากที่ก่อนหน้า + เวลาเดินทาง · เลี่ยงช่วงไปชิราคาวาโกะ · ที่ล็อกเวลา (pin) ไม่ถูกเลื่อน
 function tpFlow(i,o){
   const L=(TP.D[i]&&TP.D[i].v)||[];if(!L.length)return false;
-  const w=tpWin(i),bl=tpBlocks(i,o),vw=tpVWin(i,o);
-  let end=null,pa="osaka",ch=false;
+  const w=tpWin(i),bl=tpBlocks(i,o),vw=tpVWin(i,o),H=tpHotel(),ex=tpEx(H);
+  let end=null,pa="osaka",pl=null,ch=false;
   L.forEach(x=>{
-    const d=Math.max(15,x.u-x.t),a=x.a||pa;let t;
+    const d=Math.max(15,x.u-x.t),a=x.a||pa,cl=TPL[x.id]||(a==="osaka"?pl:null);let t;
     if(x.pin!=null)t=x.pin;
     else{
       if(end==null){
         const far=tpBuf("osaka",a)>=150,base=i===0?w.s:(far?450:w.s);   // ที่ไกล (คานาซาวะ) ออกเช้าขึ้น 07:30
-        t=a==="sg"&&vw?vw[0]:base+(a==="osaka"?0:tpBuf("osaka",a));
+        let g=0;
+        if(a==="sg")g=vw?0:tpBuf("osaka",a);
+        else if(a==="osaka")g=i===0||!(H&&H.ll&&cl)?0:tpMove(tpKm(H.ll,cl));   // จากที่พักไปที่แรก
+        else g=tpBuf("osaka",a)+(i===0?0:ex);                                  // ไปเมืองอื่น: ปรับตามระยะที่พัก→สถานี
+        t=a==="sg"&&vw?vw[0]:base+g;
       }else{
-        t=end+tpBuf(pa,a);if(a==="sg"&&vw)t=Math.max(t,vw[0]);
+        t=end+tpGap(pa,a,pl,cl);if(a==="sg"&&vw)t=Math.max(t,vw[0]);
       }
       t=tpRound(t);
       if(a!=="sg")for(const b of bl)if(t<b[1]&&t+d>b[0])t=tpRound(b[1]+30);
     }
     if(x.t!==t||x.u!==t+d){x.t=t;x.u=t+d;ch=true}
-    end=x.u;pa=a;
+    end=x.u;pa=a;pl=a==="osaka"?cl:null;
   });
   return ch;
 }
@@ -344,27 +407,28 @@ function tpClear(){if(!confirm("ล้างแผนของวันนี้
 const tpRow=(t,a,b,x,ctl)=>`<div class="stp s"${x?` style="${x}"`:""}><div class="tt">${t}</div><div class="sb"><b>${a}</b>${b?`<small>${b}</small>`:""}</div>${ctl||""}</div>`;
 // รายการของวัน i เรียงตามเวลา: แถวคงที่ (เครื่องบิน/เดินทางชิราคาวาโกะ) + ที่ที่เลือกเอง
 function tpItems(i,o){
-  const k=tpSgKind(i),w=tpWin(i),it=[],last=i===NIGHTS,mid=SG.r==="kz"?"คานาซาวะ":"ทาคายาม่า",fl=F[F.length-1],f=(t,a,b)=>it.push({t,f:1,a,b:b||""});
+  const H=tpHotel(),acc=tpAcc(H),k=tpSgKind(i),w=tpWin(i),it=[],last=i===NIGHTS,mid=SG.r==="kz"?"คานาซาวะ":"ทาคายาม่า",fl=F[F.length-1],f=(t,a,b)=>it.push({t,f:1,a,b:b||""});
   if(i===0)f(sgJ(F[0].arr),"🛬 เครื่องลง","เริ่มเที่ยวได้ประมาณ "+sgT(w.m0));
   if(last)f(w.e,"🧳 ออกไปสนามบิน","เครื่องออก "+sgT(sgJ(fl.dep)));
   if(k&&o){
     if(k==="out"){
+      if(H)f(o.leave-acc,"🏨 ออกจากที่พัก","ไปสถานีโอซาก้า ~"+acc+" นาที");
       f(o.leave,o.os==="pre"&&o.ov?"🚆 ออกจากโอซาก้าไปนอนที่"+mid:"🚆 ออกจากโอซาก้า");
       if(!(o.ov&&o.os==="pre"))f(o.B.a,"📍 ถึงชิราคาวาโกะ");
-      if(!o.ov)f(o.R.d,"🚌 ขึ้นบัสกลับ"),f(o.home,"🏠 ถึงโอซาก้า");
+      if(!o.ov){f(o.R.d,"🚌 ขึ้นบัสกลับ");f(o.home,"🏠 ถึงโอซาก้า");if(H)f(o.home+acc,"🏨 ถึงที่พักประมาณ")}
       else if(o.os==="mid")f(o.R.d,"🚌 ขึ้นบัสกลับไป"+mid),f(1320,"🌙 นอนที่"+mid);
       else f(1320,"🌙 นอนที่"+(o.os==="sg"?"ชิราคาวาโกะ":mid));
     }else{
       if(o.os==="pre")f(o.B.d,"🚌 ขึ้นบัสไปชิราคาวาโกะ"),f(o.B.a,"📍 ถึงชิราคาวาโกะ");
       if(o.os!=="mid")f(o.R.d,"🚌 ขึ้นบัสกลับ");
-      f(o.home,"🏠 ถึงโอซาก้า");
+      f(o.home,"🏠 ถึงโอซาก้า");if(H)f(o.home+acc,"🏨 ถึงที่พักประมาณ");
     }
   }
   ((TP.D[i]&&TP.D[i].v)||[]).forEach((x,j)=>it.push({t:x.t,u:x.u,x,k:j}));
   return it.sort((p,q)=>p.t-q.t||(q.f?1:0)-(p.f?1:0));
 }
 function tpCopy(){
-  const o=tpSgPlan(),L=["🗓️ แผนเที่ยวโอซาก้า"];
+  const o=tpSgPlan(),H=tpHotel(),L=["🗓️ แผนเที่ยวโอซาก้า"];if(H)L.push("🏨 ที่พัก: "+H.h.name+" ("+(H.h.area||"")+")");
   for(let i=0;i<=NIGHTS;i++){
     L.push("",`📅 วัน ${i+1} · ${sgFd(i)}`);
     tpFlow(i,o);const it=tpItems(i,o);
@@ -387,12 +451,15 @@ function renderTrip(){
     return `<button class="chip ${j===i?"on":""}" onclick="tpDay(${j})">วัน ${j+1} · ${sgFd(j)}${k?" · 🏯":n?" · "+n+" ที่":""}</button>`;
   }).join("");
   const selS="background:transparent;border:0;font:inherit;color:inherit;text-align:center;-webkit-appearance:none;appearance:none;padding:0";
-  let prev=null,pa="osaka",users=0,la="",lu=0;
+  const H=tpHotel();
+  let prev=null,pa="osaka",users=0,la="",lu=0,pl=null,lc=null;
   const cb="min-height:32px;min-width:36px;padding:0 8px;font-size:14px;flex:none";
   const rows=it.map(r=>{
     if(r.f)return tpRow(sgT(r.t),r.a,r.b,"background:#f3f1e3");
     users++;
-    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t;
+    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t,cl=TPL[x.id]||(a==="osaka"?pl:null),from=prev?pl:(H&&H.ll&&i>0?H.ll:null);
+    let tr="";
+    if(a==="osaka"&&TPL[x.id]&&from){const km=tpKm(from,TPL[x.id]);if(km>=0.3)tr=`🚇 จาก${prev?"ที่ก่อนหน้า":"ที่พัก"} ~${tpMove(km)} นาที (${km.toFixed(1)} กม.)`}
     if(prev){
       if(x.t<prev.u)wn.push("⚠ เวลาซ้อนกับที่ก่อนหน้า");
       else if(a!==prev.a&&a!=="sg"&&prev.a!=="sg"&&x.t-prev.u<tpBuf(prev.a,a))wn.push("🚆 เดินทางอาจไม่ทัน");
@@ -401,11 +468,15 @@ function renderTrip(){
     else if(bl.some(b=>x.t<b[1]&&x.u>b[0]))wn.push("⚠ ตรงกับเวลาไปชิราคาวาโกะ");
     if(i===0&&x.t<w.m0)wn.push("⚠ ยังเข้าเมืองไม่ถึง");
     if(last&&x.u>w.e)wn.push("⚠ ไม่ทันไปสนามบิน");
-    prev={u:x.u,a};pa=a;la=a;lu=x.u;
-    return `<div class="stp s" style="flex-wrap:wrap;${wn.length?"border-color:#b91c1c":""}"><div style="flex:none;display:flex;align-items:center;gap:3px;background:var(--sky);border-radius:999px;padding:5px 10px;font-weight:700;font-size:14px;color:#1a2308">${x.pin!=null?"📌 ":""}<select onchange="tpPin(${r.k},this.value)" style="${selS}"><option value="auto">⟲ อัตโนมัติ</option>${tpOpts(x.t)}</select>–${sgT(x.u)}</div><div class="sb"><b>${x.e} ${esc(x.n)}</b>${x.h?`<small>${esc(x.h)}</small>`:""}${wn.length?`<small style="color:#b91c1c">${wn.join(" · ")}</small>`:""}</div><div style="flex-basis:100%;display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="chip" style="${cb}" onclick="tpMv(${r.k},-1)" aria-label="เลื่อนขึ้น">▲</button><button class="chip" style="${cb}" onclick="tpMv(${r.k},1)" aria-label="เลื่อนลง">▼</button><button class="chip" style="${cb}" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา">−</button><span style="font-size:13px;min-width:62px;text-align:center">${sgDur(dur)}</span><button class="chip" style="${cb}" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา">+</button><button class="chip" style="${cb}" onclick="tpRm(${r.k})" aria-label="ลบ">✕</button></div></div>`;
+    prev={u:x.u,a};pa=a;la=a;lu=x.u;pl=a==="osaka"?cl:null;lc=pl;
+    return `<div class="stp s" style="flex-wrap:wrap;${wn.length?"border-color:#b91c1c":""}"><div style="flex:none;display:flex;align-items:center;gap:3px;background:var(--sky);border-radius:999px;padding:5px 10px;font-weight:700;font-size:14px;color:#1a2308">${x.pin!=null?"📌 ":""}<select onchange="tpPin(${r.k},this.value)" style="${selS}"><option value="auto">⟲ อัตโนมัติ</option>${tpOpts(x.t)}</select>–${sgT(x.u)}</div><div class="sb"><b>${x.e} ${esc(x.n)}</b>${x.h?`<small>${esc(x.h)}</small>`:""}${tr?`<small>${tr}</small>`:""}${wn.length?`<small style="color:#b91c1c">${wn.join(" · ")}</small>`:""}</div><div style="flex-basis:100%;display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="chip" style="${cb}" onclick="tpMv(${r.k},-1)" aria-label="เลื่อนขึ้น">▲</button><button class="chip" style="${cb}" onclick="tpMv(${r.k},1)" aria-label="เลื่อนลง">▼</button><button class="chip" style="${cb}" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา">−</button><span style="font-size:13px;min-width:62px;text-align:center">${sgDur(dur)}</span><button class="chip" style="${cb}" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา">+</button><button class="chip" style="${cb}" onclick="tpRm(${r.k})" aria-label="ลบ">✕</button></div></div>`;
   }).join("");
-  const back=users&&!kind&&!last&&la&&la!=="osaka"&&la!=="sg"?lu+tpBuf(la,"osaka"):0;
-  const backNote=back?`<div class="note" style="margin:0 0 6px;${back>1380?"color:#b91c1c;font-weight:700":""}">🚆 กลับถึงโอซาก้าประมาณ ${sgT(back)}${back>1380?" · ค่อนข้างดึก":""}</div>`:"";
+  let back=0,bk2="";
+  if(users&&!kind&&!last&&la&&la!=="sg"){
+    if(la==="osaka"){if(H&&H.ll&&lc){back=lu+tpMove(tpKm(lc,H.ll));bk2="🏨 กลับถึงที่พัก"}}
+    else{back=lu+tpBuf(la,"osaka")+tpEx(H);bk2=H?"🏨 กลับถึงที่พัก":"🚆 กลับถึงโอซาก้า"}
+  }
+  const backNote=back?`<div class="note" style="margin:0 0 6px;${back>1380?"color:#b91c1c;font-weight:700":""}">${bk2}ประมาณ ${sgT(back)}${back>1380?" · ค่อนข้างดึก":""}</div>`:"";
   let sgBox="";
   if(kind){
     const md=!SG.n?"day":SG.o==="sg"?"sg":"",mc=(k,t)=>`<button class="chip ${md===k?"on":""}" onclick="tpMode('${k}')">${t}</button>`;
@@ -416,13 +487,15 @@ function renderTrip(){
   }
   const areas=Object.keys(TPA).filter(a=>a!=="sg"||vw),pk=areas.includes(TP.pa)?TP.pa:(areas.includes("osaka")?"osaka":areas[0]);
   const tabs=areas.map(a=>`<button class="chip ${a===pk?"on":""}" onclick="tpPa('${a}')">${TPA[a]}</button>`).join("");
-  const picker=`<div class="chips" style="padding:0 0 6px">${tabs}</div>${TPH[pk]?`<div class="note" style="margin:2px 0 6px">${TPH[pk]}</div>`:""}<div class="chips" style="flex-wrap:wrap;padding-top:0">${TPC.filter(c=>c.a===pk).map(c=>{const has=tpDL(i).some(x=>x.id===c.id);return `<button class="chip ${has?"on":""}" onclick="tpAdd('${c.id}')">${has?"✓ ":""}${c.e} ${c.n}</button>`}).join("")}</div>${TPP[pk]?`<button class="btn o" style="min-height:40px;font-size:14px;margin-top:8px" onclick="tpPreset('${pk}')">✨ เติมแผนแนะนำ ${TPP[pk].length} ที่ (${TPA[pk].replace(/^\S+\s/,"")})</button>`:""}`;
+  const picker=`<div class="chips" style="padding:0 0 6px">${tabs}</div>${TPH[pk]?`<div class="note" style="margin:2px 0 6px">${TPH[pk]}</div>`:""}<div class="chips" style="flex-wrap:wrap;padding-top:0">${tpChips(pk,H,i)}</div>${TPP[pk]?`<button class="btn o" style="min-height:40px;font-size:14px;margin-top:8px" onclick="tpPreset('${pk}')">✨ เติมแผนแนะนำ ${TPP[pk].length} ที่ (${TPA[pk].replace(/^\S+\s/,"")})</button>`:""}`;
   const ov=Array.from({length:NIGHTS+1},(_,j)=>{
     const k=tpSgKind(j),L=((TP.D[j]&&TP.D[j].v)||[]).slice().sort((p,q)=>p.t-q.t).map(x=>x.n);
     const t=(k?"🏯 ชิราคาวาโกะ":"")+(k&&L.length?" · ":"")+(L.length?L.map(esc).join(" → "):(k?"":"ยังไม่วางแผน"));
     return `<div class="kv" onclick="tpDay(${j})" style="cursor:pointer"><span><b>วัน ${j+1}</b> ${sgFd(j)}</span><span style="text-align:right;flex:1;margin-left:12px">${t}</span></div>`;
   }).join("");
+  const hotelBox=tpHotelBox(H),fitBox=tpFitBox(H);
   $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน → เลือกเมือง → แตะที่ที่อยากไป · ระบบจัดเวลาให้เอง</p>
+  ${hotelBox}
   <div class="chips" style="flex-wrap:wrap;padding:0 0 8px">${dayChips}</div>
   <div class="card"><b>วัน ${i+1} · ${sgFd(i)}${i===0?" · วันถึง":last?" · วันกลับ":""}</b>
     <div class="tl">${rows}</div>
@@ -432,6 +505,7 @@ function renderTrip(){
     <div style="display:flex;gap:8px;margin-top:10px"><input id="tpc" placeholder="หรือพิมพ์ชื่อที่เอง" style="flex:1;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn o" style="min-height:42px;width:auto;padding:0 14px" onclick="tpAddC()">เพิ่ม</button></div>
     ${!TP.sgOn&&!last?`<button class="btn o" style="min-height:42px;font-size:14px;margin-top:10px" onclick="tpSgDay(${i})">🏯 วันนี้ไปชิราคาวาโกะ</button>`:""}
     ${users?`<button class="btn o" style="min-height:40px;font-size:14px;margin-top:6px" onclick="tpClear()">ล้างแผนวันนี้</button>`:""}</div>
+  ${fitBox}
   <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
   <button class="btn o" style="min-height:42px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   <div class="note">แผนเก็บไว้ในเครื่องนี้ (ยังไม่ซิงค์ข้ามเครื่อง) · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;
