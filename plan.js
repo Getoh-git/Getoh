@@ -105,13 +105,13 @@ function sgManual(){
   }
   if(R&&U&&conn){const m=U.d-(R.a+b);if(m<0)good=false;rows.push(`<div class="kv"><span>ต่อรถที่${mid}ขากลับ (เผื่อ ${b} นาที)</span>${slack(m)}</div>`)}
   if(R&&!sg&&ov)rows.push(`<div class="kv"><span>ถึง${mid} วันที่ 1 (เข้าที่พัก)</span><b>${sgT(R.a)}</b></div>`);
-  if(U){const h=U.a+ex;rows.push(`<div class="kv"><span>ถึงโอซาก้า</span><b>${sgT(h)}</b></div><div class="kv"><span>เทียบเวลาที่ต้องกลับถึง (${sgT(l)})</span>${slack(l-h)}</div>`);if(h>l)good=false}
+  if(U){const h=U.a+ex;rows.push(`<div class="kv"><span>ถึงโอซาก้า${ov?" ("+sgFd(SG.d+1)+")":""}</span><b>${sgT(h)}</b></div><div class="kv"><span>เทียบเวลาที่ต้องกลับถึง (${sgT(l)})</span>${slack(l-h)}</div>`);if(h>l)good=false}
   if(T&&U&&!ov)rows.push(`<div class="kv"><span>รวมเวลาเดินทางทั้งวัน</span><b>${sgDur((U.a+ex)-(T.d-ex))}</b></div>`);
   let cd="";
   if(T){const ts=Math.floor((F[0].arr+324e5)/864e5)*864e5-324e5+SG.d*864e5+(T.d-ex)*6e4;cd=`<div class="pinfo" style="background:#12301a">⏳ ออกจากโอซาก้า ${sgT(T.d-ex)} · เหลืออีก ${sgCd(ts)}</div>`}
   const full=T&&B&&R&&U&&good,o=full?{T,B,R,U,ov,os:SG.o,leave:T.d-ex,home:U.a+ex,stay:sg?1440-B.a+R.d:R.d-B.a}:null;
   if(o)SGO=[o];
-  const dl=n=>ov?` · วันที่ ${n}`:"";
+  const dl=n=>ov?` · วันที่ ${n} (${sgFd(SG.d+n-1)})`:"";
   return `<div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b>✋ เลือกขบวนเอง</b><button class="chip" style="min-height:34px" onclick="SG.P={};sgSave();renderPlan()">ล้างที่เลือก</button></div>
     <div class="note" style="margin:4px 0 0">แตะเพื่อเลือก แตะซ้ำเพื่อยกเลิก · ตัวใหญ่คือเวลาออก ตัวที่จางคือต่อรถไม่ทัน (ยังเลือกได้)</div>
     ${step(1,(kz?"รถไฟจากโอซาก้า (เวลาออกจากโอซาก้า)":"ออกจากโอซาก้า (ชินคันเซ็น + ไฮดะ)")+dl(1),s1,"ไม่มีเที่ยว")}
@@ -186,7 +186,7 @@ function renderPlan(){
   ${ov?`<div class="pinfo" style="background:#5b3b1e">${stayNote}</div>`:""}
   ${info.map(x=>`<div class="pinfo">${x}</div>`).join("")}
   ${win?`<div class="pinfo" style="background:#12301a">❄️ ช่วง 1 ธ.ค.–31 มี.ค. ไฟล์ระบุว่าบัสบางเที่ยว (△) หยุด และไม่จอดป้ายโกกายามะ-สุกานุมะ ระบบตัดเที่ยวที่หยุดออกให้แล้ว</div>`:""}
-  ${wk?`<div class="pinfo" style="background:#12301a">📅 ${ov?"มีวัน":"วันนี้เป็น"}เสาร์/อาทิตย์ ระบบตัดบัสเที่ยว ◆ (ไม่วิ่งเสาร์ อาทิตย์ วันหยุด) ออกให้แล้ว${ov?"ตามวันที่ของแต่ละวัน":""} วันหยุดนักขัตฤกษ์ให้เช็กเพิ่มเอง</div>`:""}
+  ${wk?`<div class="pinfo" style="background:#12301a">📅 ${(()=>{const C=sgCtx(),a=[];if(C.L.wk)a.push(sgFd(SG.d));if(ov&&C.L2.wk)a.push(sgFd(SG.d+1));return a.join(" และ ")})()} เป็นเสาร์/อาทิตย์ ระบบตัดบัสเที่ยว ◆ (ไม่วิ่งเสาร์ อาทิตย์ วันหยุด) ออกให้แล้ว วันหยุดนักขัตฤกษ์ให้เช็กเพิ่มเอง</div>`:""}
   ${SG.mode==="manual"?sgManual():`${res.length?`<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px"><b>พบ ${res.length} แบบ</b><div class="chips" style="padding:0"><button class="chip ${SG.sort==="stay"?"on":""}" onclick="sgSet('sort','stay')">อยู่นานสุด</button><button class="chip ${SG.sort==="early"?"on":""}" onclick="sgSet('sort','early')">กลับเร็วสุด</button></div></div>`:`<div class="card" style="margin-top:12px">ไม่พบเที่ยวที่เข้าเงื่อนไข ลองลดเวลาที่อยู่ที่ชิราคาวาโกะ ขยับเวลากลับให้ดึกขึ้น${ov?" ปรับเวลาออกวันที่ 2 ให้เช้าขึ้น":""} หรือเลือกวันอื่น</div>`}
   ${shown.map((o,i)=>`<div class="card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${i===0?"⭐ ":""}แบบที่ ${i+1}${o.ov?"":" · อยู่ "+sgDur(o.stay)}</b><span class="note" style="margin:0">${o.ov?"ถึงหมู่บ้าน "+sgT(o.B.a)+" · ":""}กลับถึงโอซาก้า ${sgT(o.home)}</span></div>
     <div class="tl">${sgSteps(o,kz).map(s=>`<div class="stp s"><div class="tt">${s[0]}</div><div class="sb"><b>${esc(s[1])}</b>${s[2]?`<small>${esc(s[2])}</small>`:""}</div></div>`).join("")}</div>
