@@ -62,13 +62,16 @@ function sgBuild(){
 function sgManual(){
   const L=sgLists(),{kz,b,ex,out,back,go,rt,l}=L,P=SG.P||{},mid=kz?"คานาซาวะ":"ทาคายาม่า";
   const T=out.find(x=>x.d===P.t),B=go.find(x=>x.d===P.b),R=rt.find(x=>x.d===P.r),U=back.find(x=>x.d===P.u);
-  const sel=(k,arr,cur,fmt)=>`<select onchange="sgPick('${k}',this.value)"><option value="">– เลือก –</option>${arr.map(x=>`<option value="${x.d}" ${x.d===cur?"selected":""}>${fmt(x)}</option>`).join("")}</select>`;
-  const hint=(x,min)=>min==null?"":x.d>=min?" ✓":" ⚠ ไม่ทัน";
-  const f1=x=>kz?`${sgT(x.d)} ➔ ${sgT(x.a)} · Thunderbird ${x.n}${x.ltd?" ◆":""}`:`ออกโอซาก้า ${sgT(x.d-ex)} · ไฮดะ ${x.n} ${sgT(x.d)}➔${sgT(x.a)}${x.ltd?" ◆":""}`;
-  const f4=x=>kz?`${sgT(x.d)} ➔ ถึงโอซาก้า ${sgT(x.a)} · Thunderbird ${x.n}${x.ltd?" ◆":""}`:`ไฮดะ ${x.n} ${sgT(x.d)}➔${sgT(x.a)} · ถึงโอซาก้า ≈${sgT(x.a+ex)}`;
-  const g=x=>`${sgT(x.d)} ➔ ${sgT(x.a)}`;
   const ok=v=>`<b style="color:var(--grn)">${v}</b>`,bad=v=>`<b style="color:#b91c1c">${v}</b>`;
   const slack=m=>m>=0?ok("เหลือ "+sgDur(m)):bad("ไม่ทัน ขาด "+sgDur(-m));
+  // ปุ่มเลือกขบวน: เวลาออกตัวใหญ่ + บรรทัดรอง (ถึงกี่โมง) + บรรทัดสถานะ (รอกี่นาที / ไม่ทัน) แตะซ้ำเพื่อยกเลิก
+  const chip=(k,x,main,sub,st)=>`<button class="ob ${x.d===P[k]?"on":""} ${st&&st[0]==="w"&&st[2]?"no":""}" onclick="sgPick('${k}',${x.d===P[k]?0:x.d})"><b>${main}</b><small>${sub}</small>${st?`<small class="${st[0]}">${st[1]}</small>`:""}</button>`;
+  const st=(prev,min,x,txtOk)=>prev?(x.d>=min?["ok",txtOk(x.d-min)]:["w","⚠ ไม่ทัน",1]):null;
+  const s1=out.map(x=>chip("t",x,sgT(x.d-ex),kz?`ถึง ${sgT(x.a)}${x.ltd?" · ◆":""}`:`ไฮดะ ${x.n} · ถึง ${sgT(x.a)}${x.ltd?" ◆":""}`,null));
+  const s2=go.map(x=>chip("b",x,sgT(x.d),`ถึง ${sgT(x.a)}`,st(T,T&&T.a+b,x,m=>"รอ "+sgDur(m))));
+  const s3=rt.map(x=>chip("r",x,sgT(x.d),`ถึง ${sgT(x.a)}`,B?(x.d>=B.a?["ok","อยู่ "+sgDur(x.d-B.a)]:["w","⚠ ก่อนบัสถึง",1]):null));
+  const s4=back.map(x=>{const h=x.a+ex,late=h>l;return chip("u",x,sgT(x.d),`ถึงโอซาก้า ${kz?"":"≈"}${sgT(h)}${x.ltd?" ◆":""}`,R&&x.d<R.a+b?["w","⚠ ไม่ทัน",1]:late?["w","เกินเวลากลับ",1]:R?["ok","รอ "+sgDur(x.d-(R.a+b))]:null)});
+  const step=(n,t,arr,empty)=>`<div class="stl"><span class="sn">${n}</span>${t}</div>${arr.length?`<div class="og">${arr.join("")}</div>`:`<div class="note">${empty}</div>`}`;
   const rows=[];let good=true;
   if(T&&B){const m=B.d-(T.a+b);if(m<0)good=false;rows.push(`<div class="kv"><span>ต่อรถที่${mid} (เผื่อ ${b} นาที)</span>${slack(m)}</div>`)}
   if(B&&R){const m=R.d-B.a;if(m<0)good=false;rows.push(`<div class="kv"><span>เวลาเที่ยวที่ชิราคาวาโกะ</span>${m>=0?ok(sgDur(m)):bad("บัสกลับออกก่อนบัสไปถึง")}</div>`);if(m>=0)rows.push(`<div class="kv"><span>เทียบกับที่ตั้งไว้ (อย่างน้อย ${sgDur(SG.s)})</span>${m>=SG.s?ok("เกิน "+sgDur(m-SG.s)):bad("สั้นกว่า "+sgDur(SG.s-m))}</div>`)}
@@ -79,13 +82,13 @@ function sgManual(){
   if(T){const ts=Math.floor((F[0].arr+324e5)/864e5)*864e5-324e5+SG.d*864e5+(T.d-ex)*6e4;cd=`<div class="pinfo" style="background:#12301a">⏳ ออกจากโอซาก้า ${sgT(T.d-ex)} · เหลืออีก ${sgCd(ts)}</div>`}
   const full=T&&B&&R&&U&&good,o=full?{T,B,R,U,leave:T.d-ex,home:U.a+ex,stay:R.d-B.a}:null;
   if(o)SGO=[o];
-  return `<div class="card fm" style="margin-top:12px"><div class="rvh" style="margin-top:0">✋ เลือกขบวนเอง</div>
-    <label>1) ${kz?"Thunderbird ไปคานาซาวะ":"ขบวนไปทาคายาม่า"}${sel("t",out,P.t,f1)}</label>
-    <label>2) รถบัสไปชิราคาวาโกะ${sel("b",go,P.b,x=>g(x)+hint(x,T?T.a+b:null))}</label>
-    <label>3) รถบัสกลับ${mid}${sel("r",rt,P.r,x=>g(x)+hint(x,B?B.a:null))}</label>
-    <label>4) ${kz?"Thunderbird กลับโอซาก้า":"ไฮดะกลับนาโกย่า"}${sel("u",back,P.u,x=>f4(x)+hint(x,R?R.a+b:null))}</label>
-    <button class="btn o" style="min-height:42px;font-size:14px" onclick="SG.P={};sgSave();renderPlan()">ล้างที่เลือก</button></div>
-  ${cd}${rows.length?`<div class="card" style="margin-top:10px"><div class="rvh" style="margin-top:0">⏱ เวลาที่เหลือในแต่ละช่วง</div>${rows.join("")}</div>`:`<div class="note" style="margin-top:10px">เลือกขบวนทีละช่วง ตัวเลือกที่ต่อไม่ทันจะมีป้าย ⚠ กำกับ แต่ยังเลือกได้</div>`}
+  return `<div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b>✋ เลือกขบวนเอง</b><button class="chip" style="min-height:34px" onclick="SG.P={};sgSave();renderPlan()">ล้างที่เลือก</button></div>
+    <div class="note" style="margin:4px 0 0">แตะเพื่อเลือก แตะซ้ำเพื่อยกเลิก · ตัวใหญ่คือเวลาออก ตัวที่จางคือต่อรถไม่ทัน (ยังเลือกได้)</div>
+    ${step(1,kz?"รถไฟจากโอซาก้า (เวลาออกจากโอซาก้า)":"ออกจากโอซาก้า (ชินคันเซ็น + ไฮดะ)",s1,"ไม่มีเที่ยว")}
+    ${step(2,`รถบัสจาก${mid}ไปชิราคาวาโกะ`,s2,"ไม่มีบัสในวันนี้")}
+    ${step(3,`รถบัสกลับจากชิราคาวาโกะไป${mid}`,s3,"ไม่มีบัสในวันนี้")}
+    ${step(4,kz?"รถไฟกลับโอซาก้า":"ไฮดะกลับนาโกย่า แล้วต่อกลับโอซาก้า",s4,"ไม่มีเที่ยว")}</div>
+  ${cd}${rows.length?`<div class="card" style="margin-top:10px"><div class="rvh" style="margin-top:0">⏱ เวลาที่เหลือในแต่ละช่วง</div>${rows.join("")}</div>`:""}
   ${o?`<div class="card" style="margin-top:10px"><b>แผนของคุณ · อยู่ ${sgDur(o.stay)}</b><div class="tl">${sgSteps(o,kz).map(s=>`<div class="stp s"><div class="tt">${s[0]}</div><div class="sb"><b>${esc(s[1])}</b><small>${esc(s[2])}</small></div></div>`).join("")}</div><button class="btn o" style="min-height:42px;font-size:14px" onclick="sgCopy(0)">📋 คัดลอกแผนนี้ (ส่งเข้า LINE)</button></div>`:""}`;
 }
 function sgSteps(o,kz){
@@ -105,9 +108,16 @@ function sgCopy(i){
   navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast("คัดลอกแผนแล้ว"),()=>toast("คัดลอกไม่สำเร็จ")):toast("คัดลอกไม่ได้");
 }
 function sgTable(){
-  const kz=SG.r==="kz",row=(a,lab)=>`<div class="rvh">${lab}</div>`+a.map(x=>{const f=x[2]||{};return `<div class="kv"><span>${x[0]} ➔ ${x[1]}</span><b style="font-size:13px;font-weight:400;text-align:right">${f.bad?"⚠️ ไฟล์พิมพ์ 17:10 น่าจะผิด ไม่ใช้คำนวณ":f.w?"△ หยุด 1 ธ.ค.–31 มี.ค.":f.d?"◆ ไม่วิ่งเสาร์ อาทิตย์ วันหยุด":""}</b></div>`}).join("");
-  const tt=(a,lab)=>`<div class="rvh">${lab}</div>`+a.map(x=>`<div class="kv"><span>${x[0]}</span><b style="font-weight:400">${x[1]} ➔ ${x[2]}${x[3]?" ◆":""}</b></div>`).join("");
-  openSheet("ตารางจากไฟล์ (เม.ย. 2023)",(kz?row(SGD.busKzSg,"🚌 คานาซาวะ ➔ ชิราคาวาโกะ")+row(SGD.busSgKz,"🚌 ชิราคาวาโกะ ➔ คานาซาวะ")+tt(SGD.tbOut,"🚆 Thunderbird โอซาก้า ➔ คานาซาวะ")+tt(SGD.tbBack,"🚆 Thunderbird คานาซาวะ ➔ โอซาก้า"):row(SGD.busTkySg,"🚌 ทาคายาม่า ➔ ชิราคาวาโกะ")+row(SGD.busSgTky,"🚌 ชิราคาวาโกะ ➔ ทาคายาม่า")+tt(SGD.hidaOut,"🚆 ไฮดะ นาโกย่า ➔ ทาคายาม่า")+tt(SGD.hidaBack,"🚆 ไฮดะ ทาคายาม่า ➔ นาโกย่า"))+`<div class="note">◆ ที่ท้ายรถไฟ = วิ่งเฉพาะบางวัน · เวลาบางขบวนของวันเสาร์/วันหยุดต่างจากนี้ 1–2 นาที</div>`);
+  const kz=SG.r==="kz",dt=sgDay(),win=dt.m===11||dt.m<=2,wk=dt.w===0||dt.w===6,mid=kz?"คานาซาวะ":"ทาคายาม่า";
+  const why=f=>f.bad?"⚠ ไฟล์พิมพ์ผิด ไม่ใช้":win&&f.w?"△ หยุดช่วงนี้":wk&&f.d?"◆ เสาร์-อาทิตย์ไม่วิ่ง":"";
+  const bus=(a,t)=>`<div class="rvh" style="margin-top:14px">${t} <span class="note">(${a.filter(x=>!why(x[2]||{})).length}/${a.length} เที่ยวใช้ได้)</span></div><div class="tg">${a.map(x=>{const f=x[2]||{},w=why(f);return `<div class="tc ${w?"no":""}"><b>${x[0]}</b> ➔ ${x[1]}${w?`<small style="text-decoration:none">${w}</small>`:""}</div>`}).join("")}</div>`;
+  const trn=(a,t,pre)=>`<details class="dt"><summary>${t} <span class="note">(${a.length} ขบวน)</span></summary><div class="tg" style="margin-top:8px">${a.map(x=>`<div class="tc"><b>${x[1]}</b> ➔ ${x[2]}<small>${pre} ${x[0]}${x[3]?" · ◆ บางวัน":""}</small></div>`).join("")}</div></details>`;
+  openSheet("ตารางเที่ยวรถ ("+(kz?"คานาซาวะ":"ทาคายาม่า")+")",
+    `<div class="note" style="margin:0">ข้อมูลจากไฟล์ PDF ณ เม.ย. 2023 · วันที่เลือก: ${win?"อยู่ในช่วงหยุด △ ":""}${wk?"เสาร์/อาทิตย์ ":""}${!win&&!wk?"ไม่มีข้อจำกัดพิเศษ":""}${win||wk?"(เที่ยวที่ใช้ไม่ได้จะจางและขีดฆ่า)":""}</div>`
+    +(kz?bus(SGD.busKzSg,"🚌 คานาซาวะ ➔ ชิราคาวาโกะ")+bus(SGD.busSgKz,"🚌 ชิราคาวาโกะ ➔ คานาซาวะ"):bus(SGD.busTkySg,"🚌 ทาคายาม่า ➔ ชิราคาวาโกะ")+bus(SGD.busSgTky,"🚌 ชิราคาวาโกะ ➔ ทาคายาม่า"))
+    +`<div class="rvh" style="margin-top:14px">🚆 รถไฟ (แตะเพื่อเปิด)</div>`
+    +(kz?trn(SGD.tbOut,"โอซาก้า ➔ คานาซาวะ","Thunderbird")+trn(SGD.tbBack,"คานาซาวะ ➔ โอซาก้า","Thunderbird"):trn(SGD.hidaOut,"นาโกย่า ➔ ทาคายาม่า","ไฮดะ")+trn(SGD.hidaBack,"ทาคายาม่า ➔ นาโกย่า","ไฮดะ"))
+    +`<div class="note">◆ = วิ่งเฉพาะบางวัน · เวลาบางขบวนของวันเสาร์/วันหยุดต่างจากนี้ 1–2 นาที${kz?"":" · ส่วนชินคันเซ็นโอซาก้า↔นาโกย่าไม่อยู่ในไฟล์"}</div>`);
 }
 function renderPlan(){
   const{res,win,wk,e,l,kz,N}=sgBuild();SGO=res;
