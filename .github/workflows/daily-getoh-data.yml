@@ -2,7 +2,7 @@ name: Getoh Data Engine - Daily Kansai Refresh
 
 on:
   schedule:
-    # 06:00 Asia/Bangkok (UTC+7) = 23:00 UTC on the previous day
+    # 06:00 Thailand time (UTC+7) = 23:00 UTC on the previous day
     - cron: "0 23 * * *"
   workflow_dispatch:
 
@@ -10,33 +10,60 @@ permissions:
   contents: write
 
 concurrency:
-  group: getoh-daily-data
+  group: getoh-kansai-data-refresh
   cancel-in-progress: false
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Refresh data (keep last known-good data on source failures)
+      - name: Refresh data (keep last known good data on source failures)
         run: python scripts/getoh_data_engine.py
 
-      - name: Commit updated snapshot
+      - name: Commit and push updated snapshot safely
+        shell: bash
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
-          if git diff --quiet -- data/kansai.json; then
-            echo "No data changes."
-            exit 0
-          fi
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- data/kansai.json; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+
           git add data/kansai.json
           git commit -m "chore(data): refresh Kansai travel data"
-          git push
+
+          # Rebase the generated commit on the latest remote branch to avoid
+          # non-fast-forward failures when a user commits while the job runs.
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            if git rebase "origin/$BRANCH"; then
+              if git push origin "HEAD:$BRANCH"; then
+                echo "Snapshot pushed successfully."
+                exit 0
+              fi
+            else
+              git rebase --abort || true
+            fi
+            echo "Push attempt $attempt failed; retrying..."
+            sleep $((attempt * 3))
+          done
+
+          echo "Could not push after 3 attempts."
+          exit 1
