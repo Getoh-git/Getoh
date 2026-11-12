@@ -113,7 +113,13 @@ let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs"
 function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
 
 function tab(t,keep){
-  for(const x of ["count","hotels","plan","prep","style"]){$("p-"+x).classList.toggle("hide",t!==x);$("n-"+x).classList.toggle("on",t===x)}
+  for(const x of ["count","hotels","plan","prep","style"]){
+    const panel=$("p-"+x),button=$("n-"+x),active=t===x;
+    panel.classList.toggle("hide",!active);
+    panel.setAttribute("aria-hidden",String(!active));
+    button.classList.toggle("on",active);
+    if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");
+  }
   if(t!=="hotels"&&placing)endPlace();
   if(t==="hotels"&&initMap()){mapDraw();setTimeout(()=>map.invalidateSize(),60)}
   if(t==="plan"&&typeof renderPlan==="function")renderPlan();
@@ -123,7 +129,7 @@ function tab(t,keep){
 const toMap=()=>{tab("hotels",1);const m=$("map");if(m)m.scrollIntoView({behavior:"smooth",block:"start"})};
 function openSheet(t,html){$("st").textContent=t;$("sb").innerHTML=html;$("ov").classList.remove("hide");document.body.style.overflow="hidden"}
 function closeSheet(){$("ov").classList.add("hide");document.body.style.overflow=""}
-function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElement("div");t.id="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
+function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElement("div");t.id="toast";t.setAttribute("role","status");t.setAttribute("aria-live","polite");t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 
 function chips(){
   const A=["ALL","FAV",...new Set(all().map(h=>h.area).filter(Boolean))];
