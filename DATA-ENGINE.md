@@ -1,8 +1,8 @@
-# Getoh Data Engine (Kansai)
+# Getoh Data Engine (Kansai + Hokuriku)
 
 ## Schedule
 GitHub Actions runs daily at **06:00 Asia/Bangkok** (`23:00 UTC`).
-You can also run it manually from **GitHub → Actions → Getoh Data Engine - Daily Kansai Refresh → Run workflow**.
+You can also run it manually from **GitHub → Actions → Getoh Data Engine - Daily Kansai + Hokuriku Refresh → Run workflow**.
 
 ## Free data sources
 - **OpenStreetMap / Overpass API**: attractions, restaurants, cafes, shops, railway/public-transport stations and coordinates.

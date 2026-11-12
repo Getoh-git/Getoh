@@ -857,8 +857,8 @@ const GD_CATS = {attractions:"🏯 ที่เที่ยว",restaurants:"�
 const gdEsc = v => typeof esc === "function" ? esc(String(v ?? "")) : String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function gdArray(v){if(Array.isArray(v))return v;if(v&&typeof v==="object")return Object.values(v);return []}
 function gdCategories(data){const src=data&&(data.categories||data.places)||{};const out={};Object.keys(GD_CATS).forEach(k=>out[k]=gdArray(src[k]));return out}
-function gdCityName(v){const s=String(v||"").toLowerCase();if(s.includes("osaka")||s.includes("โอซาก้า"))return"osaka";if(s.includes("kyoto")||s.includes("เกียวโต"))return"kyoto";if(s.includes("nara")||s.includes("นารา"))return"nara";if(s.includes("kobe")||s.includes("โกเบ"))return"kobe";return s||"other"}
-function gdCityLabel(v){return({osaka:"Osaka",kyoto:"Kyoto",nara:"Nara",kobe:"Kobe",all:"ทุกเมือง"})[v]||v}
+function gdCityName(v){const s=String(v||"").toLowerCase();if(s.includes("osaka")||s.includes("โอซาก้า"))return"osaka";if(s.includes("kyoto")||s.includes("เกียวโต"))return"kyoto";if(s.includes("nara")||s.includes("นารา"))return"nara";if(s.includes("kobe")||s.includes("โกเบ"))return"kobe";if(s.includes("kanazawa")||s.includes("คานาซาวะ")||s.includes("คานาซาว่า"))return"kanazawa";return s||"other"}
+function gdCityLabel(v){return({osaka:"Osaka",kyoto:"Kyoto",nara:"Nara",kobe:"Kobe",kanazawa:"Kanazawa",all:"ทุกเมือง"})[v]||v}
 async function gdLoad(force=false){
  const host=document.getElementById("gd-panel");if(!host)return;
  if(GD_DATA&&!force){gdRender();return}
@@ -872,7 +872,7 @@ function gdRender(){
  const host=document.getElementById("gd-panel");if(!host)return;
  if(!GD_DATA){host.innerHTML=`<div class="note">ยังโหลด data/kansai.json ไม่ได้ · ตรวจว่าไฟล์อยู่ในโฟลเดอร์ data และเปิดผ่าน GitHub Pages หรือเว็บเซิร์ฟเวอร์</div><button class="chip" onclick="gdLoad(true)">ลองโหลดอีกครั้ง</button>`;return}
  const cats=gdCategories(GD_DATA),all=Object.values(cats).flat();
- const cities=["all",...new Set(all.map(x=>gdCityName(x.city||x.address)).filter(x=>["osaka","kyoto","nara","kobe"].includes(x)))];
+ const cities=["all",...new Set(all.map(x=>gdCityName(x.city||x.address)).filter(x=>["osaka","kyoto","nara","kobe","kanazawa"].includes(x)))];
  if(!cities.includes(GD_CITY))GD_CITY="all";
  const list=cats[GD_CATEGORY].filter(x=>GD_CITY==="all"||gdCityName(x.city||x.address)===GD_CITY);
  const weather=GD_DATA.weather||{},wx=Object.entries(weather).filter(([k])=>GD_CITY==="all"||gdCityName(k)===GD_CITY);

@@ -149,11 +149,14 @@ python3 -m http.server 8000
 - ฟอนต์ Sarabun โหลดจาก Google Fonts ถ้าออฟไลน์จะใช้ฟอนต์ระบบแทน
 
 
-## Getoh Data Engine (Kansai)
+## Getoh Data Engine (Kansai + Hokuriku)
 
 ดูวิธีตั้งค่าระบบดึงข้อมูลสถานที่และอากาศอัตโนมัติทุกวันเวลา 06:00 น. เวลาไทยได้ที่ [`DATA-ENGINE.md`](DATA-ENGINE.md) โดยใช้ GitHub Actions, OpenStreetMap และ Open-Meteo แบบไม่ต้องใช้ API key สำหรับแหล่งข้อมูลที่รองรับ
 
 
-## Getoh Kansai Data Engine integration
+## Getoh Kansai + Hokuriku Data Engine integration
 
-The Plan Your Trip page reads `data/kansai.json` and displays city-filtered Kansai places and weather. Use GitHub Pages or another HTTP server; opening index.html directly with file:// cannot fetch the JSON snapshot. See DATA-ENGINE.md for sources and attribution.
+The Plan Your Trip page reads `data/kansai.json` and displays city-filtered Kansai + Hokuriku places and weather. Use GitHub Pages or another HTTP server; opening index.html directly with file:// cannot fetch the JSON snapshot. See DATA-ENGINE.md for sources and attribution.
+
+
+Coverage now includes Osaka, Kyoto, Nara, Kobe, and Kanazawa. Note: Kanazawa is in Ishikawa Prefecture, Hokuriku, rather than Kansai.
