@@ -30,8 +30,6 @@ CITIES = {
     "kyoto": {"name": "Kyoto", "bbox": (34.90, 135.60, 35.15, 135.85), "lat": 35.0116, "lon": 135.7681},
     "nara": {"name": "Nara", "bbox": (34.60, 135.70, 34.75, 135.90), "lat": 34.6851, "lon": 135.8048},
     "kobe": {"name": "Kobe", "bbox": (34.60, 135.05, 34.80, 135.30), "lat": 34.6901, "lon": 135.1956},
-    # Kanazawa is in Ishikawa Prefecture (Hokuriku), outside the Kansai region.
-    "kanazawa": {"name": "Kanazawa", "bbox": (36.50, 136.55, 36.65, 136.75), "lat": 36.5613, "lon": 136.6562},
 }
 CATEGORY_FILTERS = {
     "attractions": '["tourism"~"attraction|museum|gallery|zoo|aquarium|theme_park|viewpoint|artwork|castle"]',
@@ -54,7 +52,7 @@ def utc_now():
 def load_existing():
     if not DATA_FILE.exists():
         return {
-            "region": "Kansai + Hokuriku",
+            "region": "Kansai",
             "updated_at": None,
             "categories": {k: [] for k in CATEGORY_FILTERS},
             "weather": {},
@@ -235,7 +233,7 @@ def main():
         print(json.dumps({"status": "failed", "reason": "No source returned usable data", "failures": failures}, ensure_ascii=False))
         return 2
 
-    snapshot["region"] = "Kansai + Hokuriku"
+    snapshot["region"] = "Kansai"
     snapshot["updated_at"] = now
     snapshot["meta"] = {
         "engine_version": "1.1",

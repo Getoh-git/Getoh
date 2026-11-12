@@ -1,0 +1,8 @@
+{
+  "name": "getoh-functions",
+  "description": "Secure Google Places proxy for Getoh",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "scripts": { "serve": "firebase emulators:start --only functions", "deploy": "firebase deploy --only functions" },
+  "dependencies": { "firebase-functions": "^6.3.2" }
+}

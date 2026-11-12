@@ -160,3 +160,34 @@ The Plan Your Trip page reads `data/kansai.json` and displays city-filtered Kans
 
 
 Coverage now includes Osaka, Kyoto, Nara, Kobe, and Kanazawa. Note: Kanazawa is in Ishikawa Prefecture, Hokuriku, rather than Kansai.
+
+
+## ระบบค้นหา/กรองสถานที่ + Google Places (ใหม่)
+
+แท็บแผนเที่ยวส่วน Kansai Travel Data เพิ่มความสามารถดังนี้:
+
+- ค้นหาชื่อสถานที่ เมือง ที่อยู่ และประเภทจากข้อมูล OpenStreetMap
+- กรองเมืองและหมวดสถานที่ได้เหมือนเดิม พร้อมเพิ่มตัวกรองคะแนน 3 / 4 / 4.5 ดาว (แสดงเฉพาะรายการที่มีคะแนนจริง)
+- เรียงตามคะแนน จำนวนรีวิว หรือชื่อสถานที่
+- เพิ่มสถานที่ที่ค้นพบเข้าแผนของวันที่กำลังเปิดอยู่ได้ทันที โดยไม่ลบ/เปลี่ยนระบบจัดเวลาเดิม
+- ปุ่มโหลดคะแนน/รีวิว Google จะแสดงคะแนน จำนวนรีวิว และรีวิวสูงสุด 5 รายการเมื่อเชื่อม Google Places Proxy แล้ว
+- หากยังไม่ตั้งค่า Google API ระบบ OSM และตัวกรองอื่นยังทำงานได้ตามปกติ และจะไม่แสดงคะแนนสมมติ
+
+### ตั้งค่า Google Places API (New)
+
+1. ใน Google Cloud Console ให้เปิดใช้งาน **Places API (New)** และตั้งค่า Billing, quota และ budget alerts
+2. ติดตั้ง Firebase CLI และล็อกอิน (`npm install -g firebase-tools`, `firebase login`) จากนั้นเลือกโปรเจกต์ด้วย `firebase use --add` (ไฟล์ `firebase.json` และโฟลเดอร์ `functions/` เตรียมไว้แล้ว)
+3. ตั้ง Secret สำหรับ API Key: `firebase functions:secrets:set GOOGLE_PLACES_API_KEY` แล้ววาง Google API Key เมื่อระบบถาม
+4. จำกัด API Key ฝั่ง Google Cloud ให้ใช้ได้เฉพาะ Places API (New) และตั้ง quota เพื่อควบคุมค่าใช้จ่าย
+5. ก่อน Deploy ให้แก้ `cors` ใน `functions/index.js` จาก `https://YOUR_GITHUB_USERNAME.github.io` เป็น origin จริงของเว็บ (เช่น `https://username.github.io`) แล้ว Deploy: `firebase deploy --only functions:placesLookup`
+6. นำ URL ที่ deploy ได้ไปใส่ใน `getoh-config.js` เช่น:
+
+```js
+window.GETOH_PLACES_API_URL = 'https://asia-northeast1-YOUR_PROJECT.cloudfunctions.net/placesLookup';
+```
+
+7. อัปโหลด `getoh-config.js` พร้อมไฟล์เว็บขึ้น GitHub Pages
+
+**หมายเหตุด้านค่าใช้จ่ายและนโยบาย:** การขอ `rating` และ `userRatingCount` อยู่ในกลุ่ม Place Details/Text Search Enterprise ส่วน `reviews` อยู่ใน Enterprise + Atmosphere ซึ่งมีค่าใช้จ่ายสูงกว่า คำขอจะเกิดเฉพาะเมื่อผู้ใช้กดปุ่มโหลด Google ไม่ได้เรียกทุกสถานที่อัตโนมัติ Google Places ส่งรีวิวได้สูงสุด 5 รายการต่อสถานที่ ข้อมูล Google ที่แสดงต้องคงการระบุแหล่งที่มาและปฏิบัติตามข้อกำหนด Google Maps Platform; โปรดตรวจสอบเงื่อนไขปัจจุบันก่อนเปิดใช้งานจริง
+
+**ความปลอดภัย:** API Key ถูกเก็บเป็น Firebase Secret และไม่ส่งไปหน้าเว็บโดยตรง Endpoint นี้เป็น public endpoint สำหรับเว็บ static จึงต้องเปลี่ยน CORS origin ใน `functions/index.js` ให้เป็นโดเมนของคุณก่อน deploy, จำกัด API Key ให้ใช้ได้เฉพาะ Places API (New), ตั้ง quota/budget alerts และตรวจสอบการใช้งานเป็นระยะก่อนเผยแพร่จริง
