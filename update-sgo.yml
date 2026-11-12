@@ -1,0 +1,43 @@
+name: อัปเดตตารางเที่ยวรถชิราคาวาโกะ
+
+on:
+  schedule:
+    - cron: "0 21 * * 0"      # ทุกวันจันทร์ 04:00 เวลาไทย
+  workflow_dispatch:           # กดรันเองจากแท็บ Actions ได้
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-sgo
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ติดตั้งตัวอ่าน PDF
+        run: pip install pdfplumber==0.11.4
+
+      - name: ดึงและตรวจตาราง
+        id: run
+        run: python scripts/update_sgo.py
+
+      # เปิด Pull Request ให้ตรวจก่อน merge เสมอ ไม่ commit ลง main เอง
+      - name: เปิด Pull Request ถ้าตารางเปลี่ยน
+        if: steps.run.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: sgo-data.json
+          branch: auto/update-sgo
+          commit-message: "อัปเดตตารางเที่ยวรถชิราคาวาโกะ"
+          title: "อัปเดตตารางเที่ยวรถชิราคาวาโกะ (ตรวจก่อน merge)"
+          body-path: scripts/last_diff.md
+          delete-branch: true

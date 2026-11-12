@@ -1,0 +1,14 @@
+{
+  "_note": "แหล่งข้อมูลตารางรถ ตั้ง enabled เป็น true หลังปรับตัวอ่านใน update_sgo.py ให้ตรงกับไฟล์จริงแล้วเท่านั้น (ดู README หัวข้อ 'อัปเดตตารางรถอัตโนมัติ')",
+  "sources": [
+    {
+      "id": "nohi-shirakawago",
+      "enabled": false,
+      "adapter": "nohi_pdf",
+      "url": "https://www.nouhibus.co.jp/english/highwaybus/shirakawago.pdf",
+      "url_note": "URL นี้พบจากลิงก์ที่เว็บอื่นอ้างถึง ยังไม่ได้ยืนยันว่ายังใช้ได้ ตรวจเปิดเองก่อนเปิดใช้",
+      "updates": ["busKzSg", "busSgKz", "busTkySg", "busSgTky"],
+      "link_title": "ตาราง Nohi Bus (ทางการ)"
+    }
+  ]
+}

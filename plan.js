@@ -4,7 +4,7 @@
 const SGK="osaka_sgo_v1";
 const SGB={kz:20,tky:10};   // เผื่อเวลาเปลี่ยนจากรถไฟไปป้ายบัส (นาที) ไม่อยู่ในไฟล์ เป็นค่าประมาณ
 const SGX=90;               // โอซาก้า↔นาโกย่า ไม่อยู่ในไฟล์ ประมาณ: โอซาก้า→ชินโอซาก้า+ขึ้นชานชาลา ~15 + ชินคันเซ็น Nozomi ~50 + ต่อรถที่นาโกย่า ~25 (Hikari/Kodama ช้ากว่า ~55–67)
-const SGD={
+const SGD_BUILTIN={
   // โอซาก้า → คานาซาวะ (Thunderbird) [เลขขบวน, ออก, ถึง, ◆]
   tbOut:[["1","6:30","9:13"],["3","7:00","9:38"],["5","7:40","10:25"],["7","8:10","11:02"],["9","8:42","11:14"],["11","9:12","11:58"],["13","9:42","12:20"],["15","10:12","12:56",1],["17","10:42","13:20"],["19","11:42","14:23"],["21","12:12","14:55"],["23","12:42","15:26"],["25","13:42","16:29"],["27","14:42","17:26"],["29","15:12","17:55",1],["31","15:42","18:27"],["33","16:42","19:16"],["35","17:12","19:55"],["37","17:42","20:13"],["39","18:12","20:56"],["41","18:42","21:23"],["43","19:12","21:53",1],["45","19:27","22:09"],["47","20:07","22:56"],["49","20:54","23:29"]],
   // คานาซาวะ → โอซาก้า
@@ -18,6 +18,43 @@ const SGD={
   busTkySg:[["7:50","8:50"],["8:20","9:20"],["8:50","9:40"],["10:50","11:40"],["11:20","12:20"],["11:50","13:02"],["12:50","13:50"],["13:20","14:20"],["13:50","15:02"],["14:30","15:30"],["14:50","16:02"],["16:30","17:30"],["17:50","18:47"],["19:00","19:57",{d:1}]],
   busSgTky:[["6:43","7:50"],["9:35","10:25"],["10:55","12:02"],["11:40","12:30"],["12:35","13:25"],["13:15","14:05"],["13:30","14:20"],["14:45","15:35"],["15:15","16:05"],["16:15","17:20"],["17:20","18:10"],["17:30","18:35"],["19:43","20:48",{d:1}]]
 };
+// ===== โหลดตารางเที่ยวรถจาก sgo-data.json (สร้าง/อัปเดตโดย scripts/update_sgo.py ผ่าน GitHub Actions) =====
+// ถ้าไฟล์ไม่มี โหลดไม่ได้ หรือรูปแบบไม่ผ่านการตรวจ จะใช้ SGD_BUILTIN ด้านบนแทนเสมอ
+let SGD=SGD_BUILTIN,SGMETA={label:"เม.ย. 2023",train:"เม.ย. 2023",links:[]};
+function sgValid(d){
+  try{
+    if(!d||typeof d!=="object")return false;
+    const T=/^([01]?\d|2[0-3]):[0-5]\d$/,M=x=>{const a=x.split(":");return +a[0]*60+ +a[1]};
+    for(const k of Object.keys(SGD_BUILTIN)){
+      const a=d[k],b=SGD_BUILTIN[k];
+      if(!Array.isArray(a)||a.length<3||a.length<b.length*0.5||a.length>b.length*2.5)return false;   // เที่ยวหายหรือเกินผิดปกติ = ไม่เชื่อ
+      const tr=k[0]!=="b";   // รถไฟ [เลขขบวน, ออก, ถึง, ◆] · บัส [ออก, ถึง, ธง]
+      for(const r of a){
+        if(!Array.isArray(r))return false;
+        const dep=tr?r[1]:r[0],arr=tr?r[2]:r[1],fl=tr?null:r[2];
+        if(tr&&typeof r[0]!=="string")return false;
+        if(typeof dep!=="string"||typeof arr!=="string"||!T.test(dep)||!T.test(arr))return false;
+        if(M(arr)<=M(dep)&&!(fl&&fl.bad))return false;
+        if(fl&&(typeof fl!=="object"||Object.keys(fl).some(x=>!["w","d","bad"].includes(x))))return false;
+      }
+    }
+    return true;
+  }catch(e){return false}
+}
+async function sgLoadData(){
+  try{
+    const r=await fetch("sgo-data.json",{cache:"no-cache"});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(!j||!sgValid(j.data)){console.warn("sgo-data.json ไม่ผ่านการตรวจ ใช้ข้อมูลในตัวแทน");return}
+    SGD=j.data;
+    const m=j.meta||{};
+    SGMETA={label:String(m.label||m.updated||"ไม่ระบุ"),train:String(m.trainLabel||"เม.ย. 2023"),links:(Array.isArray(m.links)?m.links:[]).filter(x=>x&&/^https:\/\//.test(x.u))};
+    if(typeof renderPlan==="function"&&$("plan"))renderPlan();
+  }catch(e){}   // ออฟไลน์/เปิดจาก file:// → ใช้ข้อมูลในตัว
+}
+const sgLinks=()=>SGMETA.links.map(x=>` <a href="${esc(x.u)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(x.t||"ตารางจริง")}</a>`).join(" ·");
+sgLoadData();
 // n: 0=ไป-กลับวันเดียว 1=ค้าง 1 คืน · o: sg=นอนที่ชิราคาวาโกะ mid=เที่ยวก่อนแล้วนอนที่คานาซาวะ/ทาคายาม่า pre=นอนที่เมืองก่อนแล้วเที่ยววันถัดไป · m: วันที่ 2 ไม่ออกเดินทางก่อนเวลานี้ (นาที) · pm: (pre) วันที่ 2 ขึ้นบัสไปชิราคาวาโกะไม่เร็วกว่า
 let SG={d:1,r:"kz",e:420,l:1350,s:150,ltd:0,sort:"stay",all:false,mode:"auto",n:0,o:"sg",m:540,pm:420,P:{}},SGO=[];
 try{SG={...SG,...JSON.parse(localStorage.getItem(SGK)||"{}")};localStorage.removeItem("osaka_plan_v1");localStorage.removeItem("osaka_places_v1")}catch(e){}
@@ -173,7 +210,7 @@ function sgTable(){
   const trn=(a,t,pre)=>`<details class="dt"><summary>${t} <span class="note">(${a.length} ขบวน)</span></summary><div class="tg" style="margin-top:8px">${a.map(x=>`<div class="tc"><b>${x[1]}</b> ➔ ${x[2]}<small>${pre} ${x[0]}${x[3]?" · ◆ บางวัน":""}</small></div>`).join("")}</div></details>`;
   const f1=fl(i1),f2=fl(i2),win=f1.win||f2.win,wk=f1.wk||f2.wk;
   openSheet("ตารางเที่ยวรถ ("+(kz?"คานาซาวะ":"ทาคายาม่า")+")",
-    `<div class="note" style="margin:0">ข้อมูลจากไฟล์ PDF ณ เม.ย. 2023 · วันที่เลือก: ${win?"อยู่ในช่วงหยุด △ ":""}${wk?"เสาร์/อาทิตย์ ":""}${!win&&!wk?"ไม่มีข้อจำกัดพิเศษ":""}${win||wk?"(เที่ยวที่ใช้ไม่ได้จะจางและขีดฆ่า)":""}</div>`
+    `<div class="note" style="margin:0">ตารางเที่ยวรถ ณ ${esc(SGMETA.label)} · วันที่เลือก: ${win?"อยู่ในช่วงหยุด △ ":""}${wk?"เสาร์/อาทิตย์ ":""}${!win&&!wk?"ไม่มีข้อจำกัดพิเศษ":""}${win||wk?"(เที่ยวที่ใช้ไม่ได้จะจางและขีดฆ่า)":""}</div>`
     +(kz?bus(SGD.busKzSg,"🚌 คานาซาวะ ➔ ชิราคาวาโกะ",i1)+bus(SGD.busSgKz,"🚌 ชิราคาวาโกะ ➔ คานาซาวะ",i2):bus(SGD.busTkySg,"🚌 ทาคายาม่า ➔ ชิราคาวาโกะ",i1)+bus(SGD.busSgTky,"🚌 ชิราคาวาโกะ ➔ ทาคายาม่า",i2))
     +`<div class="rvh" style="margin-top:14px">🚆 รถไฟ (แตะเพื่อเปิด)</div>`
     +(kz?trn(SGD.tbOut,"โอซาก้า ➔ คานาซาวะ","Thunderbird")+trn(SGD.tbBack,"คานาซาวะ ➔ โอซาก้า","Thunderbird"):trn(SGD.hidaOut,"นาโกย่า ➔ ทาคายาม่า","ไฮดะ")+trn(SGD.hidaBack,"ทาคายาม่า ➔ นาโกย่า","ไฮดะ"))
@@ -358,20 +395,14 @@ function tpVWin(i,o){
 const tpStay=(i,o)=>!!(o&&o.ov&&(o.os==="pre"||o.os==="mid")&&SG.r==="kz"&&tpSgKind(i)==="out");
 // ช่วงที่ยังเดินทางไปไม่ถึงคานาซาวะ (ที่เที่ยวในคานาซาวะต้องอยู่นอกช่วงนี้)
 const tpKBlock=o=>o.os==="pre"?[[o.leave,o.T&&typeof o.T.a==="number"?o.T.a:o.leave]]:[[o.leave,o.R&&typeof o.R.a==="number"?o.R.a:1440]];
-// ตั้งเวลาออกจากที่พักในวันไปชิราคาวาโกะ: ลดให้เช้าขึ้นได้ (ทีละ 15 นาที) แต่ช้ากว่า "เวลาล่าสุดที่ยังทันขบวนรถ" ไม่ได้
-function tpSgEarly(dm){
-  const i=TP.d,D=TP.D[i]||(TP.D[i]={v:[]}),n=(D.ea||0)+dm,o=tpSgPlan();
-  if(n<0){toast("ออกช้ากว่านี้ไม่ทันขบวนรถ");return}
-  if(o&&typeof o.leave==="number"){const pn=tpPreN(i,o),lt=pn?D.v[0].t-10:o.leave-TPW-tpAcc(tpHotel());if(lt-n<270){toast("เช้ากว่านี้ไม่ได้แล้ว (ก่อน 04:30)");return}}
-  D.ea=n;tpSave();renderPlan();
-}
-// ปุ่มเพิ่ม/เอาออก "กลับโรงแรม" ของวัน: ต่อท้ายรายการ ระบบคิดเวลาเดินทางกลับให้ (นอนที่คานาซาวะ/ชิราคาวาโกะ จะเป็นที่พักของเมืองนั้น)
-function tpAddHotel(){
-  const i=TP.d,L=tpDL(i),k=L.findIndex(x=>x.id==="hotel");
-  if(k>=0){L.splice(k,1);tpFl();return}
-  const o=tpSgPlan(),kd=tpSgKind(i),a=tpStay(i,o)?"kanazawa":(o&&o.ov&&o.os==="sg"&&kd==="out")?"sg":"osaka";
-  L.push({id:"hotel",n:a==="osaka"?"กลับโรงแรม":"กลับที่พัก"+(a==="kanazawa"?" (คานาซาวะ)":" (ชิราคาวาโกะ)"),e:"🏨",t:0,u:30,a,h:""});
-  tpFl();
+// ปรับเวลาออกจากที่พัก (วันไปชิราคาวาโกะ): เลื่อนไปขบวนรถไฟก่อนหน้า/ถัดไป
+function tpSgLeave(dm){
+  const o=tpSgPlan();if(!o)return;
+  const L=sgLists(SG.d),c=L.out.map(x=>x.d-L.ex).sort((a,b)=>a-b);
+  const nx=dm<0?c.filter(v=>v<o.leave).pop():c.find(v=>v>o.leave);
+  if(nx==null){toast("ไม่มีขบวนรถไฟอื่นในทิศทางนี้");return}
+  const old=o.leave;sgSet("e",nx);
+  const n=tpSgPlan();if(n&&n.leave===old)toast("ยังใช้ขบวนเดิม (ขบวนอื่นไม่ทันบัสหรือเงื่อนไขของวันนั้น)");
 }
 // เวลาออกจากที่พักของวัน: ระบบตั้งให้ (09:00 · ที่ไกลอย่างคานาซาวะ 07:30 · วันแรก = เวลาเข้าเมืองได้) หรือผู้ใช้ปรับเองด้วยปุ่ม − +
 function tpDepT(i){
@@ -407,7 +438,7 @@ function tpFlow(i,o){
   }
   L.forEach((x,idx)=>{
     if(idx<n0){pa=x.a||pa;pl=TPL[x.id]||pl;return}
-    const d=Math.max(15,x.u-x.t),a=x.a||pa,cl=x.id==="hotel"?(a==="osaka"&&H&&H.ll?H.ll:null):(TPL[x.id]||(pa===a?pl:null)),rd=pa!==a?tpRide(pa,a):0,sk=stay&&a==="kanazawa";let t;
+    const d=Math.max(15,x.u-x.t),a=x.a||pa,cl=TPL[x.id]||(pa===a?pl:null),rd=pa!==a?tpRide(pa,a):0,sk=stay&&a==="kanazawa";let t;
     if(end==null){
       const base=tpDepT(i).t;let g=0;
       if(a==="sg")g=vw?0:tpBuf("osaka",a);
@@ -488,8 +519,7 @@ function tpItems(i,o){
   if(k&&o){
     if(k==="out"){
       {const pn=tpPreN(i,o),L0=(TP.D[i]&&TP.D[i].v)||[];
-        const ea=(TP.D[i]&&TP.D[i].ea)||0;
-        it.push({t:Math.max(240,(pn?L0[0].t-10:o.leave-TPW-acc)-ea),ea,f:1,dep:1,sg:1,a:"🏨 ออกจากที่พัก",b:pn?"แวะคาเฟ่ก่อนขึ้นรถ":"ไปสถานีโอซาก้า ~"+acc+" นาที"});
+        it.push({t:pn?L0[0].t-10:o.leave-TPW-acc,f:1,dep:1,sg:1,a:"🏨 ออกจากที่พัก",b:pn?"แวะคาเฟ่ก่อนขึ้นรถ":"ไปสถานีโอซาก้า ~"+acc+" นาที"});
         f(o.leave-TPW,"🚉 ถึงสถานีโอซาก้าก่อน","ซื้อ/ถือตั๋ว หาชานชาลา · ที่นั่งจองทุกขบวน")}
       f(o.leave,o.os==="pre"&&o.ov?"🚆 ออกจากโอซาก้าไปนอนที่"+mid:"🚆 ออกจากโอซาก้า");
       if(!(o.ov&&o.os==="pre")){
@@ -543,16 +573,16 @@ function renderTrip(){
   const cb="min-height:44px;min-width:44px;padding:0 10px;font-size:16px;flex:none";
   const dp=tpDepT(i),stay=tpStay(i,o);
   const depHtml=`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>${i===0?"เริ่มออกเที่ยว":"ออกจากที่พักไปเที่ยว"}</b><small>${dp.auto?"ระบบตั้งให้":"ตั้งเอง"}</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpDepSet(-30)" aria-label="เร็วขึ้น">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(dp.t)}</b><button class="chip" style="${cb}" onclick="tpDepSet(30)" aria-label="ช้าลง">+</button>${dp.auto?"":`<button class="chip" style="${cb}" onclick="tpDepAuto()" aria-label="ให้ระบบตั้ง">⟲</button>`}</div></div>`;
-  const sgDep=(t,ea)=>`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>ออกจากที่พัก</b><small>${ea?"ออกเร็วกว่าที่จำเป็น "+ea+" นาที":"เวลาล่าสุดที่ยังทันขบวนรถ"} · − เร็วขึ้น</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpSgEarly(15)" aria-label="ออกเร็วขึ้น">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(t)}</b><button class="chip" style="${cb}${ea?"":";opacity:.35"}" onclick="tpSgEarly(-15)" aria-label="ออกช้าลง">+</button></div></div>`;
+  const sgDep=t=>`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>ออกจากที่พัก</b><small>${stay?"ไปนอนที่คานาซาวะ":"ไปสถานีโอซาก้า"} · กด − + เลือกขบวนก่อนหน้า/ถัดไป</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpSgLeave(-1)" aria-label="ขบวนก่อนหน้า">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(t)}</b><button class="chip" style="${cb}" onclick="tpSgLeave(1)" aria-label="ขบวนถัดไป">+</button></div></div>`;
   const gc={};tpDL(i).forEach(x=>{if(TPL[x.id])gc[x.a]=(gc[x.a]||0)+1});
   const sortBtn=Object.values(gc).some(n=>n>=3)?`<button class="btn o" style="min-height:40px;font-size:14px;margin:0 0 8px" onclick="tpSortRoute()">🧭 เรียงตามเส้นทางให้ (ที่ใกล้กันก่อน)</button>`:"";
   const rows=it.map(r=>{
-    if(r.dep)return r.sg?sgDep(r.t,r.ea):depHtml;
+    if(r.dep)return r.sg?sgDep(r.t):depHtml;
     if(r.f)return tpRow(sgT(r.t),r.a,r.b,"background:#f3f1e3");
     users++;
-    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t,cl=x.id==="hotel"?(a==="osaka"&&H&&H.ll?H.ll:null):(TPL[x.id]||(pa===a?pl:null)),from=prev?(prev.a===a?pl:null):(a==="osaka"&&H&&H.ll&&i>0?H.ll:null);
+    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t,cl=TPL[x.id]||(pa===a?pl:null),from=prev?(prev.a===a?pl:null):(a==="osaka"&&H&&H.ll&&i>0?H.ll:null);
     let tr="";
-    if(cl&&from&&(TPL[x.id]||x.id==="hotel")){const km=tpKm(from,cl);if(km>=0.3)tr=`🚇 จาก${prev?"ที่ก่อนหน้า":"ที่พัก"} ~${tpMove(km)} นาที (${km.toFixed(1)} กม.)`}
+    if(TPL[x.id]&&from){const km=tpKm(from,TPL[x.id]);if(km>=0.3)tr=`🚇 จาก${prev?"ที่ก่อนหน้า":"ที่พัก"} ~${tpMove(km)} นาที (${km.toFixed(1)} กม.)`}
     if(prev){
       if(x.t<prev.u)wn.push("⚠ เวลาซ้อนกับที่ก่อนหน้า");
       else if(a!==prev.a&&a!=="sg"&&prev.a!=="sg"&&x.t-prev.u<tpBuf(prev.a,a))wn.push("🚆 เดินทางอาจไม่ทัน");
@@ -566,7 +596,7 @@ function renderTrip(){
     return `<div class="stp s" style="flex-wrap:wrap;${wn.length?"border-color:#b91c1c":""}"><div style="flex:none;background:var(--sky);border-radius:999px;padding:5px 10px;font-weight:700;font-size:14px;color:#1a2308">${sgT(x.t)}–${sgT(x.u)}</div><div class="sb"><b>${x.e} ${esc(x.n)}</b>${x.h?`<small>${esc(x.h)}</small>`:""}${tr?`<small>${tr}</small>`:""}${wn.length?`<small style="color:#b91c1c">${wn.join(" · ")}</small>`:""}</div><div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end"><button class="chip" style="${cb}" onclick="tpMv(${r.k},-1)" aria-label="เลื่อนขึ้น">▲</button><button class="chip" style="${cb}" onclick="tpMv(${r.k},1)" aria-label="เลื่อนลง">▼</button><button class="chip" style="${cb}" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา">−</button><span style="font-size:13px;min-width:62px;text-align:center">${sgDur(dur)}</span><button class="chip" style="${cb}" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา">+</button><button class="chip" style="${cb}" onclick="tpRm(${r.k})" aria-label="ลบ">✕</button></div></div>`;
   }).join("");
   let back=0,bk2="";
-  if(users&&!kind&&!last&&la&&la!=="sg"&&!(lx&&lx.id==="hotel")){
+  if(users&&!kind&&!last&&la&&la!=="sg"){
     if(la==="osaka"){if(H&&H.ll&&lc){back=lu+tpMove(tpKm(lc,H.ll));bk2="🏨 กลับถึงที่พัก"}}
     else if(!(lx&&lx.rt)){back=lu+tpBuf(la,"osaka")+tpEx(H);bk2=H?"🏨 กลับถึงที่พัก":"🚆 กลับถึงโอซาก้า"}
   }
@@ -597,7 +627,6 @@ function renderTrip(){
     <div class="tl">${rows}</div>
     ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · ▲▼ สลับลำดับ · − + ปรับเวลาที่ใช้ (ค่าประมาณ)</div>`:`<div class="note" style="margin:8px 0;text-align:center;font-size:15px">🌱 ยังไม่มีแผนวันนี้<br>กด ➕ ด้านล่างเพื่อเลือกที่เที่ยว</div>`}
     ${sortBtn}${backNote}${sgBox}
-    ${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpAddHotel()">${((TP.D[i]&&TP.D[i].v)||[]).some(x=>x.id==="hotel")?"🏨 ยกเลิกการกลับโรงแรม":"🏨 เพิ่มการกลับโรงแรม"}</button>`:""}
     ${add}
     ${!TP.sgOn&&!last?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpSgDay(${i})">🏯 วันนี้ไปชิราคาวาโกะ</button>`:""}</div>
   <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
@@ -779,7 +808,7 @@ function renderSG(){
   const info=[SG.d===0?`🛬 วันแรก เครื่องลง ${tm(F[0].arr,"Asia/Tokyo")} ระบบเผื่อเวลาเข้าเมือง เริ่มออกจากโอซาก้าได้ไม่เร็วกว่า ${sgT(e)}`:"",lastD===N?`🛫 วันสุดท้าย เครื่องออก ${tm(F[F.length-1].dep,"Asia/Tokyo")} ต้องกลับถึงโอซาก้าไม่เกิน ${sgT(l)}`:""].filter(Boolean);
   const stayNote=pre?`🌙 วันแรกเดินทางไปนอนที่${mid} วันที่ 2 ขึ้นบัสเช้าไปเที่ยวชิราคาวาโกะ แล้วกลับโอซาก้าตอนเย็น · ตั้งเวลาออกจากโอซาก้าวันแรกด้านบน · ที่พักไม่อยู่ในไฟล์ ต้องจองเอง`:sg?"🏡 มินชุกุในหมู่บ้านมีห้องน้อย ควรจองล่วงหน้า (ข้อมูลที่พักไม่อยู่ในไฟล์) · ช่วง ม.ค.–ก.พ. บางปีมีงานไลท์อัพต้องจองแยก":`🏨 วันแรกเที่ยวชิราคาวาโกะแล้วนั่งบัสกลับมานอนที่${mid} · ที่พักไม่อยู่ในไฟล์ ต้องจองเอง`;
   $("plan").innerHTML=`<button class="chip" style="margin-bottom:8px" onclick="tpView('trip')">← กลับแผนเที่ยว</button><h1>🏯 ตัวเลือกรถไปชิราคาวาโกะ</h1><p class="sub">เลือกวันและเวลา ระบบหาเที่ยวรถไฟ+รถบัสจากโอซาก้า แบบไป-กลับวันเดียวหรือค้าง 1 คืน จากตารางในไฟล์ที่อัปโหลด · ที่เลือกที่นี่จะไปอยู่ในแผนเที่ยวให้อัตโนมัติ</p>
-  <div class="pinfo" style="background:#7a4b00">⚠️ ตารางในไฟล์เป็นข้อมูล ณ เม.ย. 2023 ก่อนเดินทางจริงตรวจเวลาล่าสุดและจองที่นั่งรถบัส (ไฟล์ระบุว่าหลายเที่ยวต้องจองล่วงหน้า)</div>
+  <div class="pinfo" style="background:#7a4b00">⚠️ ตารางรถบัสเป็นข้อมูล ณ ${esc(SGMETA.label)} (รถไฟ ณ ${esc(SGMETA.train)}) ก่อนเดินทางจริงตรวจเวลาล่าสุดและจองที่นั่งรถบัส หลายเที่ยวต้องจองล่วงหน้า${sgLinks()}</div>
   <div class="card fm" style="margin-top:10px">
     <div class="note" style="margin:0 0 4px">รูปแบบการเดินทาง</div>
     <div class="chips" style="padding-top:0"><button class="chip ${ov?"":"on"}" onclick="sgSet('n',0)">☀️ ไป-กลับวันเดียว</button><button class="chip ${ov?"on":""}" onclick="sgSet('n',1)">🌙 ค้าง 1 คืน</button></div>
