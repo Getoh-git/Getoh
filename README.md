@@ -152,3 +152,8 @@ python3 -m http.server 8000
 ## Getoh Data Engine (Kansai)
 
 ดูวิธีตั้งค่าระบบดึงข้อมูลสถานที่และอากาศอัตโนมัติทุกวันเวลา 06:00 น. เวลาไทยได้ที่ [`DATA-ENGINE.md`](DATA-ENGINE.md) โดยใช้ GitHub Actions, OpenStreetMap และ Open-Meteo แบบไม่ต้องใช้ API key สำหรับแหล่งข้อมูลที่รองรับ
+
+
+## Getoh Kansai Data Engine integration
+
+The Plan Your Trip page reads `data/kansai.json` and displays city-filtered Kansai places and weather. Use GitHub Pages or another HTTP server; opening index.html directly with file:// cannot fetch the JSON snapshot. See DATA-ENGINE.md for sources and attribution.

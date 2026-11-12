@@ -632,7 +632,13 @@ function renderTrip(){
   <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
   <button class="btn o" style="min-height:44px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   ${more}
+  <section id="getoh-live-data" class="card" style="margin-top:14px">
+    <h2 style="font-size:18px;margin:0 0 4px">🌏 Kansai Travel Data</h2>
+    <p class="note">ข้อมูลสถานที่และอากาศจาก Getoh Data Engine · อัปเดตจาก data/kansai.json</p>
+    <div id="gd-panel"><div class="note">กำลังโหลดข้อมูล Kansai…</div></div>
+  </section>
   <div class="note">แผนเก็บในเครื่องนี้ · ตรวจเวลาเปิด-ปิดของแต่ละที่ก่อนไป</div>`;
+  gdLoad();
 }
 // ===== บันทึก / โหลดแผน (แชร์ผ่าน Firebase /plans): ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · แผนที่บันทึกแล้วแก้/เขียนทับไม่ได้ แต่ลบได้ (กฎใน firebase-rules.json: สร้างใหม่หรือลบเท่านั้น) =====
 const PLK="osaka_plans_v1",PLRK="osaka_plans_cache_v1";
@@ -841,4 +847,55 @@ function renderSG(){
   `}
   <button class="btn o" style="margin-top:10px" onclick="sgTable()">📄 ดูตารางเที่ยวรถที่ใช้คำนวณ</button>
   <div class="note">เวลาเผื่อเปลี่ยนรถ: ${kz?SGB.kz:SGB.tky} นาที (ค่าประมาณ ไม่อยู่ในไฟล์) · ระบบเลือกรถไฟเที่ยวล่าสุดที่ยังทันบัส และรถไฟขากลับเที่ยวแรกที่ทัน · เที่ยวบัส 8:55 จากคานาซาวะถูกตัดออก เพราะเวลาถึงในไฟล์พิมพ์เป็น 17:10 น่าจะผิด</div>`;
+}
+
+
+// ===== Getoh Kansai Data Engine integration =====
+let GD_DATA = null, GD_LOADING = null;
+let GD_CATEGORY = "attractions", GD_CITY = "all";
+const GD_CATS = {attractions:"🏯 ที่เที่ยว",restaurants:"🍜 ร้านอาหาร",cafes:"☕ คาเฟ่",shopping:"🛍️ ช้อปปิ้ง",transport:"🚉 ขนส่ง"};
+const gdEsc = v => typeof esc === "function" ? esc(String(v ?? "")) : String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function gdArray(v){if(Array.isArray(v))return v;if(v&&typeof v==="object")return Object.values(v);return []}
+function gdCategories(data){const src=data&&(data.categories||data.places)||{};const out={};Object.keys(GD_CATS).forEach(k=>out[k]=gdArray(src[k]));return out}
+function gdCityName(v){const s=String(v||"").toLowerCase();if(s.includes("osaka")||s.includes("โอซาก้า"))return"osaka";if(s.includes("kyoto")||s.includes("เกียวโต"))return"kyoto";if(s.includes("nara")||s.includes("นารา"))return"nara";if(s.includes("kobe")||s.includes("โกเบ"))return"kobe";return s||"other"}
+function gdCityLabel(v){return({osaka:"Osaka",kyoto:"Kyoto",nara:"Nara",kobe:"Kobe",all:"ทุกเมือง"})[v]||v}
+async function gdLoad(force=false){
+ const host=document.getElementById("gd-panel");if(!host)return;
+ if(GD_DATA&&!force){gdRender();return}
+ if(GD_LOADING&&!force){await GD_LOADING;gdRender();return}
+ GD_LOADING=(async()=>{try{const r=await fetch("data/kansai.json?ts="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);GD_DATA=await r.json()}catch(e){console.warn("Getoh Kansai data load failed",e);GD_DATA=null}})();
+ await GD_LOADING;GD_LOADING=null;gdRender()
+}
+function gdSetCategory(k){if(!GD_CATS[k])return;GD_CATEGORY=k;gdRender()}
+function gdSetCity(k){GD_CITY=k;gdRender()}
+function gdRender(){
+ const host=document.getElementById("gd-panel");if(!host)return;
+ if(!GD_DATA){host.innerHTML=`<div class="note">ยังโหลด data/kansai.json ไม่ได้ · ตรวจว่าไฟล์อยู่ในโฟลเดอร์ data และเปิดผ่าน GitHub Pages หรือเว็บเซิร์ฟเวอร์</div><button class="chip" onclick="gdLoad(true)">ลองโหลดอีกครั้ง</button>`;return}
+ const cats=gdCategories(GD_DATA),all=Object.values(cats).flat();
+ const cities=["all",...new Set(all.map(x=>gdCityName(x.city||x.address)).filter(x=>["osaka","kyoto","nara","kobe"].includes(x)))];
+ if(!cities.includes(GD_CITY))GD_CITY="all";
+ const list=cats[GD_CATEGORY].filter(x=>GD_CITY==="all"||gdCityName(x.city||x.address)===GD_CITY);
+ const weather=GD_DATA.weather||{},wx=Object.entries(weather).filter(([k])=>GD_CITY==="all"||gdCityName(k)===GD_CITY);
+ const meta=GD_DATA.meta||{},updated=GD_DATA.updated_at||meta.last_attempt_at||meta.updated_at||"";
+ const date=updated?new Date(updated).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"}):"ยังไม่มีวันที่อัปเดต";
+ const st=meta.status||meta.last_run_status||"unknown",status=st==="success"?"อัปเดตสำเร็จ":st==="partial"?"อัปเดตบางส่วน":st==="not_run"?"รอการอัปเดตครั้งแรก":st;
+ const cityBtns=cities.map(c=>`<button class="chip ${GD_CITY===c?"on":""}" onclick="gdSetCity('${gdEsc(c)}')">${gdCityLabel(c)}</button>`).join("");
+ const catBtns=Object.entries(GD_CATS).map(([k,v])=>`<button class="chip ${GD_CATEGORY===k?"on":""}" onclick="gdSetCategory('${k}')">${v} (${cats[k].length})</button>`).join("");
+ const cards=list.slice(0,80).map(p=>{
+  const name=p.name||p.name_en||"ไม่มีชื่อ",details=[p.city,p.address,p.opening_hours?"🕒 "+p.opening_hours:"",p.phone?"☎ "+p.phone:""].filter(Boolean);
+  const lat=Number(p.latitude??p.lat),lon=Number(p.longitude??p.lon);
+  const map=Number.isFinite(lat)&&Number.isFinite(lon)?`<a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">ดูแผนที่ ↗</a>`:"";
+  const web=p.website&&/^https?:\/\//i.test(p.website)?`<a href="${gdEsc(p.website)}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">เว็บไซต์ ↗</a>`:"";
+  return `<article style="padding:10px 0;border-top:1px solid var(--line)"><b>${gdEsc(name)}</b><div class="note">${details.map(gdEsc).join(" · ")}</div><div style="display:flex;gap:14px">${map}${web}</div></article>`
+ }).join("");
+ const wxHtml=wx.map(([k,w])=>{const ds=gdArray(w.daily).slice(0,5).map(d=>`<span style="display:inline-block;margin:4px 8px 4px 0;font-size:12px">${gdEsc(d.date||"")} · ${d.temperature_min_c??"–"}°/${d.temperature_max_c??"–"}° · ฝน ${d.precipitation_probability_max??"–"}%</span>`).join("");return `<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${gdCityLabel(gdCityName(w.city||k))}</b><div>${ds||'<span class="note">ยังไม่มีพยากรณ์</span>'}</div></div>`}).join("");
+ const total=all.length;
+ host.innerHTML=`<div class="note">สถานะ: <b>${gdEsc(status)}</b> · ${gdEsc(date)} · สถานที่รวม ${total.toLocaleString("th-TH")} รายการ</div>
+ <div class="chips" style="flex-wrap:wrap;padding:4px 0">${cityBtns}</div><div class="chips" style="flex-wrap:wrap;padding:4px 0">${catBtns}</div>
+ <div style="margin-top:6px"><b>${GD_CATS[GD_CATEGORY]}</b> · ${list.length} รายการ</div>
+ ${cards||'<div class="note" style="padding:12px 0">ยังไม่มีข้อมูลหมวดนี้ในไฟล์ล่าสุด เมื่อ Data Engine ดึงข้อมูลสำเร็จ รายการจะแสดงตรงนี้</div>'}
+ ${list.length>80?`<div class="note">แสดง 80 รายการแรกจากทั้งหมด ${list.length}</div>`:""}
+ <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml||'<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
+ <div class="note" style="margin-top:8px">สถานที่: OpenStreetMap · อากาศ: Open-Meteo · Events ยังต้องเชื่อมแหล่งข้อมูลเพิ่มเติม</div>
+ <button class="chip" style="margin-top:6px" onclick="gdLoad(true)">↻ โหลดข้อมูลล่าสุด</button>`
 }
