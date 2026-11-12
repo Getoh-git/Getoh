@@ -2,9 +2,49 @@
   "schema_version": 1,
   "region": "Kansai, Japan",
   "meta": {
-    "last_run_status": "not_run",
+    "last_run_status": "partial",
     "note": "ยังไม่เคยดึงข้อมูลอัตโนมัติ",
-    "source_status": {}
+    "source_status": {
+      "attractions": {
+        "status": "kept_previous",
+        "count": 0,
+        "reason": "HTTP Error 502: Bad Gateway"
+      },
+      "restaurants": {
+        "status": "kept_previous",
+        "count": 0,
+        "reason": "HTTP Error 502: Bad Gateway"
+      },
+      "cafes": {
+        "status": "kept_previous",
+        "count": 0,
+        "reason": "HTTP Error 502: Bad Gateway"
+      },
+      "shopping": {
+        "status": "kept_previous",
+        "count": 0,
+        "reason": "HTTP Error 502: Bad Gateway"
+      },
+      "transport": {
+        "status": "kept_previous",
+        "count": 0,
+        "reason": "HTTP Error 502: Bad Gateway"
+      },
+      "weather": {
+        "status": "updated",
+        "cities": 4
+      },
+      "events": {
+        "status": "kept_curated",
+        "count": 0,
+        "reason": "No verified free regional events feed configured"
+      }
+    },
+    "weather_fetched_at": "2026-11-12T08:31:19+00:00",
+    "last_run_at": "2026-11-12T08:31:19+00:00",
+    "failures": [
+      "places: HTTP Error 502: Bad Gateway"
+    ]
   },
   "places": {
     "attractions": [],
@@ -13,6 +53,223 @@
     "shopping": [],
     "transport": []
   },
-  "weather": {},
+  "weather": {
+    "osaka": {
+      "city": "Osaka",
+      "source": "Open-Meteo",
+      "source_url": "https://open-meteo.com/",
+      "timezone": "Asia/Tokyo",
+      "fetched_at": "2026-11-12T08:31:17+00:00",
+      "daily": {
+        "time": [
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16",
+          "2026-11-17",
+          "2026-11-18"
+        ],
+        "weather_code": [
+          3,
+          2,
+          2,
+          61,
+          2,
+          3,
+          81
+        ],
+        "temperature_2m_max": [
+          18.3,
+          20.8,
+          21.2,
+          17.3,
+          19.5,
+          18.9,
+          20.6
+        ],
+        "temperature_2m_min": [
+          8.5,
+          12.6,
+          11.9,
+          14.9,
+          11.2,
+          8.9,
+          12.4
+        ],
+        "precipitation_probability_max": [
+          0,
+          10,
+          10,
+          84,
+          49,
+          80,
+          94
+        ]
+      }
+    },
+    "kyoto": {
+      "city": "Kyoto",
+      "source": "Open-Meteo",
+      "source_url": "https://open-meteo.com/",
+      "timezone": "Asia/Tokyo",
+      "fetched_at": "2026-11-12T08:31:18+00:00",
+      "daily": {
+        "time": [
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16",
+          "2026-11-17",
+          "2026-11-18"
+        ],
+        "weather_code": [
+          3,
+          2,
+          2,
+          61,
+          3,
+          3,
+          81
+        ],
+        "temperature_2m_max": [
+          18.5,
+          21.0,
+          20.9,
+          16.3,
+          19.0,
+          17.5,
+          20.0
+        ],
+        "temperature_2m_min": [
+          8.3,
+          11.6,
+          11.6,
+          14.5,
+          10.8,
+          7.8,
+          10.2
+        ],
+        "precipitation_probability_max": [
+          0,
+          25,
+          11,
+          82,
+          45,
+          75,
+          94
+        ]
+      }
+    },
+    "nara": {
+      "city": "Nara",
+      "source": "Open-Meteo",
+      "source_url": "https://open-meteo.com/",
+      "timezone": "Asia/Tokyo",
+      "fetched_at": "2026-11-12T08:31:18+00:00",
+      "daily": {
+        "time": [
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16",
+          "2026-11-17",
+          "2026-11-18"
+        ],
+        "weather_code": [
+          3,
+          3,
+          3,
+          61,
+          3,
+          3,
+          81
+        ],
+        "temperature_2m_max": [
+          18.7,
+          21.0,
+          21.1,
+          17.6,
+          19.3,
+          18.6,
+          20.8
+        ],
+        "temperature_2m_min": [
+          8.0,
+          11.7,
+          10.7,
+          14.5,
+          9.9,
+          6.8,
+          11.0
+        ],
+        "precipitation_probability_max": [
+          0,
+          12,
+          10,
+          84,
+          49,
+          82,
+          92
+        ]
+      }
+    },
+    "kobe": {
+      "city": "Kobe",
+      "source": "Open-Meteo",
+      "source_url": "https://open-meteo.com/",
+      "timezone": "Asia/Tokyo",
+      "fetched_at": "2026-11-12T08:31:19+00:00",
+      "daily": {
+        "time": [
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16",
+          "2026-11-17",
+          "2026-11-18"
+        ],
+        "weather_code": [
+          3,
+          2,
+          2,
+          61,
+          45,
+          3,
+          81
+        ],
+        "temperature_2m_max": [
+          17.5,
+          19.9,
+          20.3,
+          18.6,
+          18.6,
+          18.8,
+          19.8
+        ],
+        "temperature_2m_min": [
+          11.7,
+          15.0,
+          14.9,
+          16.3,
+          11.2,
+          10.7,
+          11.3
+        ],
+        "precipitation_probability_max": [
+          0,
+          24,
+          10,
+          88,
+          45,
+          75,
+          96
+        ]
+      }
+    }
+  },
   "events": []
 }
