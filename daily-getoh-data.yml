@@ -1,0 +1,42 @@
+name: Getoh Data Engine - Daily Kansai Refresh
+
+on:
+  schedule:
+    # 06:00 Asia/Bangkok (UTC+7) = 23:00 UTC on the previous day
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: getoh-daily-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refresh data (keep last known-good data on source failures)
+        run: python scripts/getoh_data_engine.py
+
+      - name: Commit updated snapshot
+        run: |
+          if git diff --quiet -- data/kansai.json; then
+            echo "No data changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/kansai.json
+          git commit -m "chore(data): refresh Kansai travel data"
+          git push

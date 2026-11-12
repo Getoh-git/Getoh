@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "region": "Kansai, Japan",
+  "meta": {
+    "last_run_status": "not_run",
+    "note": "ยังไม่เคยดึงข้อมูลอัตโนมัติ",
+    "source_status": {}
+  },
+  "places": {
+    "attractions": [],
+    "restaurants": [],
+    "cafes": [],
+    "shopping": [],
+    "transport": []
+  },
+  "weather": {},
+  "events": []
+}
