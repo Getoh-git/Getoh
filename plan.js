@@ -358,14 +358,20 @@ function tpVWin(i,o){
 const tpStay=(i,o)=>!!(o&&o.ov&&(o.os==="pre"||o.os==="mid")&&SG.r==="kz"&&tpSgKind(i)==="out");
 // ช่วงที่ยังเดินทางไปไม่ถึงคานาซาวะ (ที่เที่ยวในคานาซาวะต้องอยู่นอกช่วงนี้)
 const tpKBlock=o=>o.os==="pre"?[[o.leave,o.T&&typeof o.T.a==="number"?o.T.a:o.leave]]:[[o.leave,o.R&&typeof o.R.a==="number"?o.R.a:1440]];
-// ปรับเวลาออกจากที่พัก (วันไปชิราคาวาโกะ): เลื่อนไปขบวนรถไฟก่อนหน้า/ถัดไป
-function tpSgLeave(dm){
-  const o=tpSgPlan();if(!o)return;
-  const L=sgLists(SG.d),c=L.out.map(x=>x.d-L.ex).sort((a,b)=>a-b);
-  const nx=dm<0?c.filter(v=>v<o.leave).pop():c.find(v=>v>o.leave);
-  if(nx==null){toast("ไม่มีขบวนรถไฟอื่นในทิศทางนี้");return}
-  const old=o.leave;sgSet("e",nx);
-  const n=tpSgPlan();if(n&&n.leave===old)toast("ยังใช้ขบวนเดิม (ขบวนอื่นไม่ทันบัสหรือเงื่อนไขของวันนั้น)");
+// ตั้งเวลาออกจากที่พักในวันไปชิราคาวาโกะ: ลดให้เช้าขึ้นได้ (ทีละ 15 นาที) แต่ช้ากว่า "เวลาล่าสุดที่ยังทันขบวนรถ" ไม่ได้
+function tpSgEarly(dm){
+  const i=TP.d,D=TP.D[i]||(TP.D[i]={v:[]}),n=(D.ea||0)+dm,o=tpSgPlan();
+  if(n<0){toast("ออกช้ากว่านี้ไม่ทันขบวนรถ");return}
+  if(o&&typeof o.leave==="number"){const pn=tpPreN(i,o),lt=pn?D.v[0].t-10:o.leave-TPW-tpAcc(tpHotel());if(lt-n<270){toast("เช้ากว่านี้ไม่ได้แล้ว (ก่อน 04:30)");return}}
+  D.ea=n;tpSave();renderPlan();
+}
+// ปุ่มเพิ่ม/เอาออก "กลับโรงแรม" ของวัน: ต่อท้ายรายการ ระบบคิดเวลาเดินทางกลับให้ (นอนที่คานาซาวะ/ชิราคาวาโกะ จะเป็นที่พักของเมืองนั้น)
+function tpAddHotel(){
+  const i=TP.d,L=tpDL(i),k=L.findIndex(x=>x.id==="hotel");
+  if(k>=0){L.splice(k,1);tpFl();return}
+  const o=tpSgPlan(),kd=tpSgKind(i),a=tpStay(i,o)?"kanazawa":(o&&o.ov&&o.os==="sg"&&kd==="out")?"sg":"osaka";
+  L.push({id:"hotel",n:a==="osaka"?"กลับโรงแรม":"กลับที่พัก"+(a==="kanazawa"?" (คานาซาวะ)":" (ชิราคาวาโกะ)"),e:"🏨",t:0,u:30,a,h:""});
+  tpFl();
 }
 // เวลาออกจากที่พักของวัน: ระบบตั้งให้ (09:00 · ที่ไกลอย่างคานาซาวะ 07:30 · วันแรก = เวลาเข้าเมืองได้) หรือผู้ใช้ปรับเองด้วยปุ่ม − +
 function tpDepT(i){
@@ -401,7 +407,7 @@ function tpFlow(i,o){
   }
   L.forEach((x,idx)=>{
     if(idx<n0){pa=x.a||pa;pl=TPL[x.id]||pl;return}
-    const d=Math.max(15,x.u-x.t),a=x.a||pa,cl=TPL[x.id]||(pa===a?pl:null),rd=pa!==a?tpRide(pa,a):0,sk=stay&&a==="kanazawa";let t;
+    const d=Math.max(15,x.u-x.t),a=x.a||pa,cl=x.id==="hotel"?(a==="osaka"&&H&&H.ll?H.ll:null):(TPL[x.id]||(pa===a?pl:null)),rd=pa!==a?tpRide(pa,a):0,sk=stay&&a==="kanazawa";let t;
     if(end==null){
       const base=tpDepT(i).t;let g=0;
       if(a==="sg")g=vw?0:tpBuf("osaka",a);
@@ -482,7 +488,8 @@ function tpItems(i,o){
   if(k&&o){
     if(k==="out"){
       {const pn=tpPreN(i,o),L0=(TP.D[i]&&TP.D[i].v)||[];
-        it.push({t:pn?L0[0].t-10:o.leave-TPW-acc,f:1,dep:1,sg:1,a:"🏨 ออกจากที่พัก",b:pn?"แวะคาเฟ่ก่อนขึ้นรถ":"ไปสถานีโอซาก้า ~"+acc+" นาที"});
+        const ea=(TP.D[i]&&TP.D[i].ea)||0;
+        it.push({t:Math.max(240,(pn?L0[0].t-10:o.leave-TPW-acc)-ea),ea,f:1,dep:1,sg:1,a:"🏨 ออกจากที่พัก",b:pn?"แวะคาเฟ่ก่อนขึ้นรถ":"ไปสถานีโอซาก้า ~"+acc+" นาที"});
         f(o.leave-TPW,"🚉 ถึงสถานีโอซาก้าก่อน","ซื้อ/ถือตั๋ว หาชานชาลา · ที่นั่งจองทุกขบวน")}
       f(o.leave,o.os==="pre"&&o.ov?"🚆 ออกจากโอซาก้าไปนอนที่"+mid:"🚆 ออกจากโอซาก้า");
       if(!(o.ov&&o.os==="pre")){
@@ -536,16 +543,16 @@ function renderTrip(){
   const cb="min-height:44px;min-width:44px;padding:0 10px;font-size:16px;flex:none";
   const dp=tpDepT(i),stay=tpStay(i,o);
   const depHtml=`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>${i===0?"เริ่มออกเที่ยว":"ออกจากที่พักไปเที่ยว"}</b><small>${dp.auto?"ระบบตั้งให้":"ตั้งเอง"}</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpDepSet(-30)" aria-label="เร็วขึ้น">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(dp.t)}</b><button class="chip" style="${cb}" onclick="tpDepSet(30)" aria-label="ช้าลง">+</button>${dp.auto?"":`<button class="chip" style="${cb}" onclick="tpDepAuto()" aria-label="ให้ระบบตั้ง">⟲</button>`}</div></div>`;
-  const sgDep=t=>`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>ออกจากที่พัก</b><small>${stay?"ไปนอนที่คานาซาวะ":"ไปสถานีโอซาก้า"} · กด − + เลือกขบวนก่อนหน้า/ถัดไป</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpSgLeave(-1)" aria-label="ขบวนก่อนหน้า">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(t)}</b><button class="chip" style="${cb}" onclick="tpSgLeave(1)" aria-label="ขบวนถัดไป">+</button></div></div>`;
+  const sgDep=(t,ea)=>`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>ออกจากที่พัก</b><small>${ea?"ออกเร็วกว่าที่จำเป็น "+ea+" นาที":"เวลาล่าสุดที่ยังทันขบวนรถ"} · − เร็วขึ้น</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpSgEarly(15)" aria-label="ออกเร็วขึ้น">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(t)}</b><button class="chip" style="${cb}${ea?"":";opacity:.35"}" onclick="tpSgEarly(-15)" aria-label="ออกช้าลง">+</button></div></div>`;
   const gc={};tpDL(i).forEach(x=>{if(TPL[x.id])gc[x.a]=(gc[x.a]||0)+1});
   const sortBtn=Object.values(gc).some(n=>n>=3)?`<button class="btn o" style="min-height:40px;font-size:14px;margin:0 0 8px" onclick="tpSortRoute()">🧭 เรียงตามเส้นทางให้ (ที่ใกล้กันก่อน)</button>`:"";
   const rows=it.map(r=>{
-    if(r.dep)return r.sg?sgDep(r.t):depHtml;
+    if(r.dep)return r.sg?sgDep(r.t,r.ea):depHtml;
     if(r.f)return tpRow(sgT(r.t),r.a,r.b,"background:#f3f1e3");
     users++;
-    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t,cl=TPL[x.id]||(pa===a?pl:null),from=prev?(prev.a===a?pl:null):(a==="osaka"&&H&&H.ll&&i>0?H.ll:null);
+    const x=r.x,a=x.a||pa,wn=[],dur=x.u-x.t,cl=x.id==="hotel"?(a==="osaka"&&H&&H.ll?H.ll:null):(TPL[x.id]||(pa===a?pl:null)),from=prev?(prev.a===a?pl:null):(a==="osaka"&&H&&H.ll&&i>0?H.ll:null);
     let tr="";
-    if(TPL[x.id]&&from){const km=tpKm(from,TPL[x.id]);if(km>=0.3)tr=`🚇 จาก${prev?"ที่ก่อนหน้า":"ที่พัก"} ~${tpMove(km)} นาที (${km.toFixed(1)} กม.)`}
+    if(cl&&from&&(TPL[x.id]||x.id==="hotel")){const km=tpKm(from,cl);if(km>=0.3)tr=`🚇 จาก${prev?"ที่ก่อนหน้า":"ที่พัก"} ~${tpMove(km)} นาที (${km.toFixed(1)} กม.)`}
     if(prev){
       if(x.t<prev.u)wn.push("⚠ เวลาซ้อนกับที่ก่อนหน้า");
       else if(a!==prev.a&&a!=="sg"&&prev.a!=="sg"&&x.t-prev.u<tpBuf(prev.a,a))wn.push("🚆 เดินทางอาจไม่ทัน");
@@ -559,7 +566,7 @@ function renderTrip(){
     return `<div class="stp s" style="flex-wrap:wrap;${wn.length?"border-color:#b91c1c":""}"><div style="flex:none;background:var(--sky);border-radius:999px;padding:5px 10px;font-weight:700;font-size:14px;color:#1a2308">${sgT(x.t)}–${sgT(x.u)}</div><div class="sb"><b>${x.e} ${esc(x.n)}</b>${x.h?`<small>${esc(x.h)}</small>`:""}${tr?`<small>${tr}</small>`:""}${wn.length?`<small style="color:#b91c1c">${wn.join(" · ")}</small>`:""}</div><div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end"><button class="chip" style="${cb}" onclick="tpMv(${r.k},-1)" aria-label="เลื่อนขึ้น">▲</button><button class="chip" style="${cb}" onclick="tpMv(${r.k},1)" aria-label="เลื่อนลง">▼</button><button class="chip" style="${cb}" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา">−</button><span style="font-size:13px;min-width:62px;text-align:center">${sgDur(dur)}</span><button class="chip" style="${cb}" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา">+</button><button class="chip" style="${cb}" onclick="tpRm(${r.k})" aria-label="ลบ">✕</button></div></div>`;
   }).join("");
   let back=0,bk2="";
-  if(users&&!kind&&!last&&la&&la!=="sg"){
+  if(users&&!kind&&!last&&la&&la!=="sg"&&!(lx&&lx.id==="hotel")){
     if(la==="osaka"){if(H&&H.ll&&lc){back=lu+tpMove(tpKm(lc,H.ll));bk2="🏨 กลับถึงที่พัก"}}
     else if(!(lx&&lx.rt)){back=lu+tpBuf(la,"osaka")+tpEx(H);bk2=H?"🏨 กลับถึงที่พัก":"🚆 กลับถึงโอซาก้า"}
   }
@@ -590,6 +597,7 @@ function renderTrip(){
     <div class="tl">${rows}</div>
     ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · ▲▼ สลับลำดับ · − + ปรับเวลาที่ใช้ (ค่าประมาณ)</div>`:`<div class="note" style="margin:8px 0;text-align:center;font-size:15px">🌱 ยังไม่มีแผนวันนี้<br>กด ➕ ด้านล่างเพื่อเลือกที่เที่ยว</div>`}
     ${sortBtn}${backNote}${sgBox}
+    ${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpAddHotel()">${((TP.D[i]&&TP.D[i].v)||[]).some(x=>x.id==="hotel")?"🏨 ยกเลิกการกลับโรงแรม":"🏨 เพิ่มการกลับโรงแรม"}</button>`:""}
     ${add}
     ${!TP.sgOn&&!last?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpSgDay(${i})">🏯 วันนี้ไปชิราคาวาโกะ</button>`:""}</div>
   <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
