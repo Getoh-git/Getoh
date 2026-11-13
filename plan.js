@@ -849,6 +849,7 @@ function renderSaved(){
 }
 // ===== หน้าแรก: แผนเที่ยวที่บันทึกไว้ (แตะเพื่อเปิดดู) =====
 let PLH=0;
+function shopGo(){TP.v="trip";TPG=1;tpSave();tab("plan");gdLoad();setTimeout(()=>{const d=document.getElementById("getoh-live-data"),x=d&&d.closest("details");if(x){x.open=true;x.style.scrollMarginTop="72px";x.scrollIntoView({behavior:"smooth",block:"start"})}},120)} // ปุ่มค้นหาร้านค้าที่หน้าแรก: ไปแท็บแผนเที่ยวและเปิดกล่องค้นหาให้
 function plGo(id){TP.v="saved";TP.vid=id;tpSave();tab("plan")}
 function plHome(){
   const el=document.getElementById("home-plans");if(!el)return;

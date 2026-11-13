@@ -659,5 +659,6 @@ async function wx(){
   const lab=!live?"ค่าเฉลี่ยหลายปีช่วงทริป (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี`:"พยากรณ์ช่วงทริป";
   const today=new Date(Date.now()+324e5).toISOString().slice(0,10);
   box.innerHTML=wxCard({cur,td:fc[today],D,lab,tip,rain});
+  const tv=$("hx-tv"),ti=$("hx-ti");if(tv&&cur){tv.textContent=Math.round(cur.temperature_2m)+"°";if(ti)ti.textContent=wxIcon(cur.weather_code,cur.is_day!==0?1:0)} // อุณหภูมิมุมขวาบนของหน้าแรก
 }
 wx();setInterval(wx,18e5);
