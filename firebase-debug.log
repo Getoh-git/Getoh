@@ -1,0 +1,125 @@
+[debug] [2026-11-13T03:00:19.834Z] ----------------------------------------------------------------------
+[debug] [2026-11-13T03:00:19.838Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions:placesLookup
+[debug] [2026-11-13T03:00:19.838Z] CLI Version:   15.36.0
+[debug] [2026-11-13T03:00:19.838Z] Platform:      win32
+[debug] [2026-11-13T03:00:19.838Z] Node Version:  v22.14.0
+[debug] [2026-11-13T03:00:19.838Z] Detected Agent: unknown
+[debug] [2026-11-13T03:00:19.839Z] Time:          Fri Nov 13 2026 10:00:19 GMT+0700 (GMT+07:00)
+[debug] [2026-11-13T03:00:19.839Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-11-13T03:00:22.802Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-11-13T03:00:22.802Z] > authorizing via signed-in user (w.janhip@gmail.com)
+[debug] [2026-11-13T03:00:22.802Z] [iam] checking project osaka-trip-b03a0 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-11-13T03:00:22.811Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:22.812Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:22.813Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0:testIamPermissions [none]
+[debug] [2026-11-13T03:00:22.813Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0:testIamPermissions  x-goog-user-project=osaka-trip-b03a0
+[debug] [2026-11-13T03:00:22.813Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-11-13T03:00:23.487Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0:testIamPermissions 200
+[debug] [2026-11-13T03:00:23.488Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-11-13T03:00:23.488Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:23.488Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:23.488Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/osaka-trip-b03a0/serviceAccounts/osaka-trip-b03a0@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-11-13T03:00:23.488Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/osaka-trip-b03a0/serviceAccounts/osaka-trip-b03a0@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-11-13T03:00:24.958Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/osaka-trip-b03a0/serviceAccounts/osaka-trip-b03a0@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-11-13T03:00:24.958Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/osaka-trip-b03a0/serviceAccounts/osaka-trip-b03a0@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'osaka-trip-b03a0'...
+[info] 
+[info] i  deploying functions 
+[debug] [2026-11-13T03:00:24.962Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:24.963Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:24.963Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0 [none]
+[debug] [2026-11-13T03:00:25.230Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0 200
+[debug] [2026-11-13T03:00:25.230Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/osaka-trip-b03a0 {"projectNumber":"218695704047","projectId":"osaka-trip-b03a0","lifecycleState":"ACTIVE","name":"Osaka-Trip","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-10-28T07:33:40.973Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-11-13T03:00:25.235Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:25.235Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:25.235Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/osaka-trip-b03a0/adminSdkConfig [none]
+[debug] [2026-11-13T03:00:25.656Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/osaka-trip-b03a0/adminSdkConfig 200
+[debug] [2026-11-13T03:00:25.656Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/osaka-trip-b03a0/adminSdkConfig {"projectId":"osaka-trip-b03a0","databaseURL":"https://osaka-trip-b03a0-default-rtdb.asia-southeast1.firebasedatabase.app","storageBucket":"osaka-trip-b03a0.firebasestorage.app"}
+[debug] [2026-11-13T03:00:25.657Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:25.657Z] Checked if tokens are valid: true, expires at: 1794540415342
+[debug] [2026-11-13T03:00:25.657Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/osaka-trip-b03a0/configs [none]
+[debug] [2026-11-13T03:00:26.172Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/osaka-trip-b03a0/configs 200
+[debug] [2026-11-13T03:00:26.172Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/osaka-trip-b03a0/configs {}
+[debug] [2026-11-13T03:00:26.174Z] Validating nodejs source
+[warn] !  functions: Couldn't find firebase-functions package in your source code. Have you run 'npm install'? 
+[debug] [2026-11-13T03:00:26.175Z] getFunctionsSDKVersion encountered error: Cannot find module 'firebase-functions'
+Require stack:
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\versioning.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\controller.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\commandUtils.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\downloadableEmulators.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\registry.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\extensions\postinstall.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulatorShared.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\prepare.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\checkValidTargetFilters.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\deploy.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js {"code":"MODULE_NOT_FOUND","requireStack":["C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\versioning.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\functionsEmulator.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\controller.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\commandUtils.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\downloadableEmulators.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\registry.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\extensions\\postinstall.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\functionsEmulatorShared.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\frameworks\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\hosting\\prepare.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\hosting\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\checkValidTargetFilters.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\deploy.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\index.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\cli.js","C:\\Users\\watthana_j\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\firebase.js"]}
+[debug] [2026-11-13T03:00:26.176Z] checkFunctionsSDKVersion encountered error: Invalid Version:  {}
+[debug] [2026-11-13T03:00:26.177Z] > [functions] package.json contents: {
+  "name": "getoh-functions",
+  "description": "Secure Google Places proxy for Getoh",
+  "main": "index.js",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.3.2"
+  }
+}
+[debug] [2026-11-13T03:00:26.177Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-11-13T03:00:26.178Z] Could not parse firebase-functions version '' into semver.
+[debug] [2026-11-13T03:00:26.178Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-11-13T03:00:26.308Z] Error: Cannot find module 'firebase-functions'
+Require stack:
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\controller.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\commandUtils.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\downloadableEmulators.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\registry.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\extensions\postinstall.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulatorShared.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\prepare.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\checkValidTargetFilters.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\deploy.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\index.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js
+- C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+    at Function.resolve (node:internal/modules/helpers:146:19)
+    at Delegate.findFunctionsBinary (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:98:33)
+    at Delegate.spawnFunctionsProcess (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:128:30)
+    at Delegate.serveAdmin (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:149:35)
+    at Delegate.discoverBuild (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:192:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async loadCodebases (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js:548:33)
+    at async prepare (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js:181:24)
+    at async chain (C:\Users\watthana_j\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js:119:9)
+[error] 
+[error] Error: An unexpected error has occurred.
