@@ -141,6 +141,66 @@ for(const c of ["chips"])$(c).addEventListener("click",e=>{const b=e.target.clos
 
 const rtLine=h=>h.rt&&h.rt.length?`⭐ ${h.rt[0][1]}/10 · ${esc(h.rt[0][0])} ${Number(h.rt[0][2]).toLocaleString("th-TH")} รีวิว${h.rt.length>1?` (+${h.rt.length-1} เว็บ)`:""}`:"";
 const firstRv=(h,s)=>{const r=rv(h).find(x=>x[0]===s);return r?r[1]:""};
+
+// ---------- รีวิว Google (ดึงสดผ่าน proxy · เก็บชั่วคราวในหน้าเว็บ ไม่บันทึกลงฐานข้อมูล ตามเงื่อนไขของ Google) ----------
+let HG={},HGL={},HGE={};
+const hgOn=()=>!!window.GETOH_PLACES_API_URL;
+const hgNum=(v,min)=>{const n=Number(v);return Number.isFinite(n)&&n>=min?n:null};
+async function hgFetch(id){
+  const h=find(id);if(!h||HG[id]||HGL[id])return;
+  const ep=window.GETOH_PLACES_API_URL;if(!ep){toast("ยังไม่ได้ตั้งค่า Google Places Proxy");return}
+  HGL[id]=1;delete HGE[id];hgPaint(id);
+  try{
+    const body={query:h.name+" Osaka Japan"};
+    if(hasLL(h)){body.latitude=h.lat;body.longitude=h.lng}   // มีพิกัด → proxy จำกัดค้นในรัศมี 150 ม. แม่นกว่า
+    const r=await fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json();if(!r.ok)throw Error(d.error||("HTTP "+r.status));
+    const p=d.place||d;if(!p||!p.id)throw Error("ไม่พบโรงแรมที่ตรงกัน");
+    HG[id]=p;
+  }catch(e){HGE[id]=e.message||"ลองใหม่อีกครั้ง"}
+  delete HGL[id];hgPaint(id);
+}
+function hgPaint(id){
+  const b=$("hg-box");if(b&&b.dataset.id==id){const h=find(id);if(h)b.innerHTML=hgInner(h)}
+  const ov=$("ov");if(ov&&!ov.classList.contains("hide")&&$("hg-cmp"))compare();   // เปิดตารางเปรียบเทียบอยู่ → วาดใหม่
+  if(!HGL[id])draw();
+}
+function hgStars(p){
+  const r=hgNum(p&&p.rating,0.1),n=hgNum(p&&p.userRatingCount,0);
+  return r===null?"":`★ ${r.toFixed(1)}/5${n!==null?` (${n.toLocaleString("th-TH")} รีวิว)`:""}`;
+}
+const hgCardLine=h=>{const t=hgStars(HG[h.id]);return t?`<div class="rtl">${esc(t)} · Google</div>`:""};
+function hgInner(h){
+  const id=h.id,p=HG[id];
+  if(HGL[id])return '<span class="note">กำลังค้นหาข้อมูลจาก Google…</span>';
+  if(!p){
+    const err=HGE[id]?`<div class="note" style="color:#9a3412">ดึงข้อมูลไม่สำเร็จ: ${esc(HGE[id])}</div>`:"";
+    return err+`<button class="btn o" onclick="hgFetch(${id})">⭐ โหลดคะแนนและรีวิวจาก Google</button>`;
+  }
+  const link=(u,t)=>/^https:\/\//.test(u||"")?` · <a href="${esc(u)}" target="_blank" rel="noopener" style="color:var(--sky)">${t} ↗</a>`:"";
+  const revs=(p.reviews||[]).slice(0,5).map(x=>{
+    const a=x.authorAttribution||{},nm=esc(a.displayName||"ผู้รีวิว Google");
+    const who=/^https:\/\//.test(a.uri||"")?`<a href="${esc(a.uri)}" target="_blank" rel="noopener" style="color:var(--sky)">${nm}</a>`:nm;
+    const st=Math.max(0,Math.min(5,Number(x.rating)||0));
+    return `<div class="rv"><b style="color:var(--amb)">${"★".repeat(st)}</b> <small>${who} · ${esc(x.relativePublishTimeDescription||"")}</small><div>${esc((x.text&&x.text.text)||x.text||"")}</div></div>`;
+  }).join("");
+  return `<div><b>${esc(p.name||"")}</b>${p.address?`<div class="note" style="margin:0">${esc(p.address)}</div>`:""}
+    <div><b style="color:var(--amb)">${esc(hgStars(p)||"ไม่มีคะแนน")}</b>${link(p.googleMapsUri,"Google Maps")}${link(p.websiteUri,"เว็บไซต์")}</div></div>
+    ${revs||'<div class="note">Google ไม่ส่งรีวิวมาให้โรงแรมนี้</div>'}
+    <div class="note">ข้อมูลและรีวิวจาก Google (สูงสุด 5 รีวิว) · คะแนน Google เต็ม 5 ส่วนเว็บจองเต็ม 10 อย่าเทียบตรง ๆ · ตรวจว่าชื่อและที่อยู่ตรงกับโรงแรมที่ต้องการ</div>`;
+}
+const hgBox=h=>hgOn()?`<div class="rvh">⭐ คะแนนและรีวิวจาก Google</div><div id="hg-box" data-id="${h.id}">${hgInner(h)}</div>`:"";
+const hgCmpRow=h=>{
+  if(!hgOn())return "";
+  const t=hgStars(HG[h.id]),v=t?esc(t):HGL[h.id]?"กำลังโหลด…":HGE[h.id]?"ดึงไม่ได้":"–";
+  return `<div class="kv"><span>คะแนน Google</span><b style="color:var(--amb)">${v}</b></div>`;
+};
+const hgCmpBtn=()=>hgOn()?`<div id="hg-cmp"><button class="btn" style="margin-top:10px" onclick="hgLoadSel()">⭐ โหลดคะแนน Google ของที่เลือก</button><div class="note">ดึงสดตอนกดปุ่มเท่านั้น (มีค่าใช้จ่ายต่อคำขอ) แต่ละโรงแรมโหลดครั้งเดียวต่อการเปิดหน้าเว็บ</div></div>`:"";
+async function hgLoadSel(){
+  const ids=sel.filter(id=>!HG[id]&&!HGL[id]);
+  if(!ids.length){toast("โหลดคะแนน Google ครบแล้ว");return}
+  for(const id of ids)await hgFetch(id);
+}
 let thumb={};
 const imgTag=src=>`<img src="${src}" alt="" loading="lazy">`;
 async function loadThumb(id){
@@ -158,7 +218,7 @@ function card(h){
       <span class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></span>
       <button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button></div>
     <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
-      ${rl?`<div class="rtl">${rl}</div>`:""}
+      ${rl?`<div class="rtl">${rl}</div>`:""}${hgCardLine(h)}
       <div class="rc">${rsum(h)} · 📐 ${h.size?h.size+" m²":"–"}${h.custom?" · เพิ่มเอง":""}</div>
       ${p||n?`<div class="pq">${p?`<span class="g">👍 ${esc(p)}</span>`:""}${n?`<span class="b">👎 ${esc(n)}</span>`:""}</div>`:""}
       <div class="meta"><span class="pr">${price(h)}<small> รวม ${NIGHTS} คืน</small><em class="tot">≈ ${night(h)} /คืน</em></span>
@@ -197,7 +257,7 @@ function detail(id){
     <div class="bk"><div><small class="note" style="margin:0">ราคารวม ${NIGHTS} คืน</small><div><b style="font-size:20px">${price(h)}</b></div><div class="note" style="margin:0">≈ ${night(h)} /คืน</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
     <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
-    ${revHtml(h)}
+    ${hgBox(h)}${revHtml(h)}
     <button class="btn ${on?"o":""}" style="margin-top:10px" onclick="pick(${id});closeSheet()">${on?"✓ เลือกแล้ว (แตะเพื่อเอาออก)":"+ เลือกเปรียบเทียบ"}</button>
     <a class="btn o" href="${esc(map)}" target="_blank" rel="noopener">📍 ดูบน Google Maps</a>
     <button class="btn o" style="margin-top:8px" onclick="${hasLL(h)?`showOnMap(${id})`:`placeFor(${id})`}">🗺️ ${hasLL(h)?"ดูบนแผนที่ทริป":"ปักหมุดบนแผนที่ทริป"}</button>
@@ -530,7 +590,7 @@ function compare(){
     <div class="kv"><span>ขนาดห้อง</span><b>${h.size?h.size+" m²":"–"}</b></div>
     <div class="kv"><span>คะแนน</span><b style="color:var(--amb)">${h.score!=null?"⭐️ "+h.score:"–"}</b></div>
     <div class="kv"><span>ย่าน</span><b>${esc(h.area||"")}</b></div>
-    <div class="kv"><span>คอมเมนต์ห้อง</span><b>${rsum(h)}</b></div></div>`}).join(""));
+    <div class="kv"><span>คอมเมนต์ห้อง</span><b>${rsum(h)}</b></div>${hgCmpRow(h)}</div>`}).join("")+hgCmpBtn());
 }
 function copyLine(){
   const L=sel.length?all().filter(h=>sel.includes(h.id)):all();
