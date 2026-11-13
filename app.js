@@ -606,6 +606,12 @@ function copyLine(){
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกข้อความสำหรับ LINE แล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
 
+(function(){ // หัวหน้าแรก: ช่วงวันที่และจำนวนคืน (อ่านจากไฟลท์ใน hotels.js)
+  const d=$("hx-dates"),n=$("hx-nights");if(!d||!n)return;
+  const a=F[0].arrD.split(" "),b=F[F.length-1].depD.split(" "),y=new Date(F[0].arr+324e5).getUTCFullYear();
+  d.textContent=a[1]===b[1]?`${a[0]}–${b[0]} ${a[1]} ${y}`:`${F[0].arrD} – ${F[F.length-1].depD} ${y}`;
+  n.textContent=`${NIGHTS} คืนที่โอซาก้า`;
+})();
 setInterval(tick,1000);tick();chips();draw();
 sync();
 setInterval(()=>{if(!document.hidden)sync(true)},20000);
