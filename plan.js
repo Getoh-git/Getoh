@@ -485,9 +485,62 @@ function tpPreset(a){
   (TPP[a]||[]).forEach(id=>{const c=TPC.find(x=>x.id===id);if(c&&!L.some(x=>x.id===id)){L.push({id,n:c.n,e:c.e,t:0,u:c.m,a:c.a,h:c.h||""});n++}});
   tpFl();toast(n?"เติมแผนแนะนำ "+n+" ที่แล้ว":"มีครบแล้ว");
 }
-function tpPa(a){TP.pa=a;tpSave();renderPlan()}
-function tpRm(k){tpDL(TP.d).splice(k,1);tpFl()}
-function tpMv(k,dir){const L=tpDL(TP.d),j=k+dir;if(j<0||j>=L.length)return;[L[k],L[j]]=[L[j],L[k]];delete L[k].pin;delete L[j].pin;tpFl()}
+function tpPa(a){TP.pa=a;TPSY=0;tpSave();renderPlan()}
+// ===== UI state ของหน้าแผนเที่ยว (ไม่เก็บลงเครื่อง) =====
+let TPX=-1,TPS=0,TPSY=0,TPSA=0,TPG=0,TPD=null;   // การ์ดที่ขยายอยู่ · แผงเพิ่มที่เปิดอยู่ · ตำแหน่งเลื่อนของแผง · เล่นแอนิเมชันเปิดแผง · กล่องค้นหาคันไซเปิดอยู่ · ข้อมูลตอนลาก
+function tpOpen(k){                                // แตะการ์ดเพื่อขยาย/ย่อ (ไม่วาดใหม่ทั้งหน้า)
+  TPX=TPX===k?-1:k;
+  document.querySelectorAll("#plan .pc").forEach(c=>{const on=+c.dataset.k===TPX;c.classList.toggle("open",on);const h=c.querySelector(".pc-h");if(h)h.setAttribute("aria-expanded",on)});
+}
+function tpSheet(on){TPS=on?1:0;TPSY=0;TPSA=on?1:0;renderPlan()}
+function tpMvTo(k,to){const L=tpDL(TP.d);if(to===k||to<0||to>=L.length)return;const x=L.splice(k,1)[0];L.splice(to,0,x);TPX=to;tpFl()}
+// ลากเรียงลำดับ: จับที่ ⋮⋮ แล้วลากขึ้น/ลง เส้นสีฟ้าบอกตำแหน่งที่จะวาง
+function tpDragStart(e,k){
+  if(e.button!=null&&e.button>0)return;
+  const card=e.currentTarget.closest(".pc"),cards=[...document.querySelectorAll("#plan .pc")];if(!card)return;
+  e.preventDefault();
+  TPD={k,card,cards,y0:e.clientY,s0:scrollY,y:e.clientY,to:k,id:e.pointerId,el:e.currentTarget,raf:0};
+  TPD.mid=cards.map(c=>{const r=c.getBoundingClientRect();return r.top+scrollY+r.height/2});
+  card.classList.add("drag");
+  try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  addEventListener("pointermove",tpDragMove);addEventListener("pointerup",tpDragEnd);addEventListener("pointercancel",tpDragEnd);
+  tpDragTick();
+}
+function tpDragMove(e){if(TPD&&e.pointerId===TPD.id)TPD.y=e.clientY}
+function tpDragTick(){
+  const d=TPD;if(!d)return;
+  const h=innerHeight;let sp=0;
+  if(d.y<110)sp=-Math.min(16,(110-d.y)/5);else if(d.y>h-170)sp=Math.min(16,(d.y-(h-170))/5);
+  if(sp)scrollBy(0,sp);
+  const dy=d.y-d.y0+(scrollY-d.s0);
+  d.card.style.transform="translateY("+dy+"px)";
+  const c=d.mid[d.k]+dy;let to=0;
+  d.cards.forEach((_,j)=>{if(j!==d.k&&d.mid[j]<c)to++});
+  d.to=to;
+  const others=d.cards.filter((_,j)=>j!==d.k);
+  d.cards.forEach(x=>x.classList.remove("ins-b","ins-a"));
+  if(to<others.length)others[to].classList.add("ins-b");else if(others.length)others[others.length-1].classList.add("ins-a");
+  d.raf=requestAnimationFrame(tpDragTick);
+}
+function tpDragEnd(e){
+  const d=TPD;if(!d||(e&&e.pointerId!==d.id))return;
+  TPD=null;cancelAnimationFrame(d.raf);
+  removeEventListener("pointermove",tpDragMove);removeEventListener("pointerup",tpDragEnd);removeEventListener("pointercancel",tpDragEnd);
+  try{d.el.releasePointerCapture(d.id)}catch(_){}
+  d.card.style.transform="";d.card.classList.remove("drag");d.cards.forEach(x=>x.classList.remove("ins-b","ins-a"));
+  if(d.to!==d.k)tpMvTo(d.k,d.to);
+}
+function tpCenter(sel){const p=document.querySelector(sel);if(!p)return;const a=p.querySelector(".on");if(!a)return;const pr=p.getBoundingClientRect(),ar=a.getBoundingClientRect();p.scrollLeft+=ar.left-pr.left-(pr.width-ar.width)/2}
+addEventListener("keydown",e=>{if(e.key==="Escape"&&TPS&&!$("plan").classList.contains("hide"))tpSheet(0)});
+// รายการที่เที่ยวในแผงเพิ่ม: ปุ่มใหญ่ 2 คอลัมน์ บอกเวลาที่ใช้/ระยะจากที่พัก และติ๊กเมื่อเลือกแล้ว
+function tpPicks(pk,H,i){
+  let L=TPC.filter(c=>c.a===pk).map(c=>({c,km:pk==="osaka"&&H&&H.ll&&TPL[c.id]?tpKm(H.ll,TPL[c.id]):null}));
+  if(H&&L.some(x=>x.km!=null))L.sort((p,q)=>(p.km==null)-(q.km==null)||p.km-q.km);
+  const dl=tpDL(i);
+  return L.map(({c,km})=>{const has=dl.some(x=>x.id===c.id);return `<button class="pk ${has?"on":""}" onclick="tpAdd('${c.id}')" aria-pressed="${has}"><span class="pk-e">${c.e}</span><span class="pk-n">${esc(c.n)}<small>ใช้เวลา ${sgDur(c.m)}${km!=null?` · ห่างที่พัก ${km.toFixed(1)} กม.`:""}</small></span><span class="pk-c" aria-hidden="true">${has?"✓":"+"}</span></button>`}).join("");
+}
+function tpRm(k){tpDL(TP.d).splice(k,1);TPX=-1;tpFl()}
+function tpMv(k,dir){const L=tpDL(TP.d),j=k+dir;if(j<0||j>=L.length)return;[L[k],L[j]]=[L[j],L[k]];delete L[k].pin;delete L[j].pin;if(TPX===k)TPX=j;tpFl()}
 function tpDur(k,dm){const x=tpDL(TP.d)[k];x.u=x.t+Math.min(720,Math.max(15,x.u-x.t+dm));tpFl()}
 function tpDepSet(dm){const i=TP.d,D=TP.D[i]||(TP.D[i]={v:[]}),w=tpWin(i);D.s=Math.min(780,Math.max(i===0?w.m0:330,tpRound(tpDepT(i).t+dm)));tpFl()}
 function tpSortRoute(){
@@ -562,18 +615,19 @@ function tpCopy(){
   navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast("คัดลอกแผนทั้งทริปแล้ว"),()=>toast("คัดลอกไม่สำเร็จ")):toast("คัดลอกไม่ได้");
 }
 function renderTrip(){
+  const oldSh=document.getElementById("shb");if(oldSh)TPSY=oldSh.scrollTop;
   const i=Math.min(TP.d,NIGHTS),o=tpSgPlan();if(tpFlow(i,o))tpSave();
   const kind=tpSgKind(i),w=tpWin(i),last=i===NIGHTS,bl=tpBlocks(i,o),vw=tpVWin(i,o),it=tpItems(i,o);
   const dayChips=Array.from({length:NIGHTS+1},(_,j)=>{
-    const n=((TP.D[j]&&TP.D[j].v)||[]).length,k=tpSgKind(j);
-    return `<button class="chip ${j===i?"on":""}" onclick="tpDay(${j})">วัน ${j+1} · ${sgFd(j)}${k?" · 🏯":n?" · "+n+" ที่":""}</button>`;
+    const n=((TP.D[j]&&TP.D[j].v)||[]).length,k=tpSgKind(j),bd=k?"🏯":n?n:"";
+    return `<button class="dtab ${j===i?"on":""}" onclick="tpDay(${j})" aria-label="วัน ${j+1} ${sgFd(j)}"${j===i?' aria-current="true"':""}><b>วัน ${j+1}${bd?` <em>${bd}</em>`:""}</b><small>${sgFd(j)}</small></button>`;
   }).join("");
   const H=tpHotel();
   let prev=null,pa="osaka",users=0,la="",lu=0,pl=null,lc=null,lx=null;
-  const cb="min-height:44px;min-width:44px;padding:0 10px;font-size:16px;flex:none";
   const dp=tpDepT(i),stay=tpStay(i,o);
-  const depHtml=`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>${i===0?"เริ่มออกเที่ยว":"ออกจากที่พักไปเที่ยว"}</b><small>${dp.auto?"ระบบตั้งให้":"ตั้งเอง"}</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpDepSet(-30)" aria-label="เร็วขึ้น">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(dp.t)}</b><button class="chip" style="${cb}" onclick="tpDepSet(30)" aria-label="ช้าลง">+</button>${dp.auto?"":`<button class="chip" style="${cb}" onclick="tpDepAuto()" aria-label="ให้ระบบตั้ง">⟲</button>`}</div></div>`;
-  const sgDep=t=>`<div class="stp s" style="flex-wrap:wrap;background:#f3f1e3"><div class="tt">🏨</div><div class="sb"><b>ออกจากที่พัก</b><small>${stay?"ไปนอนที่คานาซาวะ":"ไปสถานีโอซาก้า"} · กด − + เลือกขบวนก่อนหน้า/ถัดไป</small></div><div style="display:flex;gap:6px;align-items:center"><button class="chip" style="${cb}" onclick="tpSgLeave(-1)" aria-label="ขบวนก่อนหน้า">−</button><b style="min-width:54px;text-align:center;font-size:17px">${sgT(t)}</b><button class="chip" style="${cb}" onclick="tpSgLeave(1)" aria-label="ขบวนถัดไป">+</button></div></div>`;
+  const stepper=(f1,f2,val,l1,l2,extra)=>`<div class="stepper"><button class="sbtn" onclick="${f1}" aria-label="${l1}">−</button><b>${val}</b><button class="sbtn" onclick="${f2}" aria-label="${l2}">+</button>${extra||""}</div>`;
+  const depHtml=`<div class="stp s fx"><div class="fx-top"><span class="fx-ic">🏨</span><div class="sb"><b>${i===0?"เริ่มออกเที่ยว":"ออกจากที่พักไปเที่ยว"}</b><small>${dp.auto?"ระบบตั้งให้ · กด − + เพื่อปรับ":"ตั้งเอง"}</small></div></div>${stepper("tpDepSet(-30)","tpDepSet(30)",sgT(dp.t),"เร็วขึ้น","ช้าลง",dp.auto?"":`<button class="sbtn" onclick="tpDepAuto()">⟲ อัตโนมัติ</button>`)}</div>`;
+  const sgDep=t=>`<div class="stp s fx"><div class="fx-top"><span class="fx-ic">🏨</span><div class="sb"><b>ออกจากที่พัก</b><small>${stay?"ไปนอนที่คานาซาวะ":"ไปสถานีโอซาก้า"} · กด − + เลือกขบวนก่อนหน้า/ถัดไป</small></div></div>${stepper("tpSgLeave(-1)","tpSgLeave(1)",sgT(t),"ขบวนก่อนหน้า","ขบวนถัดไป")}</div>`;
   const gc={};tpDL(i).forEach(x=>{if(TPL[x.id])gc[x.a]=(gc[x.a]||0)+1});
   const sortBtn=Object.values(gc).some(n=>n>=3)?`<button class="btn o" style="min-height:40px;font-size:14px;margin:0 0 8px" onclick="tpSortRoute()">🧭 เรียงตามเส้นทางให้ (ที่ใกล้กันก่อน)</button>`:"";
   const rows=it.map(r=>{
@@ -593,7 +647,9 @@ function renderTrip(){
     if(i===0&&x.t<w.m0)wn.push("⚠ ยังเข้าเมืองไม่ถึง");
     if(last&&x.u>w.e)wn.push("⚠ ไม่ทันไปสนามบิน");
     prev={u:x.u,a};pa=a;la=a;lu=x.u;pl=cl;lc=cl;lx=x;
-    return `<div class="stp s" style="flex-wrap:wrap;${wn.length?"border-color:#b91c1c":""}"><div style="flex:none;background:var(--sky);border-radius:999px;padding:5px 10px;font-weight:700;font-size:14px;color:#1a2308">${sgT(x.t)}–${sgT(x.u)}</div><div class="sb"><b>${x.e} ${esc(x.n)}</b>${x.h?`<small>${esc(x.h)}</small>`:""}${tr?`<small>${tr}</small>`:""}${wn.length?`<small style="color:#b91c1c">${wn.join(" · ")}</small>`:""}</div><div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end"><button class="chip" style="${cb}" onclick="tpMv(${r.k},-1)" aria-label="เลื่อนขึ้น">▲</button><button class="chip" style="${cb}" onclick="tpMv(${r.k},1)" aria-label="เลื่อนลง">▼</button><button class="chip" style="${cb}" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา">−</button><span style="font-size:13px;min-width:62px;text-align:center">${sgDur(dur)}</span><button class="chip" style="${cb}" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา">+</button><button class="chip" style="${cb}" onclick="tpRm(${r.k})" aria-label="ลบ">✕</button></div></div>`;
+    const open=TPX===r.k;
+    return `<div class="stp s pc ${open?"open":""} ${wn.length?"warn":""}" data-k="${r.k}"><div class="pc-main"><span class="pc-grip" onpointerdown="tpDragStart(event,${r.k})" title="ลากเพื่อเรียงลำดับ" aria-hidden="true">⋮⋮</span><button class="pc-h" onclick="tpOpen(${r.k})" aria-expanded="${open}"><span class="pc-t"><b>${sgT(x.t)}</b><small>${sgT(x.u)}</small></span><span class="pc-b"><b>${x.e} ${esc(x.n)}</b>${tr?`<small>${tr}</small>`:""}${wn.length?`<small class="bad">${wn.join(" · ")}</small>`:""}</span><span class="pc-chev" aria-hidden="true">⌄</span></button></div>
+      <div class="pc-ctl">${x.h?`<div class="pc-hint">ℹ️ ${esc(x.h)}</div>`:""}<div class="stepper"><span>ใช้เวลา</span><button class="sbtn" onclick="tpDur(${r.k},-15)" aria-label="ลดเวลา 15 นาที">−</button><b>${sgDur(dur)}</b><button class="sbtn" onclick="tpDur(${r.k},15)" aria-label="เพิ่มเวลา 15 นาที">+</button></div><div class="pc-act"><button class="sbtn" onclick="tpMv(${r.k},-1)">▲ เลื่อนขึ้น</button><button class="sbtn" onclick="tpMv(${r.k},1)">▼ เลื่อนลง</button><button class="sbtn del" onclick="tpRm(${r.k})">🗑 ลบ</button></div></div></div>`;
   }).join("");
   let back=0,bk2="";
   if(users&&!kind&&!last&&la&&la!=="sg"){
@@ -611,34 +667,32 @@ function renderTrip(){
   }
   const areas=Object.keys(TPA).filter(a=>a!=="sg"||vw),pk=areas.includes(TP.pa)?TP.pa:(areas.includes("osaka")?"osaka":areas[0]);
   const tabs=areas.map(a=>`<button class="chip ${a===pk?"on":""}" onclick="tpPa('${a}')">${TPA[a]}</button>`).join("");
-  const picker=`<div class="chips" style="padding:0 0 6px">${tabs}</div>${TPH[pk]?`<div class="note" style="margin:2px 0 6px">${TPH[pk]}</div>`:""}<div class="chips" style="flex-wrap:wrap;padding-top:0">${tpChips(pk,H,i)}</div>${TPP[pk]?`<button class="btn o" style="min-height:40px;font-size:14px;margin-top:8px" onclick="tpPreset('${pk}')">✨ เติมแผนแนะนำ ${TPP[pk].length} ที่ (${TPA[pk].replace(/^\S+\s/,"")})</button>`:""}`;
+  const sheet=TPS?`<div class="sh-bg" onclick="tpSheet(0)"></div><div class="sh ${TPSA?"in":""}" role="dialog" aria-modal="true" aria-label="เพิ่มที่เที่ยว"><div class="sh-h"><div><b>เพิ่มที่เที่ยว</b><small>วัน ${i+1} · ${sgFd(i)} · แตะเพื่อเพิ่ม แตะอีกครั้งเพื่อเอาออก</small></div><button class="btn sh-done" onclick="tpSheet(0)">เสร็จ${users?` · ${users} ที่`:""}</button></div><div class="sh-tabs">${tabs}</div><div class="sh-body" id="shb">${TPH[pk]?`<div class="note" style="margin:2px 0 6px">${TPH[pk]}</div>`:""}${TPP[pk]?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:4px" onclick="tpPreset('${pk}')">✨ เติมแผนแนะนำ ${TPP[pk].length} ที่ (${TPA[pk].replace(/^\S+\s/,"")})</button>`:""}<div class="pk-g">${tpPicks(pk,H,i)}</div><div class="sh-cu"><input id="tpc" placeholder="หรือพิมพ์ชื่อที่เอง" onkeydown="if(event.key==='Enter')tpAddC()"><button class="btn o" onclick="tpAddC()">เพิ่ม</button></div></div></div>`:"";
+  TPSA=0;
   const ov=Array.from({length:NIGHTS+1},(_,j)=>{
     const k=tpSgKind(j),L=((TP.D[j]&&TP.D[j].v)||[]).slice().sort((p,q)=>p.t-q.t).map(x=>x.n);
     const t=(k?"🏯 ชิราคาวาโกะ":"")+(k&&L.length?" · ":"")+(L.length?L.map(esc).join(" → "):(k?"":"ยังไม่วางแผน"));
     return `<div class="kv" onclick="tpDay(${j})" style="cursor:pointer"><span><b>วัน ${j+1}</b> ${sgFd(j)}</span><span style="text-align:right;flex:1;margin-left:12px">${t}</span></div>`;
   }).join("");
   const hotelBox=tpHotelBox(H),fitBox=tpFitBox(H);
-  const add=`<details class="dt" ${TP.ao||!users?"open":""} ontoggle="TP.ao=this.open" style="margin-top:12px;border:1px solid var(--line)"><summary style="font-size:17px;min-height:36px">➕ เพิ่มที่เที่ยว</summary><div class="note" style="margin:4px 0 8px">แตะเพื่อเพิ่ม · แตะอีกครั้งเพื่อเอาออก</div>${picker}
-    <div style="display:flex;gap:8px;margin-top:10px"><input id="tpc" placeholder="หรือพิมพ์ชื่อที่เอง" style="flex:1;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px"><button class="btn o" style="min-height:44px;width:auto;padding:0 16px" onclick="tpAddC()">เพิ่ม</button></div></details>`;
-  const more=`<details class="dt" style="margin-top:12px"><summary>⚙️ ที่พัก · บันทึก/โหลดแผน · อื่น ๆ</summary><div style="margin-top:8px">${hotelBox}${plBox()}${fitBox}${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpClear()">🗑 ล้างแผนวันนี้</button>`:""}</div></details>`;
-  $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน แล้วกด ➕ เพิ่มที่เที่ยว ระบบจัดเวลาให้เอง</p>
-  <div class="chips" style="flex-wrap:wrap;padding:0 0 8px">${dayChips}</div>
+  const more=`<details class="dt" style="margin-top:12px"><summary>🏨 ที่พัก · 💾 บันทึก/โหลดแผน</summary><div style="margin-top:8px">${hotelBox}${plBox()}${fitBox}${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpClear()">🗑 ล้างแผนวันนี้</button>`:""}</div></details>`;
+  const gdBox=`<details class="dt" ${TPG?"open":""} ontoggle="TPG=this.open?1:0;if(TPG)gdLoad()" style="margin-top:12px"><summary>🌏 ค้นหาร้านและที่เที่ยวในคันไซ</summary><section id="getoh-live-data" style="margin-top:8px"><p class="note" style="margin-top:0">ข้อมูลสถานที่และอากาศจาก Getoh Data Engine · อัปเดตจาก data/kansai.json</p><div id="gd-panel"><div class="note">กำลังโหลดข้อมูล Kansai…</div></div></section></details>`;
+  $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน แล้วกด + เพิ่มที่เที่ยว ระบบจัดเวลาให้เอง</p>
+  <div class="pl-days" role="tablist" aria-label="เลือกวัน">${dayChips}</div>
   <div class="card"><b style="font-size:18px">วัน ${i+1} · ${sgFd(i)}${i===0?" · วันถึง":last?" · วันกลับ":""}</b>
     <div class="tl">${rows}</div>
-    ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · ▲▼ สลับลำดับ · − + ปรับเวลาที่ใช้ (ค่าประมาณ)</div>`:`<div class="note" style="margin:8px 0;text-align:center;font-size:15px">🌱 ยังไม่มีแผนวันนี้<br>กด ➕ ด้านล่างเพื่อเลือกที่เที่ยว</div>`}
+    ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · แตะการ์ดเพื่อปรับเวลา · ลาก ⋮⋮ เพื่อเรียงลำดับ</div>`:`<div class="empty"><div style="font-size:32px">🌱</div><b>ยังไม่มีแผนวันนี้</b><p>เลือกที่ที่อยากไป ระบบจะจัดเวลาและเวลาเดินทางให้</p><button class="btn" onclick="tpSheet(1)">+ เพิ่มที่เที่ยวแรก</button></div>`}
     ${sortBtn}${backNote}${sgBox}
-    ${add}
     ${!TP.sgOn&&!last?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpSgDay(${i})">🏯 วันนี้ไปชิราคาวาโกะ</button>`:""}</div>
   <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
   <button class="btn o" style="min-height:44px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   ${more}
-  <section id="getoh-live-data" class="card" style="margin-top:14px">
-    <h2 style="font-size:18px;margin:0 0 4px">🌏 Kansai Travel Data</h2>
-    <p class="note">ข้อมูลสถานที่และอากาศจาก Getoh Data Engine · อัปเดตจาก data/kansai.json</p>
-    <div id="gd-panel"><div class="note">กำลังโหลดข้อมูล Kansai…</div></div>
-  </section>
-  <div class="note">แผนเก็บในเครื่องนี้ · ตรวจเวลาเปิด-ปิดของแต่ละที่ก่อนไป</div>`;
-  gdLoad();
+  ${gdBox}
+  <div class="note">แผนเก็บในเครื่องนี้ · ตรวจเวลาเปิด-ปิดของแต่ละที่ก่อนไป</div>
+  ${users&&!TPS?`<button class="fab" onclick="tpSheet(1)">+ เพิ่มที่เที่ยว</button>`:""}${sheet}`;
+  const shb=document.getElementById("shb");if(shb)shb.scrollTop=TPSY;
+  tpCenter(".pl-days");tpCenter(".sh-tabs");
+  if(TPG)gdLoad();
 }
 // ===== บันทึก / โหลดแผน (แชร์ผ่าน Firebase /plans): ทุกคนที่มีลิงก์เห็นและโหลดไปแก้เป็นแผนของตัวเองได้ · แผนที่บันทึกแล้วแก้/เขียนทับไม่ได้ แต่ลบได้ (กฎใน firebase-rules.json: สร้างใหม่หรือลบเท่านั้น) =====
 const PLK="osaka_plans_v1",PLRK="osaka_plans_cache_v1";

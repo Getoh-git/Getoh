@@ -231,6 +231,53 @@ nav button.on{font-weight:700}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* v48: แผนเที่ยวใช้ง่ายขึ้น — แท็บวันแถวเดียวติดบน · การ์ดกระชับแตะเพื่อปรับ · ลากเรียง · แผงเพิ่มที่เที่ยว */
+.pl-days{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 -14px 8px;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;background:var(--bg);scrollbar-width:none}
+.pl-days::-webkit-scrollbar,.sh-tabs::-webkit-scrollbar{display:none}
+.dtab{flex:none;scroll-snap-align:center;min-width:86px;min-height:56px;padding:6px 12px;border-radius:16px;border:1px solid var(--line);background:#fff;color:var(--tx);line-height:1.25;text-align:center;cursor:pointer;font:inherit}
+.dtab b{display:block;font-size:15px}.dtab small{display:block;font-size:12px;color:var(--mut);margin-top:1px}
+.dtab em{font-style:normal;font-size:11px;background:var(--sky);color:#1a2308;border-radius:999px;padding:1px 7px;margin-left:3px;font-weight:700}
+.dtab.on{background:var(--acc);border-color:var(--acc);color:#fff}.dtab.on small{color:#d7e6cc}.dtab.on em{background:#fff;color:var(--acc)}
+.stp.pc{display:block;padding:0}
+.stp.pc:before{top:32px}
+.pc-main{display:flex;align-items:stretch}
+.pc-grip{flex:none;width:36px;display:flex;align-items:center;justify-content:center;color:#9aa08a;font-size:18px;letter-spacing:-3px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.pc-h{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 0;min-height:64px;background:none;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.pc-t{flex:none;width:48px;text-align:center}.pc-t b{display:block;font-size:16px;font-variant-numeric:tabular-nums}.pc-t small{display:block;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.pc-b{flex:1;min-width:0}.pc-b b{display:block;font-size:16px;line-height:1.35}.pc-b small{display:block;font-size:13px;color:var(--mut);margin-top:2px}.pc-b small.bad{color:#b91c1c}
+.pc-chev{flex:none;color:var(--mut);transition:transform .15s}.pc.open .pc-chev{transform:rotate(180deg)}
+.pc.warn{border-color:#b91c1c}
+.pc-ctl{display:none;padding:2px 14px 14px;border-top:1px dashed var(--line)}
+.pc.open .pc-ctl{display:block}
+.pc.drag{z-index:15;box-shadow:0 12px 28px rgba(18,48,26,.28);transition:none}
+.pc.ins-b{box-shadow:0 -4px 0 var(--sky)}.pc.ins-a{box-shadow:0 4px 0 var(--sky)}
+.pc-hint{font-size:13px;color:var(--mut);margin-top:10px;line-height:1.5}
+.stepper{display:flex;align-items:center;gap:8px;margin-top:10px}
+.stepper>span{flex:1;font-size:14px;color:var(--mut)}
+.stepper b{min-width:92px;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}
+.sbtn{min-height:44px;min-width:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--tx);font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+.sbtn.del{color:#b91c1c;border-color:#e3c2c2}
+.pc-act{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.pc-act .sbtn{font-size:14px;min-width:0;padding:0 4px}
+.stp.fx{display:block;background:#f3f1e3}
+.fx-top{display:flex;align-items:center;gap:10px}.fx-ic{font-size:22px;flex:none}
+.stp.fx .stepper{justify-content:space-between}.stp.fx .stepper b{flex:1;font-size:20px}
+.empty{text-align:center;padding:14px 8px 6px}.empty b{display:block;font-size:17px;margin:4px 0}.empty p{margin:0 0 12px;font-size:14px;color:var(--mut)}.empty .btn{width:auto;padding:0 26px}
+.fab{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:35;min-height:52px;padding:0 20px;border-radius:999px;border:0;background:var(--acc);color:#fff;font:inherit;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(18,48,26,.3);cursor:pointer}
+.sh-bg{position:fixed;inset:0;z-index:48;background:rgba(10,20,12,.45);touch-action:none}
+.sh{position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:86vh;max-height:86dvh;display:flex;flex-direction:column;background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sh.in{animation:shin .2s ease-out}@keyframes shin{from{transform:translateY(40px);opacity:0}}
+.sh-h{display:flex;align-items:center;gap:12px;padding:16px 16px 8px}.sh-h>div{flex:1;min-width:0}.sh-h b{display:block;font-size:18px}.sh-h small{display:block;color:var(--mut);font-size:13px;line-height:1.4}
+.sh-done{width:auto;min-height:44px;padding:0 18px;flex:none}
+.sh-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 8px;scrollbar-width:none}
+.sh-body{overflow-y:auto;overscroll-behavior:contain;padding:4px 16px 20px;flex:1}
+.pk-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.pk{display:flex;align-items:center;gap:8px;min-height:62px;padding:8px 10px;text-align:left;border-radius:16px;border:1px solid var(--line);background:#fff;color:var(--tx);font:inherit;cursor:pointer}
+.pk-e{font-size:22px;flex:none}.pk-n{flex:1;min-width:0;font-size:14px;line-height:1.3;font-weight:600}.pk-n small{display:block;font-size:12px;font-weight:400;color:var(--mut);margin-top:2px}
+.pk-c{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:16px}
+.pk.on{background:#e6efd8;border-color:var(--acc)}.pk.on .pk-c{background:var(--acc);border-color:var(--acc);color:#fff}
+.sh-cu{display:flex;gap:8px;margin-top:14px}.sh-cu input{flex:1;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:0 12px;font-size:16px;background:#fff}.sh-cu .btn{width:auto;padding:0 18px}
+@media(min-width:720px){.fab{right:calc(50% - 340px + 16px)}.sh{left:50%;right:auto;margin-left:-340px;width:680px}}
 </style>
 </head>
 <body>
@@ -343,7 +390,7 @@ nav button.on{font-weight:700}
 <script src="app.js?v=22"></script>
 <script src="prep.js?v=22"></script>
 <script src="getoh-config.js?v=1"></script>
-<script src="plan.js?v=47"></script>
+<script src="plan.js?v=48"></script>
 <script src="style.js?v=22"></script>
 </body>
 </html>
