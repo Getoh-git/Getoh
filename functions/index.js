@@ -3,6 +3,9 @@ const { defineSecret } = require('firebase-functions/params');
 
 const GOOGLE_PLACES_API_KEY = defineSecret('GOOGLE_PLACES_API_KEY');
 
+const { setGlobalOptions } = require('firebase-functions/v2');
+setGlobalOptions({ maxInstances: 3 });
+
 // Public endpoint for the static GitHub Pages client. Replace the CORS origin
 // below with your actual GitHub Pages/custom domain before deploying. Restrict
 // the Google API key to Places API (New), and set API quotas/budget alerts.
