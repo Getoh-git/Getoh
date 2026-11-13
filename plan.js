@@ -850,95 +850,363 @@ function renderSG(){
 }
 
 
-// ===== Getoh Kansai Data Engine + Place Discovery =====
-let GD_DATA = null, GD_LOADING = null;
-let GD_CATEGORY = "attractions", GD_CITY = "all", GD_QUERY = "", GD_MIN_RATING = 0, GD_SORT = "popular", GD_LIMIT = 60;
+// ===== Getoh Kansai Data Engine + Place Discovery (v2) =====
+// ค้นหาได้ทั้งไทย/อังกฤษ/ญี่ปุ่น · แยกประเภทร้านช้อปปิ้ง · กรองทันทีที่พิมพ์ · เรียงตามความใกล้
+let GD_DATA = null, GD_LOADING = null, GD_VIEW = [], GD_POS = null, GD_TIMER = 0;
+let GD_CATEGORY = "shopping", GD_CITY = "all", GD_QUERY = "", GD_GROUP = "all", GD_SHOW_HIDDEN = false;
+let GD_MIN_RATING = 0, GD_SORT = "complete", GD_LIMIT = 40;
 const GD_GOOGLE = Object.create(null);
 const GD_CATS = {attractions:"🏯 ที่เที่ยว",restaurants:"🍜 ร้านอาหาร",cafes:"☕ คาเฟ่",shopping:"🛍️ ช้อปปิ้ง",transport:"🚉 ขนส่ง"};
-const gdEsc = v => typeof esc === "function" ? esc(String(v ?? "")) : String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function gdArray(v){if(Array.isArray(v))return v;if(v&&typeof v==="object")return Object.values(v);return []}
-function gdCategories(data){const src=data&&(data.categories||data.places)||{};const out={};Object.keys(GD_CATS).forEach(k=>out[k]=gdArray(src[k]));return out}
-function gdCityName(v){const s=String(v||"").toLowerCase();if(s.includes("osaka")||s.includes("โอซาก้า"))return"osaka";if(s.includes("kyoto")||s.includes("เกียวโต"))return"kyoto";if(s.includes("nara")||s.includes("นารา"))return"nara";if(s.includes("kobe")||s.includes("โกเบ"))return"kobe";if(s.includes("kanazawa")||s.includes("คานาซาวะ")||s.includes("คานาซาว่า"))return"kanazawa";return s||"other"}
-function gdCityLabel(v){return({osaka:"Osaka",kyoto:"Kyoto",nara:"Nara",kobe:"Kobe",kanazawa:"Kanazawa",all:"ทุกเมือง"})[v]||v}
-function gdRating(p){const g=GD_GOOGLE[p.id||p.osm_id||p.name]||{};const n=Number(g.rating??p.rating??p.google_rating);return Number.isFinite(n)&&n>0?n:null}
-function gdReviewCount(p){const g=GD_GOOGLE[p.id||p.osm_id||p.name]||{};const n=Number(g.userRatingCount??p.user_rating_count??p.review_count);return Number.isFinite(n)&&n>=0?n:null}
-function gdSearchText(p){return [p.name,p.name_en,p.city,p.address,p.category,p.type,p.description,p.cuisine].filter(Boolean).join(" ").toLowerCase()}
-async function gdLoad(force=false){
- const host=document.getElementById("gd-panel");if(!host)return;
- if(GD_DATA&&!force){gdRender();return}
- if(GD_LOADING&&!force){await GD_LOADING;gdRender();return}
- GD_LOADING=(async()=>{try{const r=await fetch("data/kansai.json?ts="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);GD_DATA=await r.json()}catch(e){console.warn("Getoh Kansai data load failed",e);GD_DATA=null}})();
- await GD_LOADING;GD_LOADING=null;gdRender()
+const GD_CITIES = ["osaka","kyoto","nara","kobe","kanazawa"];
+const GD_CITY_TH = {osaka:"โอซาก้า",kyoto:"เกียวโต",nara:"นารา",kobe:"โกเบ",kanazawa:"คานาซาวะ",all:"ทุกเมือง"};
+const GD_PLACEHOLDER = {
+  shopping:"ค้นหา เช่น ดองกิ · ยูนิโคล่ · ร้านยา · ห้าง · ไดโซ",
+  restaurants:"ค้นหา เช่น ราเมน · ซูชิ · ยากินิกุ · อุด้ง",
+  cafes:"ค้นหา เช่น กาแฟ · สตาร์บัคส์ · ชา",
+  attractions:"ค้นหา เช่น วัด · ศาลเจ้า · ปราสาท · พิพิธภัณฑ์",
+  transport:"ค้นหา เช่น ชื่อสถานี · station",
+  all:"ค้นหาทุกหมวด เช่น ดองกิ · ราเมน · วัด"
+};
+
+// ---------- ประเภทร้านช้อปปิ้ง ----------
+const GD_GROUPS = {
+  department:["🏬","ห้าง/ศูนย์การค้า"], supermarket:["🛒","ซูเปอร์มาร์เก็ต"], drugstore:["💊","ร้านยา/ความงาม"],
+  variety:["💴","ร้านร้อยเยน/ดองกิ"], electronics:["🔌","อิเล็กทรอนิกส์/มือถือ"], fashion:["👕","เสื้อผ้า/แฟชั่น"],
+  souvenir:["🎁","ของฝาก/งานคราฟต์"], books_hobby:["📚","หนังสือ/ของเล่น"], home:["🏠","ของใช้บ้าน/DIY"],
+  food_drink:["🍰","ขนม/เบเกอรี่/เครื่องดื่ม"], other:["🛍️","อื่น ๆ"], convenience:["🏪","ร้านสะดวกซื้อ"], service:["🔧","ร้านบริการ/รถยนต์"]
+};
+const GD_HIDDEN_GROUPS = ["convenience","service"]; // ซ่อนไว้ใน "ทั้งหมด" จนกว่าจะพิมพ์ค้นหาหรือเลือกประเภทนั้น
+const GD_SUBTYPE_GROUP = {
+  department_store:"department", mall:"department", supermarket:"supermarket", greengrocer:"supermarket", convenience:"convenience",
+  chemist:"drugstore", cosmetics:"drugstore", perfumery:"drugstore", variety_store:"variety", general:"variety", discount:"variety",
+  electronics:"electronics", mobile_phone:"electronics", computer:"electronics", video_games:"electronics", camera:"electronics", hifi:"electronics",
+  clothes:"fashion", shoes:"fashion", bag:"fashion", jewelry:"fashion", boutique:"fashion", fashion_accessories:"fashion", watches:"fashion", kimono:"fashion",
+  gift:"souvenir", souvenir:"souvenir", antiques:"souvenir", art:"souvenir", craft:"souvenir",
+  books:"books_hobby", stationery:"books_hobby", toys:"books_hobby", games:"books_hobby", musical_instrument:"books_hobby",
+  doityourself:"home", houseware:"home", furniture:"home", hardware:"home", bed:"home", interior_decoration:"home", kitchen:"home",
+  bakery:"food_drink", confectionery:"food_drink", alcohol:"food_drink", wine:"food_drink", tea:"food_drink", coffee:"food_drink", seafood:"food_drink", butcher:"food_drink", deli:"food_drink", rice:"food_drink", pastry:"food_drink", beverages:"food_drink", chocolate:"food_drink",
+  car:"service", car_repair:"service", car_parts:"service", tyres:"service", motorcycle:"service", hairdresser:"service", beauty:"service", massage:"service",
+  laundry:"service", dry_cleaning:"service", tobacco:"service", pawnbroker:"service", funeral_directors:"service", copyshop:"service", travel_agency:"service"
+};
+const GD_CONVENIENCE_RE = /セブン|ローソン|ファミリーマート|ファミマ|ミニストップ|デイリーヤマザキ|ヤマザキ|ポプラ|サークルK|ampm|7-?eleven|lawson|family ?mart|ministop|circle ?k|daily ?yamazaki|コンビニ/i;
+// ใช้เดาประเภทจากชื่อร้านเมื่อข้อมูลเก่ายังไม่มี subtype (เรียงตามลำดับความสำคัญ)
+const GD_NAME_GROUP = [
+  ["service", /トヨタ|レクサス|ホンダ|honda|toyota|lexus|bmw|porsche|maserati|volkswagen|suzuki|スズキ|マツダ|mazda|ネッツ|netz|日産|nissan|ダイハツ|スバル|モータース|オートバックス|タイヤ|ガリバー|gulliver|自動車|バイク|美容|ヘア|hair|salon|サロン|理容|クリーニング|ランドリー|laundry|cleaning|接骨|整骨|質店|たばこ|タバコ|tobacco|ほぐし|エステ|esthe|新聞|フォト/i],
+  ["drugstore", /ドラッグ|薬局|薬|ウェルシア|welcia|コクミン|kokumin|ココカラ|cocokara|サンドラッグ|sundrug|スギ薬局|ツルハ|マツモトキヨシ|matsumoto ?kiyoshi|ダックス/i],
+  ["variety", /ダイソー|daiso|セリア|seria|キャンドゥ|can\s?do|ドン・?キホーテ|don ?quijote|ドンキ|ザ・?ビッグ|the big|100円|百円/i],
+  ["department", /イオンモール|aeon ?mall|百貨店|高島屋|髙島屋|大丸|阪急百貨|伊勢丹|そごう|ビエラ|vierra|モール|プラザ|plaza|\bmall\b/i],
+  ["supermarket", /スーパー|supermarket|イオン|aeon|フレスコ|fresco|成城石井|seijo|^life$|^ライフ$|関西スーパー|イズミヤ|izumiya|コープ|co-?op|生協|阪急オアシス|oasis|オークワ|okuwa|ダイエー|daiei|トーホー|toho|ヤオヒコ|生鮮|マルヨネ|西友|seiyu/i],
+  ["electronics", /ヨドバシ|yodobashi|ビックカメラ|bic ?camera|エディオン|edion|ケーズデンキ|k's ?denki|ジョーシン|joshin|ソフトバンク|softbank|ドコモ|docomo|電機|電化|電器|カメラ|camera|パソコン|ノジマ|nojima|ヤマダ/i],
+  ["fashion", /ユニクロ|uniqlo|ジーユー|西松屋|nishimatsuya|aoki|青山|リーガル|regal|きもの|着物|呉服|服|靴|シューズ|shoes|バッグ|jewel|宝石|時計|ブティック|boutique|ファッション|fashion|しまむら/i],
+  ["souvenir", /お土産|土産|みやげ|souvenir|gift|ギフト|工芸|本舗|アンテナショップ|antenna/i],
+  ["books_hobby", /書店|書房|ブックス|\bbooks?\b|本屋|tsutaya|ツタヤ|蔦屋|文具|文房具|stationery|玩具|おもちゃ|\btoy|アニメイト|animate|ゲーム|ホビー|hobby|レコード|楽器/i],
+  ["home", /コーナン|kohnan|カインズ|cainz|ナフコ|nafco|ホームセンター|home ?center|家具|ふとん|布団|インテリア|ニトリ|nitori|無印|muji|園芸|ガラス/i],
+  ["food_drink", /パン|ベーカリー|ブーランジェリー|ブランジェリー|boulangerie|bakery|製菓|菓子|餅|酒|リカー|liquor|ワイン|wine|茶|精肉|肉|米穀|豆|醤油|油店|寿司|漬|やまや|魚|豆腐|コーヒー|珈琲|チョコ|ケーキ|cake|スイーツ|パティスリー|ほっかほっか/i]
+];
+function gdGroup(p) {
+  if (p._cat && p._cat !== "shopping") return "other";
+  if (p._g) return p._g;
+  const text = [p.name, p.name_en, p.brand, p.brand_en].filter(Boolean).join(" ");
+  const sub = String(p.subtype || p.shop || "").toLowerCase();
+  let g = GD_CONVENIENCE_RE.test(text) ? "convenience" : (GD_SUBTYPE_GROUP[sub] || "");
+  if (!g) for (const [k, re] of GD_NAME_GROUP) { if (re.test(text)) { g = k; break; } }
+  return (p._g = g || "other");
 }
-function gdSetCategory(k){if(!GD_CATS[k])return;GD_CATEGORY=k;GD_LIMIT=60;gdRender()}
-function gdSetCity(k){GD_CITY=k;GD_LIMIT=60;gdRender()}
-function gdSetQuery(v){GD_QUERY=String(v||"");GD_LIMIT=60;gdRender()}
-function gdApplyFilters(){GD_LIMIT=60;gdRender()}
-function gdSetRating(v){GD_MIN_RATING=Number(v)||0;GD_LIMIT=60;gdRender()}
-function gdSetSort(v){GD_SORT=v;gdRender()}
-function gdShowMore(){GD_LIMIT+=60;gdRender()}
-function gdAddToPlan(name){
- const n=String(name||"").trim().slice(0,40);if(!n)return;
- const L=tpDL(TP.d);if(L.some(x=>String(x.n||"").toLowerCase()===n.toLowerCase())){toast("มีสถานที่นี้ในแผนวันนี้แล้ว");return}
- L.push({id:"gd"+Date.now(),n,e:"📍",t:0,u:60,a:TP.pa||"",h:""});tpFl();toast("เพิ่ม "+n+" ในแผนวันนี้แล้ว");
+
+// ---------- ตัวช่วยค้นหา: ไทย / อังกฤษ / ญี่ปุ่น ----------
+function gdNorm(s) {
+  return String(s ?? "").normalize("NFKC").toLowerCase()
+    .replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)) // คาตาคานะ → ฮิรางานะ ให้ ファミ = ふぁみ
+    .replace(/[\u0e47-\u0e4c]/g, "")                                              // ตัดวรรณยุกต์/การันต์ ให้ ลอว์สัน ≈ ลอวสน
+    .replace(/[\s・·･\-‐–—_.,'’"()（）\[\]\/]+/g, "");
 }
-async function gdGoogleLookup(key,name,city){
- const endpoint=window.GETOH_PLACES_API_URL;
- if(!endpoint){toast("ยังไม่ได้ตั้งค่า Google Places Proxy · ดูวิธีตั้งค่าใน README");return}
- const card=document.getElementById("gd-google-"+key);if(card)card.innerHTML='<span class="note">กำลังค้นหาข้อมูล Google Places…</span>';
- try{
-  const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:[name,city,"Japan"].filter(Boolean).join(" ")})});
-  const data=await r.json();if(!r.ok)throw Error(data.error||("HTTP "+r.status));
-  const place=data.place||data;
-  if(!place||!place.id)throw Error("ไม่พบสถานที่ที่ตรงกัน");
-  GD_GOOGLE[key]=place;
-  if(card){
-   const rating=Number(place.rating),count=Number(place.userRatingCount);
-   const reviews=gdArray(place.reviews).slice(0,5).map(rv=>`<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${"★".repeat(Math.max(0,Math.min(5,Number(rv.rating)||0)))}</b> <span class="note">${gdEsc(rv.authorAttribution?.displayName||"ผู้รีวิว Google")} · ${gdEsc(rv.relativePublishTimeDescription||"")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text||rv.text||"")}</div></div>`).join("");
-   card.innerHTML=`<div style="margin-top:6px"><b>${gdEsc(place.name||"Google Places match")}</b>${place.address?`<div class="note">${gdEsc(place.address)}</div>`:""}<div><b style="color:var(--amb)">★ ${Number.isFinite(rating)?rating.toFixed(1):"ไม่มีคะแนน"}/5</b> <span class="note">${Number.isFinite(count)?count.toLocaleString("th-TH")+" รีวิว":""}</span>${place.googleMapsUri?` · <a href="${gdEsc(place.googleMapsUri)}" target="_blank" rel="noopener" style="color:var(--sky)">Google Maps ↗</a>`:""}${place.websiteUri?` · <a href="${gdEsc(place.websiteUri)}" target="_blank" rel="noopener" style="color:var(--sky)">เว็บไซต์ ↗</a>`:""}</div></div>${reviews||'<div class="note">Google Places ไม่ส่งรีวิวสำหรับสถานที่นี้</div>'}<div class="note">ข้อมูลและรีวิวจาก Google · แสดงตามเงื่อนไขการระบุแหล่งที่มาของ Google</div>`;
+const GD_ALIASES = [];
+(function () {
+  const A = (keys, terms, group) => GD_ALIASES.push({keys: keys.map(gdNorm).filter(Boolean), terms: (terms || []).map(gdNorm).filter(Boolean), group: group || null});
+  // เมือง
+  A(["โอซาก้า","โอซากา","大阪"], ["osaka","大阪"]);
+  A(["เกียวโต","京都"], ["kyoto","京都"]);
+  A(["นารา","奈良"], ["nara","奈良"]);
+  A(["โกเบ","โคเบ","神戸"], ["kobe","神戸"]);
+  A(["คานาซาวะ","คานาซาว่า","金沢"], ["kanazawa","金沢"]);
+  // ประเภทร้านช้อปปิ้ง
+  A(["ห้าง","ห้างสรรพสินค้า","ศูนย์การค้า","มอลล์","department","departmentstore","mall"], ["百貨店","イオンモール","モール","高島屋","大丸","阪急百貨店"], "department");
+  A(["ซูเปอร์","ซุปเปอร์","ซูเปอร์มาร์เก็ต","ซุปเปอร์มาร์เก็ต","supermarket","super"], ["スーパー","フレスコ","成城石井","イオン","イズミヤ","コープ","阪急オアシス"], "supermarket");
+  A(["ยา","ร้านยา","ดรักสโตร์","ดรั๊กสโตร์","drugstore","drug","pharmacy","เครื่องสำอาง","ความงาม","cosmetics"], ["ドラッグ","薬","ウェルシア","welcia","コクミン","kokumin","ココカラ","サンドラッグ","スギ薬局","ツルハ","マツモトキヨシ"], "drugstore");
+  A(["ร้อยเยน","ร้านร้อยเยน","100เยน","100yen"], ["ダイソー","セリア","キャンドゥ","100円","百円"], "variety");
+  A(["ไดโซ","ไดโซะ","daiso"], ["ダイソー","daiso"]);
+  A(["เซเรีย","seria"], ["セリア","seria"]);
+  A(["แคนดู","cando"], ["キャンドゥ","cando"]);
+  A(["ดองกิ","ดอนกิ","ดองกิโฮเต้","ดอนกิโฮเต้","donki","donquijote","ドンキ"], ["ドンキホーテ","donquijote","ドンキ"]);
+  A(["เสื้อผ้า","แฟชั่น","fashion","clothes","รองเท้า","กระเป๋า","เครื่องประดับ"], ["ユニクロ","uniqlo","服","靴","バッグ","着物"], "fashion");
+  A(["ยูนิโคล่","ยูนิโคล","uniqlo"], ["ユニクロ","uniqlo"]);
+  A(["มูจิ","muji"], ["無印良品","muji","無印"]);
+  A(["อิเล็กทรอนิกส์","อีเล็กทรอนิกส์","อุปกรณ์ไฟฟ้า","เครื่องใช้ไฟฟ้า","กล้อง","มือถือ","คอมพิวเตอร์","ไอที","electronics","camera"], ["ヨドバシ","ビックカメラ","エディオン","ケーズデンキ","ジョーシン","電機","電化","カメラ"], "electronics");
+  A(["โยโดบาชิ","yodobashi"], ["ヨドバシ","yodobashi"]);
+  A(["บิ๊กคาเมร่า","บิกคาเมร่า","biccamera"], ["ビックカメラ","biccamera"]);
+  A(["ของฝาก","ซูเวนีร์","ของที่ระลึก","งานคราฟต์","หัตถกรรม","souvenir","gift"], ["お土産","土産","みやげ","ギフト","工芸","本舗"], "souvenir");
+  A(["หนังสือ","ร้านหนังสือ","เครื่องเขียน","ของเล่น","การ์ตูน","มังงะ","อนิเมะ","อะนิเมะ","books","book","toy","anime"], ["書店","書房","ブックス","本屋","tsutaya","蔦屋","玩具","おもちゃ","アニメイト","animate","文具"], "books_hobby");
+  A(["ทสึทายะ","ซึทายะ","tsutaya"], ["tsutaya","ツタヤ","蔦屋"]);
+  A(["อนิเมท","animate"], ["アニメイト","animate"]);
+  A(["ของใช้","ของใช้ในบ้าน","โฮมเซ็นเตอร์","เฟอร์นิเจอร์","diy","home","homecenter"], ["コーナン","カインズ","ナフコ","ホームセンター","家具","ニトリ"], "home");
+  A(["ขนม","เบเกอรี่","ขนมปัง","เค้ก","ของหวาน","เหล้า","สาเก","ไวน์","เครื่องดื่ม","ชา","bakery","sweets","wine","sake","liquor","tea"], ["パン","ベーカリー","ブーランジェリー","boulangerie","製菓","菓子","酒","リカー","ワイン","茶","スイーツ"], "food_drink");
+  A(["สะดวกซื้อ","คอนวีเนียนสโตร์","คอนวีเนียน","คอนบินิ","คอมบินิ","convenience"], ["コンビニ","セブン","ローソン","ファミリーマート","ミニストップ","デイリーヤマザキ"], "convenience");
+  A(["เซเว่น","เซเว่นอีเลฟเว่น","7-eleven","7eleven","seven","7-11"], ["セブン","7eleven"]);
+  A(["ลอว์สัน","ลอสัน","โลว์สัน","โลสัน","lawson"], ["ローソン","lawson"]);
+  A(["แฟมิลี่มาร์ท","แฟมิลี่มาร์ต","แฟมิลีมาร์ท","แฟมิมา","familymart"], ["ファミリーマート","ファミマ","familymart"]);
+  A(["อิออน","ไอออน","aeon"], ["イオン","aeon"]);
+  A(["มัตสึโมโตะ","มัตสึโมโต้","มัตสึโมโตะคิโยชิ","มัตสึคิโย","matsukiyo"], ["マツモトキヨシ","matsumotokiyoshi","マツキヨ"]);
+  A(["ซันดรัก","sundrug"], ["サンドラッグ","sundrug"]);
+  // อาหาร / คาเฟ่ / ที่เที่ยว / ขนส่ง
+  A(["ราเมน","ราเมง","ramen"], ["ラーメン","拉麺","麺","ramen","中華そば"]);
+  A(["ซูชิ","sushi"], ["寿司","すし","sushi","鮨"]);
+  A(["ยากินิกุ","ยากินิคุ","ปิ้งย่าง","yakiniku"], ["焼肉","焼き肉","yakiniku"]);
+  A(["อุด้ง","อูด้ง","udon"], ["うどん","udon"]);
+  A(["โซบะ","soba"], ["そば","蕎麦","soba"]);
+  A(["ทงคัตสึ","ทงคัทสึ","หมูทอด","tonkatsu"], ["とんかつ","tonkatsu","カツ"]);
+  A(["ทาโกะยากิ","takoyaki"], ["たこ焼","takoyaki"]);
+  A(["โอโคโนมิยากิ","okonomiyaki"], ["お好み焼","okonomiyaki"]);
+  A(["อิซากายะ","izakaya"], ["居酒屋","izakaya"]);
+  A(["แกงกะหรี่","กะหรี่","curry"], ["カレー","curry"]);
+  A(["กาแฟ","คาเฟ่","coffee","cafe"], ["珈琲","コーヒー","カフェ","cafe","coffee","喫茶"]);
+  A(["สตาร์บัคส์","สตาบัค","สตาร์บัค","starbucks"], ["スターバックス","starbucks","スタバ"]);
+  A(["วัด","temple"], ["寺","temple"]);
+  A(["ศาลเจ้า","shrine"], ["神社","shrine","大社","宮"]);
+  A(["ปราสาท","castle"], ["城","castle"]);
+  A(["พิพิธภัณฑ์","museum"], ["博物館","美術館","museum","記念館"]);
+  A(["สวน","สวนสาธารณะ","park","garden"], ["公園","庭園","庭","park","garden"]);
+  A(["สถานี","station"], ["駅","station"]);
+})();
+function gdAliasFor(tok) {
+  return GD_ALIASES.filter(a => a.keys.some(k => k === tok || (tok.length >= 3 && k.startsWith(tok))));
+}
+let GD_QCACHE = {q: null, toks: []};
+function gdParseQuery(q) {
+  q = String(q || "").trim();
+  if (GD_QCACHE.q === q) return GD_QCACHE.toks;
+  const toks = q.split(/\s+/).map(gdNorm).filter(Boolean).map(n => ({n, al: gdAliasFor(n)}));
+  GD_QCACHE = {q, toks};
+  return toks;
+}
+function gdHay(p) {
+  if (p._h) return p._h;
+  // ไม่ใส่ชื่อหมวด/ประเภท (เช่น "ร้านร้อยเยน/ดองกิ") ลงไป ไม่งั้นค้นแบรนด์หนึ่งแล้วได้ร้านอื่นในหมวดเดียวกันปนมา
+  return (p._h = gdNorm([p.name, p.name_en, p.name_th, p.brand, p.brand_en, p.city, p.address, p.subtype, p.cuisine, p.category, p.description].filter(Boolean).join(" ")));
+}
+function gdMatch(p, toks) {
+  if (!toks.length) return true;
+  const h = gdHay(p), g = p._cat === "shopping" ? gdGroup(p) : "";
+  return toks.every(t => h.includes(t.n) || t.al.some(a => (a.group && g === a.group) || a.terms.some(x => h.includes(x))));
+}
+
+// ---------- ข้อมูลพื้นฐาน ----------
+const gdEsc = v => typeof esc === "function" ? esc(String(v ?? "")) : String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function gdArray(v) { if (Array.isArray(v)) return v; if (v && typeof v === "object") return Object.values(v); return []; }
+function gdCategories(data) {
+  const cat = data && data.categories || {}, pl = data && data.places || {}, out = {};
+  Object.keys(GD_CATS).forEach(k => { const a = gdArray(cat[k]); out[k] = a.length ? a : gdArray(pl[k]); });
+  return out;
+}
+function gdIndex() { // ใส่ชื่อหมวดให้ทุกรายการ (ใช้ตอนค้นหาข้ามหมวด)
+  const cats = gdCategories(GD_DATA);
+  Object.keys(cats).forEach(k => cats[k].forEach(p => { p._cat = k; }));
+}
+function gdCityName(v) {
+  const s = String(v || "").toLowerCase();
+  if (s.includes("osaka") || s.includes("โอซาก้า") || s.includes("大阪")) return "osaka";
+  if (s.includes("kyoto") || s.includes("เกียวโต") || s.includes("京都")) return "kyoto";
+  if (s.includes("nara") || s.includes("นารา") || s.includes("奈良")) return "nara";
+  if (s.includes("kobe") || s.includes("โกเบ") || s.includes("神戸")) return "kobe";
+  if (s.includes("kanazawa") || s.includes("คานาซาวะ") || s.includes("คานาซาว่า") || s.includes("金沢")) return "kanazawa";
+  return s || "other";
+}
+const gdCityLabel = v => GD_CITY_TH[v] || v;
+const gdHasGoogle = () => !!window.GETOH_PLACES_API_URL;
+const gdKey = p => String(p.id || p.osm_id || p.name);
+function gdRating(p) { const g = GD_GOOGLE[gdKey(p)] || {}; const n = Number(g.rating ?? p.rating ?? p.google_rating); return Number.isFinite(n) && n > 0 ? n : null; }
+function gdReviewCount(p) { const g = GD_GOOGLE[gdKey(p)] || {}; const n = Number(g.userRatingCount ?? p.user_rating_count ?? p.review_count); return Number.isFinite(n) && n >= 0 ? n : null; }
+function gdCoord(p) { const la = Number(p.latitude ?? p.lat), lo = Number(p.longitude ?? p.lon); return Number.isFinite(la) && Number.isFinite(lo) ? [la, lo] : null; }
+function gdDist(p) {
+  if (!GD_POS) return null; const c = gdCoord(p); if (!c) return null;
+  const R = 6371, r = x => x * Math.PI / 180, dLa = r(c[0] - GD_POS.lat), dLo = r(c[1] - GD_POS.lon);
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(r(GD_POS.lat)) * Math.cos(r(c[0])) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+const gdFmtDist = d => d < 1 ? Math.round(d * 1000 / 10) * 10 + " ม." : d < 100 ? d.toFixed(1) + " กม." : "ไกลมาก";
+function gdComplete(p) { return (p.name_en ? 2 : 0) + (p.opening_hours ? 2 : 0) + (p.website ? 1 : 0) + (p.phone ? 1 : 0) + (p.address ? 1 : 0) + (p.wikidata ? 3 : 0); }
+const gdTitle = p => { const en = p.name_th || p.name_en; return en && gdNorm(en) !== gdNorm(p.name) ? en : (p.name || "ไม่มีชื่อ"); };
+const gdSub = p => { const en = p.name_th || p.name_en; return en && gdNorm(en) !== gdNorm(p.name) ? (p.name || "") : ""; };
+const gdToast = m => { try { typeof toast === "function" ? toast(m) : 0; } catch (e) {} };
+
+// ---------- โหลด / ตั้งค่า ----------
+async function gdLoad(force = false) {
+  const host = document.getElementById("gd-panel"); if (!host) return;
+  if (GD_DATA && !force) { gdRender(); return; }
+  if (GD_LOADING && !force) { await GD_LOADING; gdRender(); return; }
+  GD_LOADING = (async () => { try { const r = await fetch("data/kansai.json?ts=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw Error("HTTP " + r.status); GD_DATA = await r.json(); gdIndex(); } catch (e) { console.warn("Getoh Kansai data load failed", e); GD_DATA = null; } })();
+  await GD_LOADING; GD_LOADING = null; gdRender();
+}
+function gdSetCategory(k) { if (k !== "all" && !GD_CATS[k]) return; GD_CATEGORY = k; GD_GROUP = "all"; GD_LIMIT = 40; gdRender(); }
+function gdSetCity(k) { GD_CITY = k; GD_LIMIT = 40; gdRender(); }
+function gdSetGroup(k) { GD_GROUP = k; GD_LIMIT = 40; gdRenderList(); }
+function gdOnInput(v) { clearTimeout(GD_TIMER); GD_TIMER = setTimeout(() => { GD_QUERY = String(v || ""); GD_LIMIT = 40; gdRenderList(); }, 120); }
+function gdSetRating(v) { GD_MIN_RATING = Number(v) || 0; GD_LIMIT = 40; gdRenderList(); }
+function gdSetSort(v) { if (v === "near" && !GD_POS) { gdNear(); return; } GD_SORT = v; gdRenderList(); }
+function gdShowMore() { GD_LIMIT += 40; gdRenderList(); }
+function gdToggleHidden() { GD_SHOW_HIDDEN = !GD_SHOW_HIDDEN; GD_LIMIT = 40; gdRenderList(); }
+function gdClear() { GD_QUERY = ""; GD_GROUP = "all"; GD_MIN_RATING = 0; GD_SHOW_HIDDEN = false; GD_SORT = "complete"; GD_LIMIT = 40; gdRender(); }
+function gdWiden() { GD_CITY = "all"; GD_CATEGORY = "all"; GD_GROUP = "all"; GD_LIMIT = 40; gdRender(); }
+function gdNear() {
+  if (!navigator.geolocation) { gdToast("เบราว์เซอร์นี้ไม่รองรับตำแหน่ง"); return; }
+  gdToast("กำลังหาตำแหน่งของคุณ…");
+  navigator.geolocation.getCurrentPosition(pos => {
+    GD_POS = {lat: pos.coords.latitude, lon: pos.coords.longitude}; GD_SORT = "near";
+    const R = 6371, r = x => x * Math.PI / 180, dLa = r(34.6937 - GD_POS.lat), dLo = r(135.5023 - GD_POS.lon);
+    const far = 2 * R * Math.asin(Math.sqrt(Math.sin(dLa / 2) ** 2 + Math.cos(r(GD_POS.lat)) * Math.cos(r(34.6937)) * Math.sin(dLo / 2) ** 2));
+    if (far > 300) gdToast("ตำแหน่งปัจจุบันอยู่ไกลจากคันไซ ปุ่มนี้จะมีประโยชน์เมื่อไปถึงญี่ปุ่นแล้ว");
+    gdRender();
+  }, () => gdToast("เปิดตำแหน่งไม่ได้ ตรวจสิทธิ์ตำแหน่งในเบราว์เซอร์"), {enableHighAccuracy: false, timeout: 10000, maximumAge: 120000});
+}
+function gdAdd(i) {
+  const p = GD_VIEW[i]; if (!p) return;
+  const n = gdTitle(p).trim().slice(0, 40); if (!n) return;
+  const L = tpDL(TP.d); if (L.some(x => String(x.n || "").toLowerCase() === n.toLowerCase())) { gdToast("มีสถานที่นี้ในแผนวันนี้แล้ว"); return; }
+  L.push({id: "gd" + Date.now(), n, e: "📍", t: 0, u: 60, a: TP.pa || "", h: ""}); tpFl(); gdToast("เพิ่ม " + n + " ในแผนวันนี้แล้ว");
+}
+
+// ---------- Google Places (ทางเลือก ใช้เมื่อตั้ง proxy แล้ว) ----------
+function gdGoogleHtml(g) {
+  const rating = Number(g.rating), count = Number(g.userRatingCount);
+  const reviews = gdArray(g.reviews).slice(0, 5).map(rv => `<div style="padding:8px 0;border-top:1px solid var(--line)"><b style="color:var(--amb)">${"★".repeat(Math.max(0, Math.min(5, Number(rv.rating) || 0)))}</b> <span class="note">${gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")} · ${gdEsc(rv.relativePublishTimeDescription || "")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text || rv.text || "")}</div></div>`).join("");
+  return `<div style="margin-top:6px"><b>${gdEsc(g.name || "Google Places match")}</b>${g.address ? `<div class="note">${gdEsc(g.address)}</div>` : ""}<div><b style="color:var(--amb)">★ ${Number.isFinite(rating) ? rating.toFixed(1) : "ไม่มีคะแนน"}/5</b> <span class="note">${Number.isFinite(count) ? count.toLocaleString("th-TH") + " รีวิว" : ""}</span>${g.googleMapsUri ? ` · <a href="${gdEsc(g.googleMapsUri)}" target="_blank" rel="noopener" style="color:var(--sky)">Google Maps ↗</a>` : ""}${g.websiteUri ? ` · <a href="${gdEsc(g.websiteUri)}" target="_blank" rel="noopener" style="color:var(--sky)">เว็บไซต์ ↗</a>` : ""}</div></div>${reviews || '<div class="note">Google Places ไม่ส่งรีวิวสำหรับสถานที่นี้</div>'}<div class="note">ข้อมูลและรีวิวจาก Google · แสดงตามเงื่อนไขการระบุแหล่งที่มาของ Google</div>`;
+}
+async function gdGoogleLookup(i) {
+  const p = GD_VIEW[i]; if (!p) return;
+  const endpoint = window.GETOH_PLACES_API_URL;
+  if (!endpoint) { gdToast("ยังไม่ได้ตั้งค่า Google Places Proxy · ดูวิธีตั้งค่าใน README"); return; }
+  const card = document.getElementById("gd-g-" + i); if (card) card.innerHTML = '<span class="note">กำลังค้นหาข้อมูล Google Places…</span>';
+  try {
+    const r = await fetch(endpoint, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({query: [p.name_en || p.name, p.city, "Japan"].filter(Boolean).join(" ")})});
+    const data = await r.json(); if (!r.ok) throw Error(data.error || ("HTTP " + r.status));
+    const place = data.place || data; if (!place || !place.id) throw Error("ไม่พบสถานที่ที่ตรงกัน");
+    GD_GOOGLE[gdKey(p)] = place; gdRenderList();
+  } catch (e) { console.warn("Google Places lookup failed", e); const c = document.getElementById("gd-g-" + i); if (c) c.innerHTML = `<span class="note">ดึงข้อมูลไม่สำเร็จ: ${gdEsc(e.message || "ลองใหม่อีกครั้ง")}</span>`; }
+}
+
+// ---------- กรอง / เรียง ----------
+function gdCompute() {
+  const cats = gdCategories(GD_DATA);
+  const src = GD_CATEGORY === "all" ? Object.values(cats).flat() : (cats[GD_CATEGORY] || []);
+  const toks = gdParseQuery(GD_QUERY);
+  const byCity = src.filter(p => GD_CITY === "all" || gdCityName(p.city || p.address) === GD_CITY);
+  const base = byCity.filter(p => gdMatch(p, toks));
+  const isShop = GD_CATEGORY === "shopping";
+  const hideOn = isShop && GD_GROUP === "all" && !GD_SHOW_HIDDEN && !toks.length;
+  const counts = {}; if (isShop) base.forEach(p => { const g = gdGroup(p); counts[g] = (counts[g] || 0) + 1; });
+  let list = base;
+  if (isShop && GD_GROUP !== "all") list = list.filter(p => gdGroup(p) === GD_GROUP);
+  else if (hideOn) list = list.filter(p => !GD_HIDDEN_GROUPS.includes(gdGroup(p)));
+  const hiddenN = hideOn ? base.length - list.length : 0;
+  if (GD_MIN_RATING && gdHasGoogle()) list = list.filter(p => { const n = gdRating(p); return n !== null && n >= GD_MIN_RATING; });
+  list = list.slice();
+  const nm = p => String(p.name_en || p.name || "");
+  if (GD_SORT === "near" && GD_POS) list.sort((a, b) => (gdDist(a) ?? 1e9) - (gdDist(b) ?? 1e9));
+  else if (GD_SORT === "rating") list.sort((a, b) => (gdRating(b) || 0) - (gdRating(a) || 0));
+  else if (GD_SORT === "reviews") list.sort((a, b) => (gdReviewCount(b) || 0) - (gdReviewCount(a) || 0));
+  else if (GD_SORT === "name") list.sort((a, b) => nm(a).localeCompare(nm(b)));
+  else list.sort((a, b) => gdComplete(b) - gdComplete(a) || nm(a).localeCompare(nm(b)));
+  return {list, counts, hiddenN, baseN: base.length, srcN: src.length, byCityN: byCity.length, toks, isShop};
+}
+
+// ---------- วาดหน้าจอ ----------
+function gdCard(p, i) {
+  const key = gdKey(p), g = GD_GOOGLE[key] || {}, rating = gdRating(p), count = gdReviewCount(p), c = gdCoord(p), d = gdDist(p);
+  const sub = gdSub(p), grp = p._cat === "shopping" ? GD_GROUPS[gdGroup(p)] : null;
+  const tags = [grp ? grp[0] + " " + grp[1] : "", GD_CATEGORY === "all" && GD_CATS[p._cat] ? GD_CATS[p._cat] : "", p.city || "", d !== null ? "📏 " + gdFmtDist(d) : ""].filter(Boolean)
+    .map(t => `<span style="display:inline-block;padding:2px 8px;margin:0 6px 4px 0;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--mut)">${gdEsc(t)}</span>`).join("");
+  const lines = [p.address ? "📍 " + p.address : "", p.opening_hours ? "🕒 " + String(p.opening_hours).replace(/^24\/7$/, "เปิด 24 ชม.") : "", p.phone ? "☎ " + p.phone : ""].filter(Boolean)
+    .map(t => `<div class="note" style="margin:2px 0">${gdEsc(t)}</div>`).join("");
+  const lk = (href, label) => `<a href="${gdEsc(href)}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">${label}</a>`;
+  const links = [
+    c ? lk(`https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}`, "📍 แผนที่") : "",
+    c ? lk(`https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}`, "🧭 นำทาง") : "",
+    lk("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(gdTitle(p) + " " + (p.city || "Japan")), "⭐ รีวิวใน Google Maps"),
+    p.website && /^https?:\/\//i.test(p.website) ? lk(p.website, "🌐 เว็บไซต์") : ""
+  ].filter(Boolean).join("");
+  const gBtn = gdHasGoogle() ? `<button class="chip" style="min-height:34px" onclick="gdGoogleLookup(${i})">⭐ โหลดคะแนน Google</button>` : "";
+  return `<article style="padding:12px 0;border-top:1px solid var(--line)">
+   <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0"><b>${gdEsc(gdTitle(p))}</b>${sub ? `<div class="note" style="margin:0">${gdEsc(sub)}</div>` : ""}</div>${rating !== null ? `<span style="white-space:nowrap;color:var(--amb);font-weight:700">★ ${rating.toFixed(1)}${count !== null ? ` <small class="note">(${count.toLocaleString("th-TH")})</small>` : ""}</span>` : ""}</div>
+   <div style="margin-top:4px">${tags}</div>${lines}
+   <div style="display:flex;gap:12px;flex-wrap:wrap;margin:6px 0">${links}</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" style="min-height:34px" onclick="gdAdd(${i})">＋ เพิ่มในแผนวันนี้</button>${gBtn}</div>
+   <div id="gd-g-${i}">${g.id ? gdGoogleHtml(g) : ""}</div></article>`;
+}
+function gdRenderList() {
+  const listEl = document.getElementById("gd-list"); if (!listEl || !GD_DATA) return;
+  const r = gdCompute(), shown = r.list.slice(0, GD_LIMIT); GD_VIEW = shown;
+  // ชิปประเภทย่อย (เฉพาะช้อปปิ้ง)
+  const subEl = document.getElementById("gd-sub");
+  if (subEl) {
+    if (!r.isShop) subEl.innerHTML = "";
+    else {
+      const visibleAll = GD_SHOW_HIDDEN || r.toks.length ? r.baseN : r.baseN - GD_HIDDEN_GROUPS.reduce((n, k) => n + (r.counts[k] || 0), 0);
+      const chip = (k, label, n, muted) => `<button class="chip ${GD_GROUP === k ? "on" : ""}" style="${muted && GD_GROUP !== k ? "opacity:.7" : ""}${n === 0 && GD_GROUP !== k ? ";opacity:.4" : ""}" onclick="gdSetGroup('${k}')">${label} (${n})</button>`;
+      subEl.innerHTML = chip("all", "ทั้งหมด", visibleAll) + Object.keys(GD_GROUPS).filter(k => (r.counts[k] || 0) > 0 || GD_GROUP === k).map(k => chip(k, GD_GROUPS[k][0] + " " + GD_GROUPS[k][1], r.counts[k] || 0, GD_HIDDEN_GROUPS.includes(k))).join("");
+    }
   }
-  gdRender();
- }catch(e){console.warn("Google Places lookup failed",e);if(card)card.innerHTML=`<span class="note">ดึงข้อมูลไม่สำเร็จ: ${gdEsc(e.message||"ลองใหม่อีกครั้ง")}</span>`;}
+  const metaEl = document.getElementById("gd-meta");
+  if (metaEl) {
+    const bits = [`<b>${GD_CATEGORY === "all" ? "🔎 ทุกหมวด" : GD_CATS[GD_CATEGORY]}</b> · พบ ${r.list.length.toLocaleString("th-TH")} รายการ${shown.length < r.list.length ? " (แสดง " + shown.length + ")" : ""}`];
+    if (r.hiddenN) bits.push(`<button class="chip" style="min-height:30px;font-size:12px" onclick="gdToggleHidden()">ซ่อนร้านสะดวกซื้อ/ร้านบริการ ${r.hiddenN} รายการ · แตะเพื่อแสดง</button>`);
+    else if (r.isShop && GD_SHOW_HIDDEN && GD_GROUP === "all" && !r.toks.length) bits.push(`<button class="chip on" style="min-height:30px;font-size:12px" onclick="gdToggleHidden()">กำลังแสดงร้านสะดวกซื้อ/ร้านบริการ · แตะเพื่อซ่อน</button>`);
+    metaEl.innerHTML = bits.join(" ");
+  }
+  let empty = "";
+  if (!r.list.length) {
+    if (GD_CITY !== "all" && GD_CATEGORY !== "all" && !r.byCityN && !r.toks.length)
+      empty = `<div class="note" style="padding:12px 0">ยังไม่มีข้อมูล${GD_CATS[GD_CATEGORY].replace(/^\S+\s/, "")}ของ${gdCityLabel(GD_CITY)}ในไฟล์ (รอบดึงข้อมูลล่าสุดของเมืองนี้ไม่สำเร็จ ระบบจะลองใหม่ในรอบถัดไป) ลองเลือกเมืองอื่นหรือ "ทุกเมือง"</div><button class="chip" onclick="gdSetCity('all')">ดูทุกเมือง</button>`;
+    else {
+      let other = 0; if (r.toks.length) { const cats = gdCategories(GD_DATA); Object.values(cats).flat().forEach(p => { if (gdMatch(p, r.toks)) other++; }); }
+      const srcAll = GD_CATEGORY === "all" ? Object.values(gdCategories(GD_DATA)).flat() : (gdCategories(GD_DATA)[GD_CATEGORY] || []);
+      const missing = r.toks.length && GD_CITY === "all" ? GD_CITIES.filter(c => !srcAll.some(x => gdCityName(x.city || x.address) === c)).map(gdCityLabel) : [];
+      const missNote = missing.length ? `<div class="note">หมายเหตุ: ข้อมูลหมวดนี้ยังไม่มีของ${missing.join(", ")} ร้านที่หาไม่เจออาจอยู่ในเมืองเหล่านั้น (ลองค้นใน Google Maps ได้)</div>` : "";
+      empty = missNote + `<div class="note" style="padding:12px 0">ไม่พบ${GD_QUERY.trim() ? ` "${gdEsc(GD_QUERY.trim())}"` : "รายการ"}ตามตัวกรองนี้</div>${other && (GD_CITY !== "all" || GD_CATEGORY !== "all" || GD_GROUP !== "all") ? `<button class="chip" onclick="gdWiden()">🔎 พบ ${other} รายการในเมือง/หมวดอื่น · ดูทั้งหมด</button>` : `<div class="note">ลองพิมพ์ชื่อแบรนด์ (เช่น ดองกิ ไดโซ ยูนิโคล่) ประเภทร้าน (เช่น ร้านยา ห้าง) หรือชื่อภาษาอังกฤษ/ญี่ปุ่น</div>`}`;
+    }
+  }
+  listEl.innerHTML = shown.map(gdCard).join("") + empty;
+  const moreEl = document.getElementById("gd-more");
+  if (moreEl) moreEl.innerHTML = r.list.length > GD_LIMIT ? `<button class="btn o" style="margin-top:8px" onclick="gdShowMore()">แสดงเพิ่มอีก ${Math.min(40, r.list.length - GD_LIMIT)} รายการ (เหลือ ${r.list.length - GD_LIMIT})</button>` : "";
 }
-function gdRender(){
- const host=document.getElementById("gd-panel");if(!host)return;
- if(!GD_DATA){host.innerHTML=`<div class="note">ยังโหลด data/kansai.json ไม่ได้ · ตรวจว่าไฟล์อยู่ในโฟลเดอร์ data และเปิดผ่าน GitHub Pages หรือเว็บเซิร์ฟเวอร์</div><button class="chip" onclick="gdLoad(true)">ลองโหลดอีกครั้ง</button>`;return}
- const cats=gdCategories(GD_DATA),all=Object.values(cats).flat();
- const cities=["all",...new Set(all.map(x=>gdCityName(x.city||x.address)).filter(x=>["osaka","kyoto","nara","kobe","kanazawa"].includes(x)))];
- if(!cities.includes(GD_CITY))GD_CITY="all";
- let list=cats[GD_CATEGORY].filter(x=>GD_CITY==="all"||gdCityName(x.city||x.address)===GD_CITY);
- if(GD_QUERY.trim())list=list.filter(p=>gdSearchText(p).includes(GD_QUERY.trim().toLowerCase()));
- if(GD_MIN_RATING)list=list.filter(p=>{const n=gdRating(p);return n!==null&&n>=GD_MIN_RATING});
- if(GD_SORT==="rating")list.sort((a,b)=>(gdRating(b)||0)-(gdRating(a)||0));
- else if(GD_SORT==="reviews")list.sort((a,b)=>(gdReviewCount(b)||0)-(gdReviewCount(a)||0));
- else if(GD_SORT==="name")list.sort((a,b)=>String(a.name||a.name_en||"").localeCompare(String(b.name||b.name_en||"")));
- else list.sort((a,b)=>(Number(b.popularity||b.tourism||0))-(Number(a.popularity||a.tourism||0)));
- const weather=GD_DATA.weather||{},wx=Object.entries(weather).filter(([k])=>GD_CITY==="all"||gdCityName(k)===GD_CITY);
- const meta=GD_DATA.meta||{},updated=GD_DATA.updated_at||meta.last_attempt_at||meta.updated_at||"";
- const date=updated?new Date(updated).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"}):"ยังไม่มีวันที่อัปเดต";
- const st=meta.status||meta.last_run_status||"unknown",status=st==="success"?"อัปเดตสำเร็จ":st==="partial"?"อัปเดตบางส่วน":st==="not_run"?"รอการอัปเดตครั้งแรก":st;
- const cityBtns=cities.map(c=>`<button class="chip ${GD_CITY===c?"on":""}" onclick="gdSetCity('${gdEsc(c)}')">${gdCityLabel(c)}</button>`).join("");
- const catBtns=Object.entries(GD_CATS).map(([k,v])=>`<button class="chip ${GD_CATEGORY===k?"on":""}" onclick="gdSetCategory('${k}')">${v} (${cats[k].length})</button>`).join("");
- const cards=list.slice(0,GD_LIMIT).map((p,i)=>{
-  const name=p.name||p.name_en||"ไม่มีชื่อ",key=String(p.id||p.osm_id||name),g=GD_GOOGLE[key]||{},rating=gdRating(p),count=gdReviewCount(p);
-  const details=[p.city,p.address,p.opening_hours?"🕒 "+p.opening_hours:"",p.phone?"☎ "+p.phone:"",p.website?"🌐 "+p.website:""].filter(Boolean);
-  const lat=Number(p.latitude??p.lat),lon=Number(p.longitude??p.lon);
-  const map=Number.isFinite(lat)&&Number.isFinite(lon)?`<a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">OpenStreetMap ↗</a>`:"";
-  const web=p.website&&/^https?:\/\//i.test(p.website)?`<a href="${gdEsc(p.website)}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">เว็บไซต์ ↗</a>`:"";
-  const googleLink=`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name+" "+(p.city||"Japan"))}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">ค้นหา Google Maps ↗</a>`;
-  const gBtn=`<button class="chip" style="min-height:34px" onclick="gdGoogleLookup('${gdEsc(key)}','${gdEsc(name).replace(/'/g,"&#39;")}','${gdEsc(p.city||"").replace(/'/g,"&#39;")}')">⭐ โหลดคะแนน/รีวิว Google</button>`;
-  return `<article style="padding:12px 0;border-top:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>${gdEsc(name)}</b>${rating!==null?`<span style="white-space:nowrap;color:var(--amb);font-weight:700">★ ${rating.toFixed(1)}${count!==null?` <small class="note">(${count.toLocaleString("th-TH")})</small>`:""}</span>`:`<span class="note" style="white-space:nowrap">ยังไม่มีคะแนน</span>`}</div><div class="note">${details.map(gdEsc).join(" · ")}</div><div style="display:flex;gap:12px;flex-wrap:wrap;margin:5px 0">${map}${web}${googleLink}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${gBtn}<button class="chip" style="min-height:34px" onclick="gdAddToPlan('${gdEsc(name).replace(/'/g,"&#39;")}')">＋ เพิ่มในแผนวันนี้</button></div><div id="gd-google-${gdEsc(key)}">${g.id?`<div style="margin-top:6px"><b>${gdEsc(g.name||"Google Places match")}</b>${g.address?`<div class="note">${gdEsc(g.address)}</div>`:""}<div><b style="color:var(--amb)">★ ${Number(g.rating||0).toFixed(1)}/5</b> <span class="note">${Number(g.userRatingCount||0).toLocaleString("th-TH")} รีวิว</span>${g.googleMapsUri?` · <a href="${gdEsc(g.googleMapsUri)}" target="_blank" rel="noopener" style="color:var(--sky)">Google Maps ↗</a>`:""}${g.websiteUri?` · <a href="${gdEsc(g.websiteUri)}" target="_blank" rel="noopener" style="color:var(--sky)">เว็บไซต์ ↗</a>`:""}</div></div>${gdArray(g.reviews).slice(0,5).map(rv=>`<div style="padding:8px 0;border-top:1px solid var(--line)"><b style="color:var(--amb)">${"★".repeat(Math.max(0,Math.min(5,Number(rv.rating)||0)))}</b> <span class="note">${gdEsc(rv.authorAttribution?.displayName||"Google reviewer")} · ${gdEsc(rv.relativePublishTimeDescription||"")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text||rv.text||"")}</div></div>`).join("")}<div class="note">รีวิวและคะแนนจาก Google Places</div>`:""}</div></article>`
- }).join("");
- const wxHtml=wx.map(([k,w])=>{const ds=gdArray(w.daily).slice(0,5).map(d=>`<span style="display:inline-block;margin:4px 8px 4px 0;font-size:12px">${gdEsc(d.date||"")} · ${d.temperature_min_c??"–"}°/${d.temperature_max_c??"–"}° · ฝน ${d.precipitation_probability_max??"–"}%</span>`).join("");return `<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${gdCityLabel(gdCityName(w.city||k))}</b><div>${ds||'<span class="note">ยังไม่มีพยากรณ์</span>'}</div></div>`}).join("");
- const total=all.length;
- host.innerHTML=`<div class="note">สถานะ: <b>${gdEsc(status)}</b> · ${gdEsc(date)} · สถานที่รวม ${total.toLocaleString("th-TH")} รายการ</div>
+function gdRender() {
+  const host = document.getElementById("gd-panel"); if (!host) return;
+  if (!GD_DATA) { host.innerHTML = `<div class="note">ยังโหลด data/kansai.json ไม่ได้ · ตรวจว่าไฟล์อยู่ในโฟลเดอร์ data และเปิดผ่าน GitHub Pages หรือเว็บเซิร์ฟเวอร์</div><button class="chip" onclick="gdLoad(true)">ลองโหลดอีกครั้ง</button>`; return; }
+  const cats = gdCategories(GD_DATA), all = Object.values(cats).flat();
+  const cities = ["all", ...GD_CITIES.filter(c => all.some(x => gdCityName(x.city || x.address) === c) || Object.keys(GD_DATA.weather || {}).some(k => gdCityName(k) === c))];
+  if (!cities.includes(GD_CITY)) GD_CITY = "all";
+  const inCity = a => a.filter(x => GD_CITY === "all" || gdCityName(x.city || x.address) === GD_CITY).length;
+  const srcNow = GD_CATEGORY === "all" ? all : (cats[GD_CATEGORY] || []);
+  const cityCount = c => c === "all" ? srcNow.length : srcNow.filter(x => gdCityName(x.city || x.address) === c).length;
+  const cityBtns = cities.map(c => { const n = cityCount(c); return `<button class="chip ${GD_CITY === c ? "on" : ""}" style="${n === 0 && GD_CITY !== c ? "opacity:.45" : ""}" onclick="gdSetCity('${c}')">${gdCityLabel(c)} (${n})</button>`; }).join("");
+  const catBtns = `<button class="chip ${GD_CATEGORY === "all" ? "on" : ""}" onclick="gdSetCategory('all')">🔎 ทุกหมวด (${inCity(all)})</button>` + Object.entries(GD_CATS).map(([k, v]) => `<button class="chip ${GD_CATEGORY === k ? "on" : ""}" onclick="gdSetCategory('${k}')">${v} (${inCity(cats[k])})</button>`).join("");
+  const weather = GD_DATA.weather || {}, wx = Object.entries(weather).filter(([k]) => GD_CITY === "all" || gdCityName(k) === GD_CITY);
+  const meta = GD_DATA.meta || {}, updated = GD_DATA.updated_at || meta.last_attempt_at || meta.updated_at || "";
+  const date = updated ? new Date(updated).toLocaleString("th-TH", {dateStyle: "medium", timeStyle: "short"}) : "ยังไม่มีวันที่อัปเดต";
+  const st = meta.status || meta.last_run_status || "unknown", status = st === "success" ? "อัปเดตสำเร็จ" : st === "partial" ? "อัปเดตบางส่วน" : st === "not_run" ? "รอการอัปเดตครั้งแรก" : st;
+  const fails = gdArray(meta.failures);
+  const wxHtml = wx.map(([k, w]) => { const ds = gdArray(w.daily).slice(0, 5).map(d => `<span style="display:inline-block;margin:4px 8px 4px 0;font-size:12px">${gdEsc(d.date || "")} · ${d.temperature_min_c ?? "–"}°/${d.temperature_max_c ?? "–"}° · ฝน ${d.precipitation_probability_max ?? "–"}%</span>`).join(""); return `<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${gdCityLabel(gdCityName(w.city || k))}</b><div>${ds || '<span class="note">ยังไม่มีพยากรณ์</span>'}</div></div>`; }).join("");
+  const sorts = [["complete", "ข้อมูลครบก่อน"], ["name", "ชื่อ A–Z"], ["near", "📍 ใกล้ฉัน" + (GD_POS ? "" : " (ขอตำแหน่ง)")]].concat(gdHasGoogle() ? [["rating", "คะแนน Google สูงสุด"], ["reviews", "รีวิว Google มากสุด"]] : []);
+  if (!sorts.some(s => s[0] === GD_SORT)) GD_SORT = "complete";
+  const inputStyle = "min-width:0;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px";
+  host.innerHTML = `<div class="note">สถานะ: <b>${gdEsc(status)}</b> · ${gdEsc(date)} · ทั้งหมด ${all.length.toLocaleString("th-TH")} รายการ${fails.length ? ` · <details style="display:inline"><summary style="display:inline;cursor:pointer">ดูรายละเอียด (${fails.length})</summary><div style="margin-top:4px">${fails.map(f => `<div>${gdEsc(f)}</div>`).join("")}</div></details>` : ""}</div>
  <div class="chips" style="flex-wrap:wrap;padding:4px 0">${cityBtns}</div><div class="chips" style="flex-wrap:wrap;padding:4px 0">${catBtns}</div>
- <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.65fr);gap:8px;margin:8px 0"><input value="${gdEsc(GD_QUERY)}" oninput="GD_QUERY=this.value" onkeydown="if(event.key==='Enter')gdApplyFilters()" placeholder="ค้นหาชื่อ/ที่อยู่/ประเภท" style="min-width:0;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px"><select onchange="gdSetRating(this.value)" style="min-width:0;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:14px"><option value="0" ${GD_MIN_RATING===0?"selected":""}>ทุกคะแนน</option><option value="3" ${GD_MIN_RATING===3?"selected":""}>3 ดาวขึ้นไป</option><option value="4" ${GD_MIN_RATING===4?"selected":""}>4 ดาวขึ้นไป</option><option value="4.5" ${GD_MIN_RATING===4.5?"selected":""}>4.5 ดาวขึ้นไป</option></select><button class="chip" style="grid-column:1/-1;justify-self:start" onclick="gdApplyFilters()">ค้นหา</button></div>
- <div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px"><span class="note" style="margin:0">เรียงตาม</span><select onchange="gdSetSort(this.value)" style="flex:1;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px"><option value="popular" ${GD_SORT==="popular"?"selected":""}>ค่าเริ่มต้น</option><option value="rating" ${GD_SORT==="rating"?"selected":""}>คะแนนสูงสุด</option><option value="reviews" ${GD_SORT==="reviews"?"selected":""}>จำนวนรีวิวมากสุด</option><option value="name" ${GD_SORT==="name"?"selected":""}>ชื่อ A–Z</option></select><button class="chip" onclick="GD_QUERY='';GD_MIN_RATING=0;GD_SORT='popular';gdRender()">ล้างตัวกรอง</button></div>
- <div style="margin-top:6px"><b>${GD_CATS[GD_CATEGORY]}</b> · พบ ${list.length.toLocaleString("th-TH")} รายการ ${GD_MIN_RATING?"· เฉพาะสถานที่มีคะแนนตามเกณฑ์":""}</div><div class="note">คะแนน Google จะโหลดเมื่อกดปุ่มในแต่ละสถานที่เท่านั้น · ตัวกรองดาวใช้กับรายการที่โหลดคะแนนแล้ว</div>
- ${cards||'<div class="note" style="padding:12px 0">ไม่พบสถานที่ตามตัวกรองนี้ หรือยังไม่มีข้อมูลคะแนนจาก Google Places ลองเปลี่ยนตัวกรอง</div>'}
- ${list.length>GD_LIMIT?`<button class="btn o" style="margin-top:8px" onclick="gdShowMore()">แสดงเพิ่มอีก 60 รายการ</button>`:""}
- <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml||'<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
- <div class="note" style="margin-top:8px">ข้อมูลพื้นฐาน: OpenStreetMap · คะแนน/รีวิว: Google Places API (เมื่อเชื่อมต่อ Proxy) · อากาศ: Open-Meteo</div>
- <button class="chip" style="margin-top:6px" onclick="gdLoad(true)">↻ โหลดข้อมูลล่าสุด</button>`
+ <input id="gd-q" type="search" autocomplete="off" value="${gdEsc(GD_QUERY)}" oninput="gdOnInput(this.value)" placeholder="${gdEsc(GD_PLACEHOLDER[GD_CATEGORY] || GD_PLACEHOLDER.all)}" style="${inputStyle};width:100%;margin:8px 0 4px">
+ <div id="gd-sub" class="chips" style="flex-wrap:wrap;padding:4px 0"></div>
+ <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span class="note" style="margin:0">เรียงตาม</span><select onchange="gdSetSort(this.value)" style="flex:1;${inputStyle};min-height:40px">${sorts.map(s => `<option value="${s[0]}" ${GD_SORT === s[0] ? "selected" : ""}>${s[1]}</option>`).join("")}</select>${gdHasGoogle() ? `<select onchange="gdSetRating(this.value)" style="${inputStyle};min-height:40px"><option value="0" ${GD_MIN_RATING === 0 ? "selected" : ""}>ทุกคะแนน</option><option value="3" ${GD_MIN_RATING === 3 ? "selected" : ""}>3★+</option><option value="4" ${GD_MIN_RATING === 4 ? "selected" : ""}>4★+</option><option value="4.5" ${GD_MIN_RATING === 4.5 ? "selected" : ""}>4.5★+</option></select>` : ""}<button class="chip" onclick="gdClear()">ล้าง</button></div>
+ <div id="gd-meta" style="margin-top:6px"></div>
+ ${gdHasGoogle() ? '<div class="note">ตัวกรอง/การเรียงตามดาวใช้กับรายการที่กด "โหลดคะแนน Google" แล้วเท่านั้น</div>' : ""}
+ <div id="gd-list"></div><div id="gd-more"></div>
+ <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml || '<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
+ <div class="note" style="margin-top:8px">ข้อมูลพื้นฐาน: © OpenStreetMap contributors (ODbL) · เวลาเปิด-ปิดมาจากชุมชน OSM โปรดเช็กอีกครั้งก่อนไป · อากาศ: Open-Meteo${gdHasGoogle() ? " · คะแนน/รีวิว: Google Places" : ""}</div>
+ <button class="chip" style="margin-top:6px" onclick="gdLoad(true)">↻ โหลดข้อมูลล่าสุด</button>`;
+  gdRenderList();
 }
