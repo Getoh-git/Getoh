@@ -659,6 +659,43 @@ async function wx(){
   const lab=!live?"ค่าเฉลี่ยหลายปีช่วงทริป (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี`:"พยากรณ์ช่วงทริป";
   const today=new Date(Date.now()+324e5).toISOString().slice(0,10);
   box.innerHTML=wxCard({cur,td:fc[today],D,lab,tip,rain});
-  const tv=$("hx-tv"),ti=$("hx-ti");if(tv&&cur){tv.textContent=Math.round(cur.temperature_2m)+"°";if(ti)ti.textContent=wxIcon(cur.weather_code,cur.is_day!==0?1:0)} // อุณหภูมิมุมขวาบนของหน้าแรก
+  if(cur){HXT.osaka={t:Math.round(cur.temperature_2m),ic:wxIcon(cur.weather_code,cur.is_day!==0?1:0)};hxTemp()} // อุณหภูมิมุมขวาบนของหน้าแรก
+  hxSnowT();
+}
+// ---------- หน้าแรก: แตะเพื่อเดินทาง โอซาก้า ⇄ ชิราคาวาโกะ (ตัวละครเดิน ฉากเปลี่ยนเป็นหิมะ) ----------
+const HXT={osaka:null,snow:null};let hxMode="osaka",hxBusy=false,hxSnowAt=0;
+const HXN={osaka:"โอซาก้าตอนนี้",snow:"ชิราคาวาโกะตอนนี้"};
+function hxTemp(){
+  const d=HXT[hxMode],tv=$("hx-tv"),ti=$("hx-ti"),tl=$("hx-tl");if(!tv)return;
+  tv.textContent=d?d.t+"°":"–°";ti.textContent=d?d.ic:(hxMode==="snow"?"❄️":"🌤️");tl.textContent=HXN[hxMode];
+}
+async function hxSnowT(){ // อุณหภูมิหมู่บ้านชิราคาวาโกะ (Open-Meteo)
+  if(Date.now()-hxSnowAt<6e5&&HXT.snow)return;hxSnowAt=Date.now();
+  try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=36.2575&longitude=136.9061&current=temperature_2m,weather_code,is_day&timezone=Asia%2FTokyo");
+    if(r.ok){const c=(await r.json()).current;if(c){HXT.snow={t:Math.round(c.temperature_2m),ic:wxIcon(c.weather_code,c.is_day!==0?1:0)};hxTemp()}}}catch(e){}
+}
+(function(){ // เกล็ดหิมะ (สี่เหลี่ยมพิกเซล) สร้างครั้งเดียว จะเคลื่อนไหวเฉพาะตอนอยู่ฉากหิมะ
+  const box=$("hx-snow");if(!box)return;let s="";
+  for(let i=0;i<44;i++){const z=[3,3,4,5][i%4];
+    s+=`<i style="--l:${(Math.random()*100).toFixed(1)}%;--s:${z}px;--d:${(5+Math.random()*5).toFixed(1)}s;--dl:-${(Math.random()*9).toFixed(1)}s;--x:${Math.round(-30+Math.random()*60)}px"></i>`}
+  box.innerHTML=s;
+})();
+function hxGo(){
+  if(hxBusy)return;hxBusy=true;
+  const hx=$("hx"),c=$("hx-couple"),go=$("hx-go"),to=hxMode==="osaka"?"snow":"osaka",dir=to==="snow"?1:-1;
+  go.disabled=true;c.classList.add("walk");
+  c.style.left=(dir>0?"128%":"-28%");                     // เดินออกจากฉาก (ไปขวาตอนออกเดินทาง ซ้ายตอนกลับ)
+  setTimeout(()=>{                                           // กลางทาง: ฉากเปลี่ยน
+    hxMode=to;hx.classList.toggle("snow",to==="snow");
+    $("hx-s1").setAttribute("aria-hidden",String(to==="snow"));$("hx-s2").setAttribute("aria-hidden",String(to!=="snow"));
+    $("hx-nights").textContent=to==="snow"?"หมู่บ้านชิราคาวาโกะ ❄️":`${NIGHTS} คืนที่โอซาก้า`;
+    go.textContent=to==="snow"?"🏙️ กลับโอซาก้า":"❄️ ไปชิราคาวาโกะ";
+    hxTemp();if(to==="snow")hxSnowT();
+  },900);
+  setTimeout(()=>{                                           // เดินเข้ามาจากอีกฝั่ง
+    c.style.transition="none";c.style.left=(dir>0?"-28%":"128%");void c.offsetWidth;
+    c.style.transition="";c.style.left="50%";
+  },1500);
+  setTimeout(()=>{c.classList.remove("walk");go.disabled=false;hxBusy=false},2900);
 }
 wx();setInterval(wx,18e5);
