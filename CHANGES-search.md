@@ -31,3 +31,21 @@
    เพื่อให้ `data/kansai.json` ได้ร้านที่แยกประเภท โอซาก้า และคานาซาวะ
    (ไฟล์ข้อมูลในชุดนี้ยังเป็นของรอบเดิม ไม่มี `subtype` ตัวค้นหาจึงเดาประเภทจากชื่อร้านไปก่อน)
 2. `update-sgo.yml` ที่ root ไม่ได้อยู่ใน `.github/workflows/` จึงไม่ทำงานอัตโนมัติ (ยังไม่ได้แตะ)
+
+## รีวิว Google (เพิ่มรอบนี้)
+ระบบมีปุ่ม "⭐ โหลดคะแนน Google" ต่อร้านอยู่แล้ว ต้องแค่ deploy proxy แล้วตั้ง URL สิ่งที่แก้เพิ่ม:
+- ย้าย `index.js` และ `package.json` เข้าโฟลเดอร์ `functions/` (เดิมอยู่ที่ root แต่ `firebase.json` ชี้ไปที่ `functions/` deploy แล้วจะไม่เจอฟังก์ชัน)
+- proxy รับพิกัดร้านแล้วจำกัดการค้นในรัศมี 150 ม. ได้ร้าน/สาขาที่ตรงจริง (เดิมค้นจากชื่ออย่างเดียว ร้านเครือข่ายอย่างเซเว่น/ลอว์สันจะได้สาขาสุ่ม)
+- รีวิวขอเป็นภาษาไทย (`languageCode: th`) จากเดิมภาษาอังกฤษ
+- ชื่อผู้รีวิวลิงก์ไปโปรไฟล์ Google ตามเงื่อนไขการแสดงที่มา
+
+ขั้นตอน deploy:
+1. Google Cloud Console: เปิด Places API (New), เปิด Billing, ตั้ง quota และ budget alert, จำกัด API key ให้ใช้ได้เฉพาะ Places API (New)
+2. `firebase functions:secrets:set GOOGLE_PLACES_API_KEY` แล้ววางคีย์
+3. แก้ `cors` ใน `functions/index.js` จาก `https://YOUR_GITHUB_USERNAME.github.io` เป็นโดเมนจริงของเว็บ
+4. `firebase deploy --only functions:placesLookup`
+5. ใส่ URL ที่ได้ใน `getoh-config.js`: `window.GETOH_PLACES_API_URL = 'https://asia-northeast1-<โปรเจกต์>.cloudfunctions.net/placesLookup';`
+   (พอตั้งแล้ว ตัวกรองดาวและการเรียงตามคะแนนจะโผล่ขึ้นมาเอง)
+
+ข้อจำกัด: Google ส่งรีวิวให้ได้สูงสุด 5 รายการต่อร้าน และเงื่อนไขของ Google ไม่อนุญาตให้เก็บรีวิว/คะแนนสะสมไว้ในไฟล์ข้อมูลเอง
+จึงต้องดึงสดตอนผู้ใช้กดปุ่มเท่านั้น (เก็บได้แต่ place_id)

@@ -1077,7 +1077,7 @@ function gdAdd(i) {
 // ---------- Google Places (ทางเลือก ใช้เมื่อตั้ง proxy แล้ว) ----------
 function gdGoogleHtml(g) {
   const rating = Number(g.rating), count = Number(g.userRatingCount);
-  const reviews = gdArray(g.reviews).slice(0, 5).map(rv => `<div style="padding:8px 0;border-top:1px solid var(--line)"><b style="color:var(--amb)">${"★".repeat(Math.max(0, Math.min(5, Number(rv.rating) || 0)))}</b> <span class="note">${gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")} · ${gdEsc(rv.relativePublishTimeDescription || "")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text || rv.text || "")}</div></div>`).join("");
+  const reviews = gdArray(g.reviews).slice(0, 5).map(rv => `<div style="padding:8px 0;border-top:1px solid var(--line)"><b style="color:var(--amb)">${"★".repeat(Math.max(0, Math.min(5, Number(rv.rating) || 0)))}</b> <span class="note">${rv.authorAttribution?.uri && /^https:\/\//.test(rv.authorAttribution.uri) ? `<a href="${gdEsc(rv.authorAttribution.uri)}" target="_blank" rel="noopener" style="color:var(--sky)">${gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")}</a>` : gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")} · ${gdEsc(rv.relativePublishTimeDescription || "")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text || rv.text || "")}</div></div>`).join("");
   return `<div style="margin-top:6px"><b>${gdEsc(g.name || "Google Places match")}</b>${g.address ? `<div class="note">${gdEsc(g.address)}</div>` : ""}<div><b style="color:var(--amb)">★ ${Number.isFinite(rating) ? rating.toFixed(1) : "ไม่มีคะแนน"}/5</b> <span class="note">${Number.isFinite(count) ? count.toLocaleString("th-TH") + " รีวิว" : ""}</span>${g.googleMapsUri ? ` · <a href="${gdEsc(g.googleMapsUri)}" target="_blank" rel="noopener" style="color:var(--sky)">Google Maps ↗</a>` : ""}${g.websiteUri ? ` · <a href="${gdEsc(g.websiteUri)}" target="_blank" rel="noopener" style="color:var(--sky)">เว็บไซต์ ↗</a>` : ""}</div></div>${reviews || '<div class="note">Google Places ไม่ส่งรีวิวสำหรับสถานที่นี้</div>'}<div class="note">ข้อมูลและรีวิวจาก Google · แสดงตามเงื่อนไขการระบุแหล่งที่มาของ Google</div>`;
 }
 async function gdGoogleLookup(i) {
@@ -1086,7 +1086,7 @@ async function gdGoogleLookup(i) {
   if (!endpoint) { gdToast("ยังไม่ได้ตั้งค่า Google Places Proxy · ดูวิธีตั้งค่าใน README"); return; }
   const card = document.getElementById("gd-g-" + i); if (card) card.innerHTML = '<span class="note">กำลังค้นหาข้อมูล Google Places…</span>';
   try {
-    const r = await fetch(endpoint, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({query: [p.name_en || p.name, p.city, "Japan"].filter(Boolean).join(" ")})});
+    const r = await fetch(endpoint, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({query: [p.name_en || p.name, p.city, "Japan"].filter(Boolean).join(" "), ...(gdCoord(p) ? {latitude: gdCoord(p)[0], longitude: gdCoord(p)[1]} : {})})});
     const data = await r.json(); if (!r.ok) throw Error(data.error || ("HTTP " + r.status));
     const place = data.place || data; if (!place || !place.id) throw Error("ไม่พบสถานที่ที่ตรงกัน");
     GD_GOOGLE[gdKey(p)] = place; gdRenderList();
