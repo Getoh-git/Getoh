@@ -278,6 +278,10 @@ nav button.on{font-weight:700}
 .pk.on{background:#e6efd8;border-color:var(--acc)}.pk.on .pk-c{background:var(--acc);border-color:var(--acc);color:#fff}
 .sh-cu{display:flex;gap:8px;margin-top:14px}.sh-cu input{flex:1;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:0 12px;font-size:16px;background:#fff}.sh-cu .btn{width:auto;padding:0 18px}
 @media(min-width:720px){.fab{right:calc(50% - 340px + 16px)}.sh{left:50%;right:auto;margin-left:-340px;width:680px}}
+
+/* v49: หน้าแรก — การ์ดแผนที่บันทึกไว้ */
+.hp{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:8px;min-height:60px;font:inherit;color:inherit;cursor:pointer}
+.hp b{display:block;font-size:16px}.hp small{display:block;color:var(--mut);font-size:13px;margin-top:2px;line-height:1.4}.hp i{font-style:normal;font-size:22px;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -298,16 +302,7 @@ nav button.on{font-weight:700}
     <div class="sub" id="tnext" style="text-align:center;margin:0"></div>
     <button class="btn" style="margin-top:12px" onclick="tab('hotels')">🏨 เลือกโรงแรม ➔</button>
   </div>
-  <div class="card" style="margin-top:12px" aria-labelledby="start-title">
-    <h2 id="start-title" style="font-size:18px;margin:0 0 4px">เริ่มต้นจัดทริปของคุณ</h2>
-    <p class="sub" style="margin-bottom:10px">เลือกทำทีละขั้น ไม่จำเป็นต้องกรอกทุกอย่างในครั้งเดียว</p>
-    <div class="g2">
-      <button class="btn o" onclick="tab('hotels')" aria-label="ไปเลือกโรงแรม">🏨 เลือกโรงแรม</button>
-      <button class="btn o" onclick="tab('plan')" aria-label="ไปวางแผนเที่ยว">🗓️ วางแผนเที่ยว</button>
-      <button class="btn o" onclick="tab('prep')" aria-label="ไปเตรียมตัวเดินทาง">🧳 เตรียมตัว</button>
-      <button class="btn o" onclick="tab('style')" aria-label="ไปดูคำแนะนำการแต่งตัว">👗 แต่งตัว</button>
-    </div>
-  </div>
+  <div class="card" id="home-plans" style="margin-top:12px"></div>
   <div id="wx"></div>
   <h3 style="margin:18px 0 0">✈️ ไฟลท์บิน</h3>
   <div id="flights"></div>
@@ -390,7 +385,7 @@ nav button.on{font-weight:700}
 <script src="app.js?v=22"></script>
 <script src="prep.js?v=22"></script>
 <script src="getoh-config.js?v=1"></script>
-<script src="plan.js?v=48"></script>
+<script src="plan.js?v=49"></script>
 <script src="style.js?v=22"></script>
 </body>
 </html>

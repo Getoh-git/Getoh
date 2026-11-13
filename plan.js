@@ -669,13 +669,8 @@ function renderTrip(){
   const tabs=areas.map(a=>`<button class="chip ${a===pk?"on":""}" onclick="tpPa('${a}')">${TPA[a]}</button>`).join("");
   const sheet=TPS?`<div class="sh-bg" onclick="tpSheet(0)"></div><div class="sh ${TPSA?"in":""}" role="dialog" aria-modal="true" aria-label="เพิ่มที่เที่ยว"><div class="sh-h"><div><b>เพิ่มที่เที่ยว</b><small>วัน ${i+1} · ${sgFd(i)} · แตะเพื่อเพิ่ม แตะอีกครั้งเพื่อเอาออก</small></div><button class="btn sh-done" onclick="tpSheet(0)">เสร็จ${users?` · ${users} ที่`:""}</button></div><div class="sh-tabs">${tabs}</div><div class="sh-body" id="shb">${TPH[pk]?`<div class="note" style="margin:2px 0 6px">${TPH[pk]}</div>`:""}${TPP[pk]?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:4px" onclick="tpPreset('${pk}')">✨ เติมแผนแนะนำ ${TPP[pk].length} ที่ (${TPA[pk].replace(/^\S+\s/,"")})</button>`:""}<div class="pk-g">${tpPicks(pk,H,i)}</div><div class="sh-cu"><input id="tpc" placeholder="หรือพิมพ์ชื่อที่เอง" onkeydown="if(event.key==='Enter')tpAddC()"><button class="btn o" onclick="tpAddC()">เพิ่ม</button></div></div></div>`:"";
   TPSA=0;
-  const ov=Array.from({length:NIGHTS+1},(_,j)=>{
-    const k=tpSgKind(j),L=((TP.D[j]&&TP.D[j].v)||[]).slice().sort((p,q)=>p.t-q.t).map(x=>x.n);
-    const t=(k?"🏯 ชิราคาวาโกะ":"")+(k&&L.length?" · ":"")+(L.length?L.map(esc).join(" → "):(k?"":"ยังไม่วางแผน"));
-    return `<div class="kv" onclick="tpDay(${j})" style="cursor:pointer"><span><b>วัน ${j+1}</b> ${sgFd(j)}</span><span style="text-align:right;flex:1;margin-left:12px">${t}</span></div>`;
-  }).join("");
   const hotelBox=tpHotelBox(H),fitBox=tpFitBox(H);
-  const more=`<details class="dt" style="margin-top:12px"><summary>🏨 ที่พัก · 💾 บันทึก/โหลดแผน</summary><div style="margin-top:8px">${hotelBox}${plBox()}${fitBox}${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpClear()">🗑 ล้างแผนวันนี้</button>`:""}</div></details>`;
+  const more=`<details class="dt" style="margin-top:12px"><summary>🏨 ที่พัก · 💾 บันทึก/โหลดแผน</summary><div style="margin-top:8px">${hotelBox}${plBox()}${fitBox}<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button>${users?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpClear()">🗑 ล้างแผนวันนี้</button>`:""}</div></details>`;
   const gdBox=`<details class="dt" ${TPG?"open":""} ontoggle="TPG=this.open?1:0;if(TPG)gdLoad()" style="margin-top:12px"><summary>🌏 ค้นหาร้านและที่เที่ยวในคันไซ</summary><section id="getoh-live-data" style="margin-top:8px"><p class="note" style="margin-top:0">ข้อมูลสถานที่และอากาศจาก Getoh Data Engine · อัปเดตจาก data/kansai.json</p><div id="gd-panel"><div class="note">กำลังโหลดข้อมูล Kansai…</div></div></section></details>`;
   $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน แล้วกด + เพิ่มที่เที่ยว ระบบจัดเวลาให้เอง</p>
   <div class="pl-days" role="tablist" aria-label="เลือกวัน">${dayChips}</div>
@@ -684,8 +679,6 @@ function renderTrip(){
     ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · แตะการ์ดเพื่อปรับเวลา · ลาก ⋮⋮ เพื่อเรียงลำดับ</div>`:`<div class="empty"><div style="font-size:32px">🌱</div><b>ยังไม่มีแผนวันนี้</b><p>เลือกที่ที่อยากไป ระบบจะจัดเวลาและเวลาเดินทางให้</p><button class="btn" onclick="tpSheet(1)">+ เพิ่มที่เที่ยวแรก</button></div>`}
     ${sortBtn}${backNote}${sgBox}
     ${!TP.sgOn&&!last?`<button class="btn o" style="min-height:44px;font-size:14px;margin-top:10px" onclick="tpSgDay(${i})">🏯 วันนี้ไปชิราคาวาโกะ</button>`:""}</div>
-  <details class="dt" style="margin-top:12px"><summary>👀 ดูทั้งทริปในหน้าเดียว</summary><div style="margin-top:8px">${ov}
-  <button class="btn o" style="min-height:44px;font-size:14px;margin-top:8px" onclick="tpCopy()">📋 คัดลอกแผนทั้งทริป (ส่งเข้า LINE)</button></div></details>
   ${more}
   ${gdBox}
   <div class="note">แผนเก็บในเครื่องนี้ · ตรวจเวลาเปิด-ปิดของแต่ละที่ก่อนไป</div>
@@ -700,7 +693,7 @@ const plLoadLS=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k)||"null");r
 let PLM=plLoadLS(PLK,[]);if(!Array.isArray(PLM))PLM=[];                 // แผนที่บันทึกจากเครื่องนี้ (sh=1 เมื่ออัปโหลดแล้ว)
 let PLR=plLoadLS(PLRK,{});if(!PLR||typeof PLR!=="object"||Array.isArray(PLR))PLR={};   // แผนจากฐานข้อมูล (แคชไว้ดูตอนออฟไลน์)
 let PLC=null,plLast=0,plBusy=false;
-const plInv=()=>{PLC=null};
+const plInv=()=>{PLC=null;plHome()};
 const plLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
 const plId=()=>"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const plWhen=ts=>ts?new Date(ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
@@ -854,7 +847,17 @@ function renderSaved(){
   <div class="card" style="margin-bottom:10px"><b>💾 บันทึกสำเนาเป็นแผนใหม่</b><div style="display:flex;gap:8px;margin-top:6px"><input id="svn" maxlength="40" placeholder="ชื่อแผนใหม่ (เว้นว่าง = ชื่อเดิม + สำเนา)" style="flex:1;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px"><button class="btn g" style="width:auto;min-height:42px;padding:0 14px;font-size:14px" onclick="plSaveCopy('${p.id}')">บันทึกใหม่</button></div></div>
   <div class="note">แผนนี้เป็นภาพ ณ เวลาที่บันทึก ไม่เปลี่ยนตามข้อมูลโรงแรมหรือตารางรถที่แก้ภายหลัง · ตรวจเวลาเปิด-ปิดของแต่ละที่อีกครั้งก่อนไป</div>`;
 }
-plSync();setInterval(()=>{if(!document.hidden)plSync()},20000);
+// ===== หน้าแรก: แผนเที่ยวที่บันทึกไว้ (แตะเพื่อเปิดดู) =====
+let PLH=0;
+function plGo(id){TP.v="saved";TP.vid=id;tpSave();tab("plan")}
+function plHome(){
+  const el=document.getElementById("home-plans");if(!el)return;
+  const L=plAll(),shown=PLH?L:L.slice(0,3);
+  el.innerHTML=`<h2 style="font-size:18px;margin:0 0 4px">🗓️ แผนเที่ยวที่บันทึกไว้</h2>`+
+    (L.length?`<p class="sub" style="margin:0">แตะเพื่อดูแผน (${L.length} แผน)</p>`+shown.map(p=>`<button class="hp" onclick="plGo('${p.id}')"><span style="flex:1;min-width:0"><b>${esc(p.name)}</b><small>${plShared(p.id)?"🌐 แชร์แล้ว":"📱 เฉพาะเครื่องนี้"} · ${plWhen(p.ts)} · ${plCount(p)} ที่${p.hn?" · 🏨 "+esc(p.hn):""}</small></span><i aria-hidden="true">›</i></button>`).join("")+(L.length>3?`<button class="chip" style="margin-top:8px" onclick="PLH=${PLH?0:1};plHome()">${PLH?"แสดงน้อยลง":"ดูทั้งหมด ("+L.length+")"}</button>`:""):`<p class="sub" style="margin:0 0 4px">ยังไม่มีแผนที่บันทึกไว้ วางแผนแล้วกด 💾 บันทึกแผนในหน้าแผนเที่ยว</p>`)+
+    `<button class="btn o" style="margin-top:10px;min-height:44px;font-size:14px" onclick="tab('plan')">🗓️ ไปวางแผนเที่ยว</button>`;
+}
+plSync();plHome();setInterval(()=>{if(!document.hidden)plSync()},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)plSync()});
 function renderPlan(){if(Date.now()-plLast>15000)plSync();if(TP.v==="sg")renderSG();else if(TP.v==="saved")renderSaved();else renderTrip()}
 function renderSG(){
