@@ -178,16 +178,19 @@ function hgInner(h){
     return err+`<button class="btn o" onclick="hgFetch(${id})">⭐ โหลดคะแนนและรีวิวจาก Google</button>`;
   }
   const link=(u,t)=>/^https:\/\//.test(u||"")?` · <a href="${esc(u)}" target="_blank" rel="noopener" style="color:var(--sky)">${t} ↗</a>`:"";
-  const revs=(p.reviews||[]).slice(0,5).map(x=>{
-    const a=x.authorAttribution||{},nm=esc(a.displayName||"ผู้รีวิว Google");
-    const who=/^https:\/\//.test(a.uri||"")?`<a href="${esc(a.uri)}" target="_blank" rel="noopener" style="color:var(--sky)">${nm}</a>`:nm;
+  const all5=(p.reviews||[]).slice(0,5);
+  const good=all5.filter(x=>Number(x.rating)>=4).length,bad=all5.length-good;
+  const items=all5.slice().sort((x,y)=>(Number(x.rating)||0)-(Number(y.rating)||0)).map(x=>{
+    const au=x.authorAttribution||{},nm=esc(au.displayName||"ผู้รีวิว Google");
+    const who=/^https:\/\//.test(au.uri||"")?`<a href="${esc(au.uri)}" target="_blank" rel="noopener" style="color:var(--sky)" onclick="event.stopPropagation()">${nm}</a>`:nm;
     const st=Math.max(0,Math.min(5,Number(x.rating)||0));
-    return `<div class="rv"><b style="color:var(--amb)">${"★".repeat(st)}</b> <small>${who} · ${esc(x.relativePublishTimeDescription||"")}</small><div>${esc((x.text&&x.text.text)||x.text||"")}</div></div>`;
+    return `<div class="rv" style="cursor:pointer" onclick="const t=this.querySelector('.rtx').style;t.webkitLineClamp=t.webkitLineClamp==='3'?'unset':'3'"><b style="color:var(--amb)">${"★".repeat(st)}</b> <small>${who} · ${esc(x.relativePublishTimeDescription||"")}</small><div class="rtx" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden">${esc((x.text&&x.text.text)||x.text||"")}</div></div>`;
   }).join("");
-  return `<div><b>${esc(p.name||"")}</b>${p.address?`<div class="note" style="margin:0">${esc(p.address)}</div>`:""}
-    <div><b style="color:var(--amb)">${esc(hgStars(p)||"ไม่มีคะแนน")}</b>${link(p.googleMapsUri,"Google Maps")}${link(p.websiteUri,"เว็บไซต์")}</div></div>
-    ${revs||'<div class="note">Google ไม่ส่งรีวิวมาให้โรงแรมนี้</div>'}
-    <div class="note">ข้อมูลและรีวิวจาก Google (สูงสุด 5 รีวิว) · คะแนน Google เต็ม 5 ส่วนเว็บจองเต็ม 10 อย่าเทียบตรง ๆ · ตรวจว่าชื่อและที่อยู่ตรงกับโรงแรมที่ต้องการ</div>`;
+  const sum=all5.length?`<div class="note" style="margin:4px 0">รีวิวที่ Google คัดมา ${all5.length} รายการ: 👍 ${good} ชม (4★ ขึ้นไป) · 👎 ${bad} ติ (ต่ำกว่า 4★)</div>`:"";
+  const list=items?`<details class="dt" style="margin-top:6px"><summary>อ่านรีวิว Google (${all5.length}) · เรียงดาวน้อยไปมาก</summary><div style="margin-top:6px">${items}<div class="note">แตะข้อความเพื่ออ่านต่อ</div></div></details>`:'<div class="note">Google ไม่ส่งรีวิวมาให้โรงแรมนี้</div>';
+  return `<div><b style="font-size:17px;color:var(--amb)">${esc(hgStars(p)||"ไม่มีคะแนน")}</b>${link(p.googleMapsUri,"Google Maps")}${link(p.websiteUri,"เว็บไซต์")}</div>
+    <div class="note" style="margin:2px 0">${esc(p.name||"")}${p.address?" · "+esc(p.address):""}</div>${sum}${list}
+    <div class="note">ข้อมูลจาก Google · เต็ม 5 (เว็บจองเต็ม 10 อย่าเทียบตรง ๆ) · ตรวจว่าชื่อตรงกับโรงแรมที่ต้องการ</div>`;
 }
 const hgBox=h=>hgOn()?`<div class="rvh">⭐ คะแนนและรีวิวจาก Google</div><div id="hg-box" data-id="${h.id}">${hgInner(h)}</div>`:"";
 const hgCmpRow=h=>{
@@ -240,16 +243,20 @@ function draw(){
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
 
 function revHtml(h){
-  const r=rv(h),g=k=>r.filter(x=>x[0]===k),R=(a,c)=>a.map(x=>`<div class="rv ${c}">${esc(x[1])}<small>${esc(x[2]||"")}</small></div>`).join("")||`<div class="note">ยังไม่มีข้อมูล</div>`,q=encodeURIComponent(h.name+" Osaka");
-  const rt=h.rt&&h.rt.length?`<div class="rvh">⭐ คะแนนรีวิวจากเว็บจอง</div>`+h.rt.map(x=>`<div class="kv"><span>${esc(x[0])}</span><b>${x[1]}/10 · ${Number(x[2]).toLocaleString("th-TH")} รีวิว</b></div>`).join("")+`<div class="note">แต่ละเว็บใช้เกณฑ์ไม่เหมือนกัน ดูหลายแหล่งประกอบกัน</div>`:"";
-  return rt+`<div class="rvh">👍 แง่บวก (${g("+").length})</div>${R(g("+"),"p")}<div class="rvh">👎 แง่ลบ (${g("-").length})</div>${R(g("-"),"n")}`+(g("~").length?`<div class="rvh">⚖️ ข้อสังเกตอื่น ๆ</div>${R(g("~"),"m")}`:"")+
+  const r=rv(h),g=k=>r.filter(x=>x[0]===k),q=encodeURIComponent(h.name+" Osaka");
+  const R=(arr,c)=>arr.map(x=>`<div class="rv ${c}">${esc(x[1])}<small>${esc(x[2]||"")}</small></div>`).join("");
+  const sec=(t,arr,c)=>arr.length?`<details class="dt" style="margin-top:8px"><summary>${t} (${arr.length})</summary><div style="margin-top:6px">${R(arr,c)}</div></details>`:"";
+  const rt=h.rt&&h.rt.length?`<div class="kv"><span>⭐ เว็บจอง (เต็ม 10)</span><b>${h.rt.map(x=>`${esc(x[0])} ${x[1]}`).join(" · ")}</b></div><div class="note">จำนวนรีวิว ${h.rt.map(x=>Number(x[2]).toLocaleString("th-TH")).join(" / ")} · แต่ละเว็บใช้เกณฑ์ไม่เหมือนกัน</div>`:"";
+  const p=firstRv(h,"+"),n=firstRv(h,"-");
+  const top=p||n?`<div class="pq" style="margin-top:6px">${p?`<span class="g">👍 ${esc(p)}</span>`:""}${n?`<span class="b">👎 ${esc(n)}</span>`:""}</div>`:"";
+  return rt+top+sec("👍 แง่บวกทั้งหมด",g("+"),"p")+sec("👎 แง่ลบทั้งหมด",g("-"),"n")+sec("⚖️ ข้อสังเกตอื่น ๆ",g("~"),"m")+(r.length?"":`<div class="note">ยังไม่มีคอมเมนต์ห้อง</div>`)+
    `<div class="note">${h.custom?"คอมเมนต์ที่คุณเพิ่มเอง":"สรุปเป็นภาษาไทยจากรีวิวจริงบนเว็บจองที่พัก ไม่ใช่ข้อความต้นฉบับ"}</div>
     <div class="g2"><a class="btn o" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">🔎 รีวิว Google</a><a class="btn o" href="https://www.booking.com/searchresults.html?ss=${q}" target="_blank" rel="noopener">🛎 ดูใน Booking</a></div>`;
 }
 function detail(id){
   const h=find(id);if(!h)return;
   const on=sel.includes(id);
-  const cats=h.loc!=null?`<div class="note">คะแนนรายหมวดมาจากไฟล์เดิม ยังไม่ได้ตรวจกับแหล่งรีวิว</div>`+[["ทำเลที่ตั้ง",h.loc],["ความสะอาด",h.cl],["การบริการ",h.sv],["ความคุ้มค่า",h.vl]].map(x=>`<div class="kv"><span>${x[0]}</span><b>${x[1]}</b></div>`).join(""):"";
+  const cats=h.loc!=null?`<div class="kv"><span>ทำเล · สะอาด · บริการ · คุ้มค่า</span><b>${[h.loc,h.cl,h.sv,h.vl].map(v=>v??"–").join(" · ")}</b></div><div class="note">คะแนนรายหมวดมาจากไฟล์เดิม ยังไม่ได้ตรวจกับแหล่งรีวิว</div>`:"";
   const map=h.map||"https://maps.google.com/?q="+encodeURIComponent(h.name+" Osaka");
   openSheet(h.name,`
     <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
