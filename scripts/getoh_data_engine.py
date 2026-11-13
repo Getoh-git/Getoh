@@ -20,7 +20,10 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "kansai.json"
-USER_AGENT = "Getoh-Kansai-Data-Engine/1.1 (open data travel planner)"
+USER_AGENT = "Getoh-Kansai-Data-Engine/1.2 (open data travel planner)"
+ENGINE_VERSION = "1.2"
+TIME_BUDGET_SECONDS = 20 * 60   # GitHub Action timeout is 25 min; stop querying after this and keep old data
+QUERY_PAUSE_SECONDS = 1.5       # be polite to the public Overpass instances
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
@@ -30,14 +33,29 @@ CITIES = {
     "kyoto": {"name": "Kyoto", "bbox": (34.90, 135.60, 35.15, 135.85), "lat": 35.0116, "lon": 135.7681},
     "nara": {"name": "Nara", "bbox": (34.60, 135.70, 34.75, 135.90), "lat": 34.6851, "lon": 135.8048},
     "kobe": {"name": "Kobe", "bbox": (34.60, 135.05, 34.80, 135.30), "lat": 34.6901, "lon": 135.1956},
+    # Kanazawa is in Ishikawa Prefecture (Hokuriku), outside the Kansai region.
+    "kanazawa": {"name": "Kanazawa", "bbox": (36.50, 136.55, 36.65, 136.75), "lat": 36.5613, "lon": 136.6562},
 }
-CATEGORY_FILTERS = {
-    "attractions": '["tourism"~"attraction|museum|gallery|zoo|aquarium|theme_park|viewpoint|artwork|castle"]',
-    "restaurants": '["amenity"~"restaurant|fast_food|food_court"]',
-    "cafes": '["amenity"="cafe"]',
-    "shopping": '["shop"]',
-    "transport": '["public_transport"~"station|stop_position|platform"]',
+# Each category is a list of (selector, per-city result limit).
+# Shopping is split into several focused queries so that tourist-relevant shops
+# (department stores, drugstores, electronics, souvenirs ...) are not crowded out
+# by the hundreds of convenience stores, hair salons and car dealers that a plain
+# ["shop"] query returns first.
+CATEGORY_QUERIES = {
+    "attractions": [('["tourism"~"attraction|museum|gallery|zoo|aquarium|theme_park|viewpoint|artwork|castle"]', 120)],
+    "restaurants": [('["amenity"~"restaurant|fast_food|food_court"]', 120)],
+    "cafes": [('["amenity"="cafe"]', 120)],
+    "shopping": [
+        ('["shop"~"^(department_store|mall|supermarket)$"]', 100),
+        ('["shop"~"^(chemist|cosmetics|variety_store|general|doityourself|houseware|electronics|mobile_phone|computer|video_games|camera)$"]', 150),
+        ('["shop"~"^(clothes|shoes|bag|jewelry|boutique|fashion_accessories|watches|kimono|gift|souvenir|antiques|craft|art)$"]', 150),
+        ('["shop"~"^(books|stationery|toys|games|bakery|confectionery|alcohol|wine|tea)$"]', 100),
+        ('["shop"="convenience"]', 30),
+    ],
+    "transport": [('["public_transport"~"station|stop_position|platform"]', 120)],
 }
+CATEGORY_FILTERS = CATEGORY_QUERIES  # backwards-compatible name (keys are used below)
+# Which OSM tag holds the "sub type" (shop=chemist, tourism=museum, amenity=cafe ...)
 CATEGORY_TAGS = {
     "attractions": ("tourism",),
     "restaurants": ("amenity",),
@@ -52,7 +70,7 @@ def utc_now():
 def load_existing():
     if not DATA_FILE.exists():
         return {
-            "region": "Kansai",
+            "region": "Kansai + Hokuriku",
             "updated_at": None,
             "categories": {k: [] for k in CATEGORY_FILTERS},
             "weather": {},
@@ -82,19 +100,20 @@ def http_get_json(url, timeout=45):
 def fetch_overpass(query):
     last_error = None
     body = urlencode({"data": query}).encode()
-    for endpoint in OVERPASS_URLS:
-        try:
-            req = Request(endpoint, data=body, headers={
-                "User-Agent": USER_AGENT,
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json",
-            })
-            with urlopen(req, timeout=75) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-            return payload.get("elements", [])
-        except Exception as exc:
-            last_error = exc
-            time.sleep(1.2)
+    for attempt in range(2):
+        for endpoint in OVERPASS_URLS:
+            try:
+                req = Request(endpoint, data=body, headers={
+                    "User-Agent": USER_AGENT,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json",
+                })
+                with urlopen(req, timeout=70) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                return payload.get("elements", [])
+            except Exception as exc:
+                last_error = exc
+                time.sleep(2 + attempt * 3)
     raise RuntimeError(str(last_error) if last_error else "All Overpass endpoints failed")
 
 def classify_element(element, category, city_key):
@@ -105,10 +124,18 @@ def classify_element(element, category, city_key):
     name = tags.get("name") or tags.get("name:en") or tags.get("brand")
     if not name or lat is None or lon is None:
         return None
-    address_parts = [
-        tags.get("addr:housenumber"), tags.get("addr:street"),
-        tags.get("addr:suburb"), tags.get("addr:city"),
-    ]
+    subtype = None
+    for tag in CATEGORY_TAGS.get(category, ()):
+        if tags.get(tag):
+            subtype = tags.get(tag)
+            break
+    address = tags.get("addr:full")
+    if not address:
+        parts = [
+            tags.get("addr:housenumber"), tags.get("addr:street"), tags.get("addr:quarter"),
+            tags.get("addr:suburb"), tags.get("addr:city"),
+        ]
+        address = ", ".join(x for x in parts if x)
     return {
         "id": f"osm-{element.get('type', 'node')}-{element.get('id')}",
         "source": "OpenStreetMap",
@@ -116,11 +143,16 @@ def classify_element(element, category, city_key):
         "osm_id": element.get("id"),
         "name": name,
         "name_en": tags.get("name:en"),
+        "name_th": tags.get("name:th"),
+        "brand": tags.get("brand"),
+        "brand_en": tags.get("brand:en"),
         "category": category,
+        "subtype": subtype,
+        "cuisine": tags.get("cuisine"),
         "city": CITIES[city_key]["name"],
         "latitude": lat,
         "longitude": lon,
-        "address": ", ".join(x for x in address_parts if x),
+        "address": address,
         "website": tags.get("website") or tags.get("contact:website"),
         "opening_hours": tags.get("opening_hours"),
         "phone": tags.get("phone") or tags.get("contact:phone"),
@@ -128,31 +160,61 @@ def classify_element(element, category, city_key):
         "updated_at": utc_now(),
     }
 
-def fetch_category(category):
-    records = {}
-    city_successes = 0
+def fetch_category(category, deadline):
+    """Returns (fresh_by_city, city_ok, errors).
+
+    fresh_by_city[city_key] is {id: record}. city_ok[city_key] is False when any
+    query for that city failed, so the caller can keep that city's previous data.
+    """
+    fresh = {key: {} for key in CITIES}
+    city_ok = {key: True for key in CITIES}
     errors = []
-    selector = CATEGORY_FILTERS[category]
     for city_key, city in CITIES.items():
         south, west, north, east = city["bbox"]
-        # Bound each query to one city and limit the number of returned objects.
-        query = (
-            '[out:json][timeout:60];('
-            f'node{selector}({south},{west},{north},{east});'
-            f'way{selector}({south},{west},{north},{east});'
-            f'relation{selector}({south},{west},{north},{east});'
-            ');out center tags 120;'
-        )
-        try:
-            elements = fetch_overpass(query)
-            city_successes += 1
-            for element in elements:
-                item = classify_element(element, category, city_key)
-                if item:
-                    records[item["id"]] = item
-        except Exception as exc:
-            errors.append(f"{city['name']}: {exc}")
-    return list(records.values()), city_successes, errors
+        for selector, limit in CATEGORY_QUERIES[category]:
+            if time.monotonic() > deadline:
+                city_ok[city_key] = False
+                errors.append(f"{city['name']}: skipped (time budget used up)")
+                break
+            query = (
+                '[out:json][timeout:55];('
+                f'node{selector}({south},{west},{north},{east});'
+                f'way{selector}({south},{west},{north},{east});'
+                f'relation{selector}({south},{west},{north},{east});'
+                f');out center tags {limit};'
+            )
+            try:
+                for element in fetch_overpass(query):
+                    item = classify_element(element, category, city_key)
+                    if item:
+                        fresh[city_key][item["id"]] = item
+            except Exception as exc:
+                city_ok[city_key] = False
+                errors.append(f"{city['name']}: {exc}")
+            time.sleep(QUERY_PAUSE_SECONDS)
+    return fresh, city_ok, errors
+
+def merge_category(previous, fresh, city_ok):
+    """Per-city merge so one failed/timed-out city never wipes out the others.
+
+    - all queries for the city succeeded and returned data -> replace the city
+    - some queries failed -> fresh data wins, old records that were not refreshed stay
+    - nothing fresh -> keep the previous records of that city
+    """
+    known = {city["name"] for city in CITIES.values()}
+    previous = previous or []
+    merged = [item for item in previous if item.get("city") not in known]
+    for city_key, city in CITIES.items():
+        old_items = [item for item in previous if item.get("city") == city["name"]]
+        new_items = fresh[city_key]
+        if new_items and city_ok[city_key]:
+            merged.extend(new_items.values())
+        elif new_items:
+            merged.extend(new_items.values())
+            merged.extend(item for item in old_items if item.get("id") not in new_items)
+        else:
+            merged.extend(old_items)
+    return merged
 
 def fetch_weather():
     result, errors = {}, []
@@ -208,19 +270,23 @@ def main():
     counts, failures = {}, []
     successful_sources = 0
 
-    for category in CATEGORY_FILTERS:
-        fresh, city_successes, errors = fetch_category(category)
-        counts[category] = len(fresh)
+    deadline = time.monotonic() + TIME_BUDGET_SECONDS
+    fresh_counts = {}
+    for category in CATEGORY_QUERIES:
+        fresh, city_ok, errors = fetch_category(category, deadline)
+        fresh_total = sum(len(v) for v in fresh.values())
+        fresh_counts[category] = fresh_total
         if errors:
             failures.extend([f"{category}: {e}" for e in errors])
-        # Only replace an existing category with a non-empty fresh result.
-        if fresh:
-            snapshot["categories"][category] = fresh
+        previous = snapshot["categories"].get(category, [])
+        if fresh_total:
+            snapshot["categories"][category] = merge_category(previous, fresh, city_ok)
             successful_sources += 1
-        elif city_successes == len(CITIES):
+        elif not errors:
             failures.append(f"{category}: all city queries returned no named POIs; kept previous snapshot")
         else:
             failures.append(f"{category}: no usable fresh data; kept previous snapshot")
+        counts[category] = len(snapshot["categories"].get(category, []))
 
     fresh_weather, weather_errors = fetch_weather()
     if weather_errors:
@@ -233,12 +299,17 @@ def main():
         print(json.dumps({"status": "failed", "reason": "No source returned usable data", "failures": failures}, ensure_ascii=False))
         return 2
 
-    snapshot["region"] = "Kansai"
+    snapshot["region"] = "Kansai + Hokuriku"
     snapshot["updated_at"] = now
     snapshot["meta"] = {
-        "engine_version": "1.1",
+        "engine_version": ENGINE_VERSION,
         "status": "partial" if failures else "success",
         "counts": counts,
+        "fresh_counts": fresh_counts,
+        "city_counts": {
+            cat: {name: sum(1 for x in items if x.get("city") == name) for name in [c["name"] for c in CITIES.values()]}
+            for cat, items in snapshot["categories"].items()
+        },
         "weather_cities_updated": len(fresh_weather),
         "failures": failures,
         "last_attempt_at": now,
