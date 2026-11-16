@@ -9,11 +9,18 @@ setGlobalOptions({ maxInstances: 3 });
 // Public endpoint for the static GitHub Pages client. Replace the CORS origin
 // below with your actual GitHub Pages/custom domain before deploying. Restrict
 // the Google API key to Places API (New), and set API quotas/budget alerts.
+const RATE = new Map();
 exports.placesLookup = onRequest(
   { region: 'asia-northeast1', secrets: [GOOGLE_PLACES_API_KEY], cors: ['https://getoh-git.github.io'], maxInstances: 5 },
   async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(204).send('');
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    // จำกัดการเรียกต่อ IP (best-effort ต่ออินสแตนซ์) กันคนยิงตรงจนค่า API บาน
+    const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const now = Date.now(), hits = (RATE.get(ip) || []).filter(t => now - t < 60000);
+    if (hits.length >= 20) return res.status(429).json({ error: 'เรียกถี่เกินไป ลองใหม่ใน 1 นาที' });
+    hits.push(now); RATE.set(ip, hits); if (RATE.size > 5000) RATE.clear();
 
     const query = String((req.body && req.body.query) || '').trim().slice(0, 180);
     if (query.length < 2) return res.status(400).json({ error: 'กรุณาระบุชื่อสถานที่' });
@@ -22,7 +29,12 @@ exports.placesLookup = onRequest(
     const lat = Number(req.body && req.body.latitude), lon = Number(req.body && req.body.longitude);
     const hasCoord = Number.isFinite(lat) && Number.isFinite(lon) && lat > 20 && lat < 46 && lon > 122 && lon < 154; // อยู่ในญี่ปุ่น
     const searchBody = { textQuery: query, languageCode: 'th', regionCode: 'JP', pageSize: 1 };
-    if (hasCoord) searchBody.locationBias = { circle: { center: { latitude: lat, longitude: lon }, radius: 150 } };
+    // locationRestriction = จำกัดผลในกรอบ ~300 ม. จริง ๆ (locationBias เป็นแค่ถ่วงน้ำหนัก อาจได้สาขาอื่น)
+    if (hasCoord) searchBody.locationRestriction = { rectangle: {
+      low: { latitude: lat - 0.003, longitude: lon - 0.0035 },
+      high: { latitude: lat + 0.003, longitude: lon + 0.0035 }
+    } };
+    else return res.status(400).json({ error: 'ต้องระบุพิกัดร้าน' });
 
     try {
       const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
