@@ -42,6 +42,7 @@ function flightCard(f,now,ix){
    <div class="tks">${st}</div><div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div></div>
    <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${f.no?esc(f.no):"ยังไม่ระบุ"}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
 }
+const HXT={osaka:null,snow:null};let hxMode="osaka",hxBusy=false,hxSnowAt=0; // ต้องประกาศก่อน tick()/jlDraw() ทำงานครั้งแรก
 // ---------- หน้าแรก: Journey Line + ป้ายไฟลท์ (สถานะคำนวณจากตารางเวลา ยังไม่ใช้ Flight API) ----------
 const JL_NORM={osa:"ก.พ. ≈ 2–9°",sgw:"ก.พ. ≈ −6–1°"}; // ค่าปกติโดยประมาณของเดือนก.พ. ใช้ตอนยังไม่ใกล้วันเดินทาง
 function jlStatus(f,now){
@@ -690,7 +691,7 @@ async function wx(){
   hxSnowT();
 }
 // ---------- หน้าแรก: แตะเพื่อเดินทาง โอซาก้า ⇄ ชิราคาวาโกะ (ตัวละครเดิน ฉากเปลี่ยนเป็นหิมะ) ----------
-const HXT={osaka:null,snow:null};let hxMode="osaka",hxBusy=false,hxSnowAt=0;
+// (HXT, hxMode, hxBusy, hxSnowAt ย้ายไปประกาศก่อน tick() แล้ว)
 const HXN={osaka:"โอซาก้าตอนนี้",snow:"ชิราคาวาโกะตอนนี้"};
 function hxTemp(){
   const d=HXT[hxMode],tv=$("hx-tv"),ti=$("hx-ti"),tl=$("hx-tl");if(!tv)return;
