@@ -1015,6 +1015,15 @@ const GD_ALIASES = [];
   A(["อิออน","ไอออน","aeon"], ["イオン","aeon"]);
   A(["มัตสึโมโตะ","มัตสึโมโต้","มัตสึโมโตะคิโยชิ","มัตสึคิโย","matsukiyo"], ["マツモトキヨシ","matsumotokiyoshi","マツキヨ"]);
   A(["ซันดรัก","sundrug"], ["サンドラッグ","sundrug"]);
+  A(["ซูกิ","ซูกิยาคิวเคียวคุ","sugi"], ["スギ薬局","スギドラッグ","sugi"]);
+  A(["ซึรุฮะ","สึรุฮะ","tsuruha"], ["ツルハ","tsuruha"]);
+  A(["ไดโกกุ","ไดโคขุ","daikoku"], ["ダイコク","daikoku"]);
+  A(["โคคุมิน","kokumin"], ["コクミン","kokumin"]);
+  A(["โคโคคาระ","cocokara"], ["ココカラ","cocokara"]);
+  A(["เวลเซีย","welcia"], ["ウェルシア","welcia"]);
+  A(["ยามาดะ","yamada"], ["ヤマダ","yamada"]);
+  A(["เอดิออน","edion"], ["エディオン","edion"]);
+  A(["โจชิน","joshin"], ["ジョーシン","joshin"]);
   // อาหาร / คาเฟ่ / ที่เที่ยว / ขนส่ง
   A(["ราเมน","ราเมง","ramen"], ["ラーメン","拉麺","麺","ramen","中華そば"]);
   A(["ซูชิ","sushi"], ["寿司","すし","sushi","鮨"]);
@@ -1050,6 +1059,25 @@ function gdHay(p) {
   if (p._h) return p._h;
   // ไม่ใส่ชื่อหมวด/ประเภท (เช่น "ร้านร้อยเยน/ดองกิ") ลงไป ไม่งั้นค้นแบรนด์หนึ่งแล้วได้ร้านอื่นในหมวดเดียวกันปนมา
   return (p._h = gdNorm([p.name, p.name_en, p.name_th, p.brand, p.brand_en, p.city, p.address, p.subtype, p.cuisine, p.category, p.description].filter(Boolean).join(" ")));
+}
+// คะแนนความตรง (ยิ่งน้อยยิ่งตรง): ชื่อ/แบรนด์ตรงตัว < ขึ้นต้นด้วยคำค้น < มีคำค้นในชื่อ < ตรงผ่านกลุ่ม/alias < ตรงในที่อยู่หรือรายละเอียด
+function gdScore(p, toks) {
+  if (!toks.length) return 0;
+  const names = [p.name, p.name_en, p.name_th, p.brand, p.brand_en].filter(Boolean).map(gdNorm);
+  let total = 0;
+  for (const t of toks) {
+    const terms = [t.n].concat(t.al.flatMap(a => a.terms));
+    let s = 4;
+    for (const n of names) for (const x of terms) {
+      if (!x) continue;
+      if (n === x) s = Math.min(s, 0);
+      else if (n.startsWith(x)) s = Math.min(s, 1);
+      else if (n.includes(x)) s = Math.min(s, 2);
+    }
+    if (s === 4 && p._cat === "shopping" && t.al.some(a => a.group && a.group === gdGroup(p))) s = 3;
+    total += s;
+  }
+  return total;
 }
 function gdMatch(p, toks) {
   if (!toks.length) return true;
@@ -1091,7 +1119,7 @@ function gdDist(p) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 const gdFmtDist = d => d < 1 ? Math.round(d * 1000 / 10) * 10 + " ม." : d < 100 ? d.toFixed(1) + " กม." : "ไกลมาก";
-function gdComplete(p) { return (p.name_en ? 2 : 0) + (p.opening_hours ? 2 : 0) + (p.website ? 1 : 0) + (p.phone ? 1 : 0) + (p.address ? 1 : 0) + (p.wikidata ? 3 : 0); }
+function gdComplete(p) { return (p.name_en ? 2 : 0) + (p.opening_hours ? 2 : 0) + (p.website ? 1 : 0) + (p.phone ? 1 : 0) + (p.address ? 1 : 0) + (p.wikidata ? 1 : 0) + (p.brand ? 1 : 0); }
 const gdTitle = p => { const en = p.name_th || p.name_en; return en && gdNorm(en) !== gdNorm(p.name) ? en : (p.name || "ไม่มีชื่อ"); };
 const gdSub = p => { const en = p.name_th || p.name_en; return en && gdNorm(en) !== gdNorm(p.name) ? (p.name || "") : ""; };
 const gdToast = m => { try { typeof toast === "function" ? toast(m) : 0; } catch (e) {} };
@@ -1101,7 +1129,7 @@ async function gdLoad(force = false) {
   const host = document.getElementById("gd-panel"); if (!host) return;
   if (GD_DATA && !force) { gdRender(); return; }
   if (GD_LOADING && !force) { await GD_LOADING; gdRender(); return; }
-  GD_LOADING = (async () => { try { const r = await fetch("data/kansai.json?ts=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw Error("HTTP " + r.status); GD_DATA = await r.json(); gdIndex(); } catch (e) { console.warn("Getoh Kansai data load failed", e); GD_DATA = null; } })();
+  GD_LOADING = (async () => { try { const r = await fetch("data/kansai.json", {cache: force ? "reload" : "no-cache"}); if (!r.ok) throw Error("HTTP " + r.status); GD_DATA = await r.json(); gdIndex(); } catch (e) { console.warn("Getoh Kansai data load failed", e); GD_DATA = null; } })();
   await GD_LOADING; GD_LOADING = null; gdRender();
 }
 function gdSetCategory(k) { if (k !== "all" && !GD_CATS[k]) return; GD_CATEGORY = k; GD_GROUP = "all"; GD_LIMIT = 40; gdRender(); }
@@ -1165,13 +1193,13 @@ function gdCompute() {
   if (isShop && GD_GROUP !== "all") list = list.filter(p => gdGroup(p) === GD_GROUP);
   else if (hideOn) list = list.filter(p => !GD_HIDDEN_GROUPS.includes(gdGroup(p)));
   const hiddenN = hideOn ? base.length - list.length : 0;
-  if (GD_MIN_RATING && gdHasGoogle()) list = list.filter(p => { const n = gdRating(p); return n !== null && n >= GD_MIN_RATING; });
   list = list.slice();
   const nm = p => String(p.name_en || p.name || "");
   if (GD_SORT === "near" && GD_POS) list.sort((a, b) => (gdDist(a) ?? 1e9) - (gdDist(b) ?? 1e9));
   else if (GD_SORT === "rating") list.sort((a, b) => (gdRating(b) || 0) - (gdRating(a) || 0));
   else if (GD_SORT === "reviews") list.sort((a, b) => (gdReviewCount(b) || 0) - (gdReviewCount(a) || 0));
   else if (GD_SORT === "name") list.sort((a, b) => nm(a).localeCompare(nm(b)));
+  else if (toks.length) { list.forEach(p => { p._s = gdScore(p, toks); }); list.sort((a, b) => a._s - b._s || gdComplete(b) - gdComplete(a) || nm(a).localeCompare(nm(b))); }
   else list.sort((a, b) => gdComplete(b) - gdComplete(a) || nm(a).localeCompare(nm(b)));
   return {list, counts, hiddenN, baseN: base.length, srcN: src.length, byCityN: byCity.length, toks, isShop};
 }
@@ -1244,8 +1272,8 @@ function gdRender() {
   const inCity = a => a.filter(x => GD_CITY === "all" || gdCityName(x.city || x.address) === GD_CITY).length;
   const srcNow = GD_CATEGORY === "all" ? all : (cats[GD_CATEGORY] || []);
   const cityCount = c => c === "all" ? srcNow.length : srcNow.filter(x => gdCityName(x.city || x.address) === c).length;
-  const cityBtns = cities.map(c => { const n = cityCount(c); return `<button class="chip ${GD_CITY === c ? "on" : ""}" style="${n === 0 && GD_CITY !== c ? "opacity:.45" : ""}" onclick="gdSetCity('${c}')">${gdCityLabel(c)} (${n})</button>`; }).join("");
-  const catBtns = `<button class="chip ${GD_CATEGORY === "all" ? "on" : ""}" onclick="gdSetCategory('all')">🔎 ทุกหมวด (${inCity(all)})</button>` + Object.entries(GD_CATS).map(([k, v]) => `<button class="chip ${GD_CATEGORY === k ? "on" : ""}" onclick="gdSetCategory('${k}')">${v} (${inCity(cats[k])})</button>`).join("");
+  const cityBtns = cities.filter(c => c === "all" || c === GD_CITY || cityCount(c) > 0).map(c => { const n = cityCount(c); return `<button class="chip ${GD_CITY === c ? "on" : ""}" style="${n === 0 && GD_CITY !== c ? "opacity:.45" : ""}" onclick="gdSetCity('${c}')">${gdCityLabel(c)} (${n})</button>`; }).join("");
+  const catBtns = `<button class="chip ${GD_CATEGORY === "all" ? "on" : ""}" onclick="gdSetCategory('all')">🔎 ทุกหมวด (${inCity(all)})</button>` + Object.entries(GD_CATS).filter(([k]) => GD_CATEGORY === k || inCity(cats[k]) > 0).map(([k, v]) => `<button class="chip ${GD_CATEGORY === k ? "on" : ""}" onclick="gdSetCategory('${k}')">${v} (${inCity(cats[k])})</button>`).join("");
   const weather = GD_DATA.weather || {}, wx = Object.entries(weather).filter(([k]) => GD_CITY === "all" || gdCityName(k) === GD_CITY);
   const meta = GD_DATA.meta || {}, updated = GD_DATA.updated_at || meta.last_attempt_at || meta.updated_at || "";
   const date = updated ? new Date(updated).toLocaleString("th-TH", {dateStyle: "medium", timeStyle: "short"}) : "ยังไม่มีวันที่อัปเดต";
@@ -1259,9 +1287,9 @@ function gdRender() {
  <div class="chips" style="flex-wrap:wrap;padding:4px 0">${cityBtns}</div><div class="chips" style="flex-wrap:wrap;padding:4px 0">${catBtns}</div>
  <input id="gd-q" type="search" autocomplete="off" value="${gdEsc(GD_QUERY)}" oninput="gdOnInput(this.value)" placeholder="${gdEsc(GD_PLACEHOLDER[GD_CATEGORY] || GD_PLACEHOLDER.all)}" style="${inputStyle};width:100%;margin:8px 0 4px">
  <div id="gd-sub" class="chips" style="flex-wrap:wrap;padding:4px 0"></div>
- <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span class="note" style="margin:0">เรียงตาม</span><select onchange="gdSetSort(this.value)" style="flex:1;${inputStyle};min-height:40px">${sorts.map(s => `<option value="${s[0]}" ${GD_SORT === s[0] ? "selected" : ""}>${s[1]}</option>`).join("")}</select>${gdHasGoogle() ? `<select onchange="gdSetRating(this.value)" style="${inputStyle};min-height:40px"><option value="0" ${GD_MIN_RATING === 0 ? "selected" : ""}>ทุกคะแนน</option><option value="3" ${GD_MIN_RATING === 3 ? "selected" : ""}>3★+</option><option value="4" ${GD_MIN_RATING === 4 ? "selected" : ""}>4★+</option><option value="4.5" ${GD_MIN_RATING === 4.5 ? "selected" : ""}>4.5★+</option></select>` : ""}<button class="chip" onclick="gdClear()">ล้าง</button></div>
+ <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span class="note" style="margin:0">เรียงตาม</span><select onchange="gdSetSort(this.value)" style="flex:1;${inputStyle};min-height:40px">${sorts.map(s => `<option value="${s[0]}" ${GD_SORT === s[0] ? "selected" : ""}>${s[1]}</option>`).join("")}</select><button class="chip" onclick="gdClear()">ล้าง</button></div>
  <div id="gd-meta" style="margin-top:6px"></div>
- ${gdHasGoogle() ? '<div class="note">ตัวกรอง/การเรียงตามดาวใช้กับรายการที่กด "โหลดคะแนน Google" แล้วเท่านั้น</div>' : ""}
+ ${gdHasGoogle() ? '<div class="note">การเรียงตามดาวใช้กับรายการที่กด "โหลดคะแนน Google" แล้วเท่านั้น (ร้านที่ยังไม่โหลดอยู่ท้ายรายการ ไม่ถูกซ่อน)</div>' : ""}
  <div id="gd-list"></div><div id="gd-more"></div>
  <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml || '<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
  <div class="note" style="margin-top:8px">ข้อมูลพื้นฐาน: © OpenStreetMap contributors (ODbL) · เวลาเปิด-ปิดมาจากชุมชน OSM โปรดเช็กอีกครั้งก่อนไป · อากาศ: Open-Meteo${gdHasGoogle() ? " · คะแนน/รีวิว: Google Places" : ""}</div>
