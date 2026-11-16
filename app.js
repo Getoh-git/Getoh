@@ -42,6 +42,33 @@ function flightCard(f,now,ix){
    <div class="tks">${st}</div><div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div></div>
    <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${f.no?esc(f.no):"ยังไม่ระบุ"}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
 }
+// ---------- หน้าแรก: Journey Line + ป้ายไฟลท์ (สถานะคำนวณจากตารางเวลา ยังไม่ใช้ Flight API) ----------
+const JL_NORM={osa:"ก.พ. ≈ 2–9°",sgw:"ก.พ. ≈ −6–1°"}; // ค่าปกติโดยประมาณของเดือนก.พ. ใช้ตอนยังไม่ใกล้วันเดินทาง
+function jlStatus(f,now){
+  if(now<f.ap-3*36e5)return["ตามตาราง","ok"];
+  if(now<f.dep)return["ถึงเวลาไปสนามบิน","go"];
+  if(now<f.arr)return["อยู่บนเครื่อง","go"];
+  return["ลงจอดแล้ว ✓","done"];
+}
+function jlDraw(){
+  const el=$("jl");if(!el||typeof F==="undefined"||!F.length)return;
+  const now=Date.now(),a=F[0],b=F[F.length-1],cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+  let x,cap;
+  if(now<a.dep){x=0;cap="📍 ตอนนี้ยังอยู่ไทย · เตรียมตัวก่อนออกเดินทาง"}
+  else if(now<a.arr){x=.5*cl((now-a.dep)/(a.arr-a.dep),0,1);cap="✈️ กำลังบินไปโอซาก้า"}
+  else if(now<b.dep){x=.5;cap=`📍 อยู่โอซาก้า · วันที่ ${Math.floor((now-a.arr)/864e5)+1} ของทริป`}
+  else if(now<b.arr){x=.5+.5*cl((now-b.dep)/(b.arr-b.dep),0,1);cap="✈️ กำลังบินกลับบ้าน"}
+  else{x=1;cap="🏠 กลับถึงบ้านแล้ว เก็บความทรงจำไว้นะ"}
+  const L=8+84*x,tmp=(d,k)=>`<em>${d?d.ic+" "+d.t+"°":"–°"}</em><small>${JL_NORM[k]}</small>`;
+  const node=(pos,ico,lab,inner,on)=>`<div class="jl-n ${on?"on":""}" style="left:${pos}%"><i></i><b>${ico} ${lab}</b>${inner}</div>`;
+  const rows=F.map(f=>{const[s,c]=jlStatus(f,now);return `<div class="jl-row"><div><b>${f.no?esc(f.no):"ยังไม่ระบุ"} · ${f.from} ➔ ${f.to}</b><small>${esc(f.title)} · ${f.depD} ${f.depT} ➔ ${f.arrD} ${f.arrT}</small></div><span class="jl-st ${c}">${s}</span></div>`}).join("");
+  el.innerHTML=`<div class="jl-cap">${cap}</div><div class="jl-line"><i class="jl-bar"></i><i class="jl-fill" style="width:${84*x}%"></i>
+   <span class="jl-pl" style="left:29%">✈</span><span class="jl-pl" style="left:71%">✈</span>
+   <img class="jl-me" src="couple-pixel.png" alt="" style="left:${L}%">
+   ${node(8,"🏠","ไทย","",x===0)}${node(50,"🏯","โอซาก้า",tmp(HXT.osaka,"osa"),x===.5)}${node(92,"🏠","ไทย","",x===1)}</div>
+   <div class="jl-sg">❄️ ชิราคาวาโกะ ตอนนี้ ${HXT.snow?HXT.snow.t+"°":"–°"} · ${JL_NORM.sgw} <small>(ค่าประมาณ)</small></div>${rows}
+   <div class="jl-foot">สถานะคำนวณจากตารางเวลา ไม่ใช่ข้อมูลสดจากสายการบิน · เช็กกับสายการบินก่อนออกเดินทางอีกครั้ง</div>`;
+}
 let lastFl=0;
 function tick(){
   const now=Date.now(),nx=F.find(f=>now<f.dep);
@@ -52,7 +79,7 @@ function tick(){
   $("ts").textContent=String(Math.floor(v%6e4/1e3)).padStart(2,"0");
   $("tlabel").textContent=nx?`เหลือเวลาจนถึงเครื่องออก (${nx.title})`:"ทริปนี้จบแล้ว กลับถึงบ้านเรียบร้อย 🏠";
   $("tnext").textContent=nx?`${nx.from} ➔ ${nx.to} · ${nx.depD} เวลา ${nx.depT}`:"";
-  if(!lastFl||now-lastFl>=6e4){lastFl=now;$("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("")} // การ์ดวาดใหม่ทุกนาที ไม่ใช่ทุกวินาที
+  if(!lastFl||now-lastFl>=6e4){lastFl=now;$("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("");jlDraw()} // การ์ดวาดใหม่ทุกนาที ไม่ใช่ทุกวินาที
 }
 
 // ===================== Hotels =====================
@@ -667,7 +694,7 @@ const HXT={osaka:null,snow:null};let hxMode="osaka",hxBusy=false,hxSnowAt=0;
 const HXN={osaka:"โอซาก้าตอนนี้",snow:"ชิราคาวาโกะตอนนี้"};
 function hxTemp(){
   const d=HXT[hxMode],tv=$("hx-tv"),ti=$("hx-ti"),tl=$("hx-tl");if(!tv)return;
-  tv.textContent=d?d.t+"°":"–°";ti.textContent=d?d.ic:(hxMode==="snow"?"❄️":"🌤️");tl.textContent=HXN[hxMode];
+  tv.textContent=d?d.t+"°":"–°";ti.textContent=d?d.ic:(hxMode==="snow"?"❄️":"🌤️");tl.textContent=HXN[hxMode];jlDraw();
 }
 async function hxSnowT(){ // อุณหภูมิหมู่บ้านชิราคาวาโกะ (Open-Meteo)
   if(Date.now()-hxSnowAt<6e5&&HXT.snow)return;hxSnowAt=Date.now();

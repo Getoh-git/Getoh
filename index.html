@@ -318,6 +318,26 @@ nav button.on{font-weight:700}
 .hx::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#B7CAD9 0%,#D5E2EC 60%,#E7EFF5 100%);opacity:0;transition:opacity .9s}
 .hx.snow::before{opacity:1}
 .hx-foot{position:relative;z-index:3}
+/* ===== หน้าแรก: Journey Line + ป้ายไฟลท์ ===== */
+.jl{position:relative;margin-top:12px;background:#12301a;color:#E9EAD2;border-radius:18px;padding:14px 12px 10px;font-family:"DotGothic16",Sarabun,sans-serif}
+.jl-cap{font-size:14px;margin:0 2px 6px;color:#B8CC2C}
+.jl-line{position:relative;height:122px}
+.jl-bar,.jl-fill{position:absolute;top:50px;height:4px;left:8%;border-radius:2px}
+.jl-bar{right:8%;background:rgba(233,234,210,.22)}.jl-fill{background:#B8CC2C;transition:width .6s}
+.jl-pl{position:absolute;top:38px;transform:translateX(-50%);font-size:18px}
+.jl-me{position:absolute;top:2px;height:42px;transform:translateX(-50%);image-rendering:pixelated;transition:left .6s}
+.jl-n{position:absolute;top:38px;transform:translateX(-50%);text-align:center;width:104px;line-height:1.25}
+.jl-n i{display:block;width:28px;height:28px;margin:0 auto 4px;border-radius:50%;background:#1d4a2a;border:3px solid #E9EAD2;box-sizing:border-box}
+.jl-n.on i{background:#B8CC2C;border-color:#fff}
+.jl-n b{display:block;font-size:14px;font-weight:400}.jl-n em{display:block;font-style:normal;font-size:15px;color:#B8CC2C}.jl-n small{display:block;font-size:11px;color:#9fb394}
+.jl-sg{font-size:13px;margin:2px 2px 8px;color:#cfe0c4}
+.jl-row{border-top:1px dashed rgba(233,234,210,.25);padding:8px 2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.jl-row b{font-weight:400;font-size:16px;letter-spacing:.5px}.jl-row small{display:block;font-size:12px;color:#9fb394}
+.jl-st{flex:none;padding:3px 10px;border-radius:999px;background:#1d4a2a;font-size:13px;white-space:nowrap}
+.jl-st.ok::before{content:"● ";color:#B8CC2C}.jl-st.go{background:#B8CC2C;color:#12301a}.jl-st.done{opacity:.7}
+.jl-foot{font-size:11px;color:#9fb394;margin:2px 2px 0}
+.jl-det{margin-top:12px}.jl-det summary{cursor:pointer;font-weight:700;padding:8px 2px}
+
 .hx-spr{width:100%;aspect-ratio:57/68;background:url(couple-walk.png) 0 0/300% 100% no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
 .hx-couple.walk .hx-spr{animation:hxwalk .5s step-end infinite}
 @keyframes hxwalk{0%{background-position:50% 0;transform:translateY(0)}25%{background-position:50% 0;transform:translateY(calc(var(--k)*-2px))}50%{background-position:100% 0;transform:translateY(0)}75%{background-position:100% 0;transform:translateY(calc(var(--k)*-2px))}}
@@ -362,10 +382,9 @@ nav button.on{font-weight:700}
       <button class="btn" onclick="shopGo()">🛍️ ค้นหาร้านค้า</button>
     </div>
   </div>
-  <div class="card" id="home-plans" style="margin-top:12px"></div>
+  <div class="jl" id="jl"></div>
   <div id="wx"></div>
-  <h2 class="hx-h">✈️ ไฟลท์บิน</h2>
-  <div id="flights"></div>
+  <details class="jl-det"><summary>✈️ รายละเอียดไฟลท์ (บัตรโดยสาร)</summary><div id="flights"></div></details>
 
 </section>
 
@@ -442,7 +461,7 @@ nav button.on{font-weight:700}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="hotels.js?v=22"></script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <script src="prep.js?v=22"></script>
 <script src="getoh-config.js?v=1"></script>
 <script src="plan.js?v=52"></script>
