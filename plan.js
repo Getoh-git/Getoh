@@ -912,6 +912,7 @@ function renderSG(){
 // ค้นหาได้ทั้งไทย/อังกฤษ/ญี่ปุ่น · แยกประเภทร้านช้อปปิ้ง · กรองทันทีที่พิมพ์ · เรียงตามความใกล้
 let GD_DATA = null, GD_LOADING = null, GD_VIEW = [], GD_POS = null, GD_TIMER = 0;
 let GD_CATEGORY = "shopping", GD_CITY = "all", GD_QUERY = "", GD_GROUP = "all", GD_SHOW_HIDDEN = false;
+let GD_MAPON = false, GD_MAP = null, GD_MLAYER = null, GD_MAPLIST = [], GD_MARKERS = [], GD_FOCUS = null;
 let GD_MIN_RATING = 0, GD_SORT = "complete", GD_LIMIT = 40;
 const GD_GOOGLE = Object.create(null);
 const GD_CATS = {attractions:"🏯 ที่เที่ยว",restaurants:"🍜 ร้านอาหาร",cafes:"☕ คาเฟ่",shopping:"🛍️ ช้อปปิ้ง",transport:"🚉 ขนส่ง"};
@@ -1153,6 +1154,41 @@ function gdNear() {
     gdRender();
   }, () => gdToast("เปิดตำแหน่งไม่ได้ ตรวจสิทธิ์ตำแหน่งในเบราว์เซอร์"), {enableHighAccuracy: false, timeout: 10000, maximumAge: 120000});
 }
+// ---------- แผนที่ผลการค้นหา (Leaflet ที่หน้าเว็บโหลดอยู่แล้ว) ----------
+function gdToggleMap() { GD_MAPON = !GD_MAPON; gdRender(); }
+function gdAddMap(i) { const p = GD_MAPLIST[i]; if (!p) return; const t = GD_VIEW; GD_VIEW = [p]; gdAdd(0); GD_VIEW = t; }
+function gdFocus(i) {
+  GD_FOCUS = i;
+  if (!GD_MAPON) { GD_MAPON = true; gdRender(); } else gdMapDraw();
+  const el = document.getElementById("gd-map"); if (el) el.scrollIntoView({behavior: "smooth", block: "center"});
+}
+function gdMapDraw() {
+  const el = document.getElementById("gd-map"), Lf = window.L; if (!el || !GD_MAPON) return;
+  if (!Lf || !Lf.map) { el.innerHTML = '<div class="note" style="padding:12px">โหลดแผนที่ไม่ได้ (ตรวจอินเทอร์เน็ต)</div>'; return; }
+  if (!GD_MAP) {
+    GD_MAP = Lf.map(el).setView([34.6937, 135.5023], 12);
+    Lf.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19, attribution: "© OpenStreetMap"}).addTo(GD_MAP);
+    GD_MLAYER = Lf.layerGroup().addTo(GD_MAP);
+  }
+  GD_MLAYER.clearLayers(); GD_MARKERS = [];
+  const pts = [];
+  GD_MAPLIST.forEach((p, i) => {
+    const c = gdCoord(p); if (!c) return; pts.push(c);
+    const grp = p._cat === "shopping" ? GD_GROUPS[gdGroup(p)] : null, emoji = grp ? grp[0] : String(GD_CATS[p._cat] || "📍").split(" ")[0];
+    const icon = Lf.divIcon({className: "", iconSize: [30, 30], iconAnchor: [15, 15], html: `<div style="width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.35)">${emoji}</div>`});
+    const sub = gdSub(p), d = gdDist(p);
+    const html = `<b>${gdEsc(gdTitle(p))}</b>${sub ? `<div>${gdEsc(sub)}</div>` : ""}<div style="color:#666">${gdEsc([grp ? grp[1] : "", p.city || "", d !== null ? gdFmtDist(d) : ""].filter(Boolean).join(" · "))}</div>`
+      + `<div style="margin-top:6px;display:flex;gap:10px"><a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}" target="_blank" rel="noopener">🧭 นำทาง</a><a href="#" onclick="gdAddMap(${i});return false">➕ เพิ่มลงแผน</a></div>`;
+    GD_MARKERS[i] = Lf.marker(c, {icon}).addTo(GD_MLAYER).bindPopup(html);
+  });
+  if (GD_POS) Lf.circleMarker([GD_POS.lat, GD_POS.lon], {radius: 8, color: "#fff", weight: 2, fillColor: "#1a73e8", fillOpacity: 1}).addTo(GD_MLAYER).bindTooltip("คุณอยู่ที่นี่");
+  setTimeout(() => {
+    if (!GD_MAP) return; GD_MAP.invalidateSize();
+    const m = GD_FOCUS !== null ? GD_MARKERS[GD_FOCUS] : null; GD_FOCUS = null;
+    if (m) { GD_MAP.setView(m.getLatLng(), 17); m.openPopup(); }
+    else if (pts.length) GD_MAP.fitBounds(pts, {padding: [24, 24], maxZoom: 16});
+  }, 60);
+}
 function gdAdd(i) {
   const p = GD_VIEW[i]; if (!p) return;
   const n = gdTitle(p).trim().slice(0, 40); if (!n) return;
@@ -1214,7 +1250,8 @@ function gdCard(p, i) {
     .map(t => `<div class="note" style="margin:2px 0">${gdEsc(t)}</div>`).join("");
   const lk = (href, label) => `<a href="${gdEsc(href)}" target="_blank" rel="noopener" style="color:var(--sky);font-size:13px">${label}</a>`;
   const links = [
-    c ? lk(`https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}`, "📍 แผนที่") : "",
+    c && i < 300 ? `<a href="#" onclick="gdFocus(${i});return false" style="color:var(--sky);font-size:13px">🗺️ ดูบนแผนที่</a>` : "",
+    c ? lk(`https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}`, "📍 Google Maps") : "",
     c ? lk(`https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}`, "🧭 นำทาง") : "",
     lk("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(gdTitle(p) + " " + (p.city || "Japan")), "⭐ รีวิวใน Google Maps"),
     p.website && /^https?:\/\//i.test(p.website) ? lk(p.website, "🌐 เว็บไซต์") : ""
@@ -1260,6 +1297,7 @@ function gdRenderList() {
     }
   }
   listEl.innerHTML = shown.map(gdCard).join("") + empty;
+  GD_MAPLIST = r.list.slice(0, 300); gdMapDraw();
   const moreEl = document.getElementById("gd-more");
   if (moreEl) moreEl.innerHTML = r.list.length > GD_LIMIT ? `<button class="btn o" style="margin-top:8px" onclick="gdShowMore()">แสดงเพิ่มอีก ${Math.min(40, r.list.length - GD_LIMIT)} รายการ (เหลือ ${r.list.length - GD_LIMIT})</button>` : "";
 }
@@ -1283,12 +1321,15 @@ function gdRender() {
   const sorts = [["complete", "ข้อมูลครบก่อน"], ["name", "ชื่อ A–Z"], ["near", "📍 ใกล้ฉัน" + (GD_POS ? "" : " (ขอตำแหน่ง)")]].concat(gdHasGoogle() ? [["rating", "คะแนน Google สูงสุด"], ["reviews", "รีวิว Google มากสุด"]] : []);
   if (!sorts.some(s => s[0] === GD_SORT)) GD_SORT = "complete";
   const inputStyle = "min-width:0;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px";
+  if (GD_MAP) { try { GD_MAP.remove(); } catch (e) {} GD_MAP = null; GD_MLAYER = null; }
   host.innerHTML = `<div class="note">สถานะ: <b>${gdEsc(status)}</b> · ${gdEsc(date)} · ทั้งหมด ${all.length.toLocaleString("th-TH")} รายการ${fails.length ? ` · <details style="display:inline"><summary style="display:inline;cursor:pointer">ดูรายละเอียด (${fails.length})</summary><div style="margin-top:4px">${fails.map(f => `<div>${gdEsc(f)}</div>`).join("")}</div></details>` : ""}</div>
  <div class="chips" style="flex-wrap:wrap;padding:4px 0">${cityBtns}</div><div class="chips" style="flex-wrap:wrap;padding:4px 0">${catBtns}</div>
  <input id="gd-q" type="search" autocomplete="off" value="${gdEsc(GD_QUERY)}" oninput="gdOnInput(this.value)" placeholder="${gdEsc(GD_PLACEHOLDER[GD_CATEGORY] || GD_PLACEHOLDER.all)}" style="${inputStyle};width:100%;margin:8px 0 4px">
  <div id="gd-sub" class="chips" style="flex-wrap:wrap;padding:4px 0"></div>
  <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span class="note" style="margin:0">เรียงตาม</span><select onchange="gdSetSort(this.value)" style="flex:1;${inputStyle};min-height:40px">${sorts.map(s => `<option value="${s[0]}" ${GD_SORT === s[0] ? "selected" : ""}>${s[1]}</option>`).join("")}</select><button class="chip" onclick="gdClear()">ล้าง</button></div>
  <div id="gd-meta" style="margin-top:6px"></div>
+  <div style="margin:6px 0"><button class="chip ${GD_MAPON ? "on" : ""}" onclick="gdToggleMap()">🗺️ ${GD_MAPON ? "ซ่อนแผนที่" : "แสดงผลบนแผนที่"}</button></div>
+  <div id="gd-map" style="display:${GD_MAPON ? "block" : "none"};height:340px;border-radius:12px;border:1px solid var(--line);margin:0 0 8px;z-index:0"></div>
  ${gdHasGoogle() ? '<div class="note">การเรียงตามดาวใช้กับรายการที่กด "โหลดคะแนน Google" แล้วเท่านั้น (ร้านที่ยังไม่โหลดอยู่ท้ายรายการ ไม่ถูกซ่อน)</div>' : ""}
  <div id="gd-list"></div><div id="gd-more"></div>
  <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml || '<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
