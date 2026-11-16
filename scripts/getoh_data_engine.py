@@ -47,10 +47,13 @@ CATEGORY_QUERIES = {
     "cafes": [('["amenity"="cafe"]', 120)],
     "shopping": [
         ('["shop"~"^(department_store|mall|supermarket)$"]', 100),
-        ('["shop"~"^(chemist|cosmetics|variety_store|general|doityourself|houseware|electronics|mobile_phone|computer|video_games|camera)$"]', 150),
-        ('["shop"~"^(clothes|shoes|bag|jewelry|boutique|fashion_accessories|watches|kimono|gift|souvenir|antiques|craft|art)$"]', 150),
+        ('["shop"~"^(chemist|cosmetics|variety_store|general|doityourself|houseware|electronics|mobile_phone|computer|video_games|camera)$"]', 250),
+        ('["shop"~"^(clothes|shoes|bag|jewelry|boutique|fashion_accessories|watches|kimono|gift|souvenir|antiques|craft|art)$"]', 250),
         ('["shop"~"^(books|stationery|toys|games|bakery|confectionery|alcohol|wine|tea)$"]', 100),
-        ('["shop"="convenience"]', 30),
+        ('["shop"="convenience"]', 60),
+        # ร้านแบรนด์ที่นักท่องเที่ยวค้นบ่อย: ดึงตามชื่อโดยตรง ไม่ให้ถูกตัดทิ้งด้วยลิมิตของคิวรีทั่วไป
+        ('["shop"]["name"~"ダイソー|DAISO|Daiso|ドン・キホーテ|ドンキホーテ|ドンキ|ユニクロ|UNIQLO|ヨドバシ|ビックカメラ|BicCamera|セリア|Seria|キャンドゥ|無印良品|MUJI|マツモトキヨシ|マツキヨ|ツルハ|スギ薬局|ココカラファイン|サンドラッグ|ウェルシア|コクミン|ダイコク|ヤマダ|エディオン|ジョーシン|ニトリ|ABC-MART|ロフト|LOFT|ハンズ|イオン|AEON|ライフ|フレスコ|成城石井|業務スーパー|ZARA|H&M|GU|ジーユー"]', 300),
+        ('["shop"]["brand"~"ダイソー|DAISO|Daiso|ドン・キホーテ|ドンキホーテ|ドンキ|ユニクロ|UNIQLO|ヨドバシ|ビックカメラ|BicCamera|セリア|Seria|キャンドゥ|無印良品|MUJI|マツモトキヨシ|マツキヨ|ツルハ|スギ薬局|ココカラファイン|サンドラッグ|ウェルシア|コクミン|ダイコク|ヤマダ|エディオン|ジョーシン|ニトリ|ABC-MART|ロフト|LOFT|ハンズ|イオン|AEON|ライフ|フレスコ|成城石井|業務スーパー|ZARA|H&M|GU|ジーユー"]', 200),
     ],
     "transport": [('["public_transport"~"station|stop_position|platform"]', 120)],
 }
