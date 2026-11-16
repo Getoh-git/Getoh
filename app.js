@@ -42,33 +42,23 @@ function flightCard(f,now,ix){
    <div class="tks">${st}</div><div class="ft">${orbit(p,ix)}<code>${fmtR(tg)}</code></div></div>
    <div class="tkf"><div><small>ถึงสนามบิน</small><b>${f.apT}</b></div><div><small>เที่ยวบิน</small><b>${f.no?esc(f.no):"ยังไม่ระบุ"}</b></div><div><small>เส้นทาง</small><b>${esc(P[P.length-1])}</b></div></div></div></div>`;
 }
-const HXT={osaka:null,snow:null};let hxMode="osaka",hxBusy=false,hxSnowAt=0; // ต้องประกาศก่อน tick()/jlDraw() ทำงานครั้งแรก
-// ---------- หน้าแรก: Journey Line + ป้ายไฟลท์ (สถานะคำนวณจากตารางเวลา ยังไม่ใช้ Flight API) ----------
-const JL_NORM={osa:"ก.พ. ≈ 2–9°",sgw:"ก.พ. ≈ −6–1°"}; // ค่าปกติโดยประมาณของเดือนก.พ. ใช้ตอนยังไม่ใกล้วันเดินทาง
-function jlStatus(f,now){
-  if(now<f.ap-3*36e5)return["ตามตาราง","ok"];
-  if(now<f.dep)return["ถึงเวลาไปสนามบิน","go"];
-  if(now<f.arr)return["อยู่บนเครื่อง","go"];
-  return["ลงจอดแล้ว ✓","done"];
-}
+const HXT={osaka:null,kyoto:null,nara:null,kobe:null,kanazawa:null,snow:null}; // snow = ชิราคาวาโกะ
+let hxMode="osaka",hxBusy=false,hxSnowAt=0,hxCur="osaka",hxI=0,hxPaused=false,hxTimer=0,hxRaf=0;
+const HX_DWELL=10000;
+const CITY6=[["osaka","โอซาก้า",34.6937,135.5023],["kobe","โกเบ",34.6901,135.1956],["kyoto","เกียวโต",35.0116,135.7681],["nara","นารา",34.6851,135.8048],["kanazawa","คานาซาวะ",36.5613,136.6562],["snow","ชิราคาวาโกะ",36.2575,136.9061]];
+const NORM6={osaka:"ก.พ. ≈ 2–9°",kobe:"ก.พ. ≈ 3–10°",kyoto:"ก.พ. ≈ 1–9°",nara:"ก.พ. ≈ 0–9°",kanazawa:"ก.พ. ≈ 0–6°",snow:"ก.พ. ≈ −6–1°"}; // ค่าปกติโดยประมาณ
+const HX_IMG={osaka:"hx-s1",kobe:"hx-s-kobe",kyoto:"hx-s-kyoto",nara:"hx-s-nara",kanazawa:"hx-s-kanazawa",snow:"hx-s2"}; // ต้องประกาศก่อน tick()/jlDraw() ทำงานครั้งแรก
+// ---------- หน้าแรก: อุณหภูมิ 6 เมือง (ไฮไลต์เมืองที่กราฟิกด้านบนกำลังเดินผ่าน) ----------
 function jlDraw(){
   const el=$("jl");if(!el||typeof F==="undefined"||!F.length)return;
-  const now=Date.now(),a=F[0],b=F[F.length-1],cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-  let x,cap;
-  if(now<a.dep){x=0;cap="📍 ตอนนี้ยังอยู่ไทย · เตรียมตัวก่อนออกเดินทาง"}
-  else if(now<a.arr){x=.5*cl((now-a.dep)/(a.arr-a.dep),0,1);cap="✈️ กำลังบินไปโอซาก้า"}
-  else if(now<b.dep){x=.5;cap=`📍 อยู่โอซาก้า · วันที่ ${Math.floor((now-a.arr)/864e5)+1} ของทริป`}
-  else if(now<b.arr){x=.5+.5*cl((now-b.dep)/(b.arr-b.dep),0,1);cap="✈️ กำลังบินกลับบ้าน"}
-  else{x=1;cap="🏠 กลับถึงบ้านแล้ว เก็บความทรงจำไว้นะ"}
-  const L=8+84*x,tmp=(d,k)=>`<em>${d?d.ic+" "+d.t+"°":"–°"}</em><small>${JL_NORM[k]}</small>`;
-  const node=(pos,ico,lab,inner,on)=>`<div class="jl-n ${on?"on":""}" style="left:${pos}%"><i></i><b>${ico} ${lab}</b>${inner}</div>`;
-  const rows=F.map(f=>{const[s,c]=jlStatus(f,now);return `<div class="jl-row"><div><b>${f.no?esc(f.no):"ยังไม่ระบุ"} · ${f.from} ➔ ${f.to}</b><small>${esc(f.title)} · ${f.depD} ${f.depT} ➔ ${f.arrD} ${f.arrT}</small></div><span class="jl-st ${c}">${s}</span></div>`}).join("");
-  el.innerHTML=`<div class="jl-cap">${cap}</div><div class="jl-line"><i class="jl-bar"></i><i class="jl-fill" style="width:${84*x}%"></i>
-   <span class="jl-pl" style="left:29%">✈</span><span class="jl-pl" style="left:71%">✈</span>
-   <img class="jl-me" src="couple-pixel.png" alt="" style="left:${L}%">
-   ${node(8,"🏠","ไทย","",x===0)}${node(50,"🏯","โอซาก้า",tmp(HXT.osaka,"osa"),x===.5)}${node(92,"🏠","ไทย","",x===1)}</div>
-   <div class="jl-sg">❄️ ชิราคาวาโกะ ตอนนี้ ${HXT.snow?HXT.snow.t+"°":"–°"} · ${JL_NORM.sgw} <small>(ค่าประมาณ)</small></div>${rows}
-   <div class="jl-foot">สถานะคำนวณจากตารางเวลา ไม่ใช่ข้อมูลสดจากสายการบิน · เช็กกับสายการบินก่อนออกเดินทางอีกครั้ง</div>`;
+  const now=Date.now(),A=F[0],Z=F[F.length-1];let cap;
+  if(now<A.dep)cap="📍 ตอนนี้ยังอยู่ไทย · อุณหภูมิจริงของแต่ละเมืองที่จะไป";
+  else if(now<A.arr)cap="✈️ กำลังบินไปโอซาก้า";
+  else if(now<Z.dep)cap=`📍 อยู่ในทริป วันที่ ${Math.floor((now-A.arr)/864e5)+1} · อุณหภูมิตอนนี้`;
+  else if(now<Z.arr)cap="✈️ กำลังบินกลับบ้าน";
+  else cap="🏠 กลับถึงบ้านแล้ว เก็บความทรงจำไว้นะ";
+  const tiles=CITY6.map(([k,n])=>{const d=HXT[k];return `<div class="jc ${k===hxCur?"on":""}" data-k="${k}"><span>${d?d.ic:"…"}</span><b>${d?d.t+"°":"–°"}</b><div>${n}</div><small>${NORM6[k]}</small></div>`}).join("");
+  el.innerHTML=`<div class="jl-cap">${cap}</div><div class="jcg">${tiles}</div><div class="jl-foot">ตัวเลขใหญ่คืออุณหภูมิตอนนี้ (Open-Meteo) · บรรทัดเล็กคือช่วงปกติของเดือนก.พ. เป็นค่าประมาณ</div>`;
 }
 let lastFl=0;
 function tick(){
@@ -692,15 +682,21 @@ async function wx(){
 }
 // ---------- หน้าแรก: แตะเพื่อเดินทาง โอซาก้า ⇄ ชิราคาวาโกะ (ตัวละครเดิน ฉากเปลี่ยนเป็นหิมะ) ----------
 // (HXT, hxMode, hxBusy, hxSnowAt ย้ายไปประกาศก่อน tick() แล้ว)
-const HXN={osaka:"โอซาก้าตอนนี้",snow:"ชิราคาวาโกะตอนนี้"};
-function hxTemp(){
-  const d=HXT[hxMode],tv=$("hx-tv"),ti=$("hx-ti"),tl=$("hx-tl");if(!tv)return;
-  tv.textContent=d?d.t+"°":"–°";ti.textContent=d?d.ic:(hxMode==="snow"?"❄️":"🌤️");tl.textContent=HXN[hxMode];jlDraw();
+function hxTween(to,ms){ // ตัวเลขอุณหภูมิค่อย ๆ เปลี่ยนจากเมืองก่อนหน้า
+  const el=$("hx-tv");if(!el)return;cancelAnimationFrame(hxRaf);
+  const from=parseInt(String(el.textContent).replace("−","-"),10);
+  if(to==null||!isFinite(from)||(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)){el.textContent=to==null?"–°":to+"°";return}
+  const t0=performance.now(),f=t=>{const k=Math.min(1,(t-t0)/ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;el.textContent=Math.round(from+(to-from)*e)+"°";if(k<1)hxRaf=requestAnimationFrame(f)};
+  hxRaf=requestAnimationFrame(f);
 }
-async function hxSnowT(){ // อุณหภูมิหมู่บ้านชิราคาวาโกะ (Open-Meteo)
-  if(Date.now()-hxSnowAt<6e5&&HXT.snow)return;hxSnowAt=Date.now();
-  try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=36.2575&longitude=136.9061&current=temperature_2m,weather_code,is_day&timezone=Asia%2FTokyo");
-    if(r.ok){const c=(await r.json()).current;if(c){HXT.snow={t:Math.round(c.temperature_2m),ic:wxIcon(c.weather_code,c.is_day!==0?1:0)};hxTemp()}}}catch(e){}
+function hxTemp(){ // ข้อมูลอากาศมาถึงแล้ว: อัปเดตป้ายของเมืองปัจจุบันทันที
+  const d=HXT[hxCur],tv=$("hx-tv"),ti=$("hx-ti");if(!tv)return;
+  tv.textContent=d?d.t+"°":"–°";ti.textContent=d?d.ic:"🌤️";jlDraw();
+}
+async function hxSnowT(){ // ดึงอุณหภูมิทั้ง 6 เมืองในคำขอเดียว (Open-Meteo) ทุก 10 นาที
+  if(Date.now()-hxSnowAt<6e5&&HXT.osaka)return;hxSnowAt=Date.now();
+  try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+CITY6.map(c=>c[2]).join(",")+"&longitude="+CITY6.map(c=>c[3]).join(",")+"&current=temperature_2m,weather_code,is_day&timezone=Asia%2FTokyo");
+    if(r.ok){const arr=await r.json();(Array.isArray(arr)?arr:[arr]).forEach((o,n)=>{const c=o&&o.current;if(c&&CITY6[n])HXT[CITY6[n][0]]={t:Math.round(c.temperature_2m),ic:wxIcon(c.weather_code,c.is_day!==0?1:0)}});hxTemp()}}catch(e){}
 }
 (function(){ // เกล็ดหิมะ (สี่เหลี่ยมพิกเซล) สร้างครั้งเดียว จะเคลื่อนไหวเฉพาะตอนอยู่ฉากหิมะ
   const box=$("hx-snow");if(!box)return;let s="";
@@ -708,22 +704,18 @@ async function hxSnowT(){ // อุณหภูมิหมู่บ้านช
     s+=`<i style="--l:${(Math.random()*100).toFixed(1)}%;--s:${z}px;--d:${(5+Math.random()*5).toFixed(1)}s;--dl:-${(Math.random()*9).toFixed(1)}s;--x:${Math.round(-30+Math.random()*60)}px"></i>`}
   box.innerHTML=s;
 })();
-function hxGo(){
-  if(hxBusy)return;hxBusy=true;
-  const hx=$("hx"),c=$("hx-couple"),go=$("hx-go"),to=hxMode==="osaka"?"snow":"osaka",dir=to==="snow"?1:-1;
-  go.disabled=true;c.classList.add("walk");
-  c.style.left=(dir>0?"128%":"-28%");                     // เดินออกจากฉาก (ไปขวาตอนออกเดินทาง ซ้ายตอนกลับ)
-  setTimeout(()=>{                                           // กลางทาง: ฉากเปลี่ยน
-    hxMode=to;hx.classList.toggle("snow",to==="snow");
-    $("hx-s1").setAttribute("aria-hidden",String(to==="snow"));$("hx-s2").setAttribute("aria-hidden",String(to!=="snow"));
-    $("hx-nights").textContent=to==="snow"?"หมู่บ้านชิราคาวาโกะ ❄️":`${NIGHTS} คืนที่โอซาก้า`;
-    go.textContent=to==="snow"?"🏙️ กลับโอซาก้า":"❄️ ไปชิราคาวาโกะ";
-    hxTemp();if(to==="snow")hxSnowT();
-  },900);
-  setTimeout(()=>{                                           // เดินเข้ามาจากอีกฝั่ง
-    c.style.transition="none";c.style.left=(dir>0?"-28%":"128%");void c.offsetWidth;
-    c.style.transition="";c.style.left="50%";
-  },1500);
-  setTimeout(()=>{c.classList.remove("walk");go.disabled=false;hxBusy=false},2900);
+function hxShow(i,first){ // เดินไปเมืองถัดไป: ฉากค่อย ๆ จางสลับ ตัวเลขค่อย ๆ นับไปที่อุณหภูมิใหม่
+  const [k,n]=CITY6[i],hx=$("hx");if(!hx)return;hxI=i;hxCur=k;
+  CITY6.forEach(c=>{const im=$(HX_IMG[c[0]]);if(!im)return;const on=c[0]===k;im.classList.toggle("on",on);im.setAttribute("aria-hidden",String(!on));if(on){im.style.animation="none";void im.offsetWidth;im.style.animation=""}});
+  hx.classList.toggle("snow",k==="snow");
+  const d=HXT[k],ti=$("hx-ti"),tl=$("hx-tl");if(tl)tl.textContent=n+"ตอนนี้";if(ti)ti.textContent=d?d.ic:"🌤️";
+  if(first)hxTemp();else{hxTween(d?d.t:null,4000);jlDraw()}
 }
-wx();setInterval(wx,18e5);
+function hxNext(){if(!hxPaused&&!document.hidden)hxShow((hxI+1)%CITY6.length);hxTimer=setTimeout(hxNext,HX_DWELL)}
+function hxGo(){ // ปุ่มหยุด/เดินต่อ
+  hxPaused=!hxPaused;const c=$("hx-couple"),b=$("hx-go");
+  if(c)c.classList.toggle("walk",!hxPaused);if(b)b.textContent=hxPaused?"▶ เดินต่อ":"⏸ หยุดเดิน";
+  const s=document.querySelector(".hx-sky.on");if(s)s.style.animationPlayState=hxPaused?"paused":"running";
+}
+function hxStart(){const c=$("hx-couple");if(c)c.classList.add("walk");hxShow(0,true);hxSnowT();hxTimer=setTimeout(hxNext,HX_DWELL)}
+wx();setInterval(wx,18e5);hxStart();
