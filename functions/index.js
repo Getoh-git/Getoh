@@ -19,7 +19,7 @@ exports.placesLookup = onRequest(
     // จำกัดการเรียกต่อ IP (best-effort ต่ออินสแตนซ์) กันคนยิงตรงจนค่า API บาน
     const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
     const now = Date.now(), hits = (RATE.get(ip) || []).filter(t => now - t < 60000);
-    if (hits.length >= 20) return res.status(429).json({ error: 'เรียกถี่เกินไป ลองใหม่ใน 1 นาที' });
+    if (hits.length >= 90) return res.status(429).json({ error: 'เรียกถี่เกินไป ลองใหม่ใน 1 นาที' });
     hits.push(now); RATE.set(ip, hits); if (RATE.size > 5000) RATE.clear();
 
     const query = String((req.body && req.body.query) || '').trim().slice(0, 180);
@@ -36,17 +36,19 @@ exports.placesLookup = onRequest(
     } };
     else return res.status(400).json({ error: 'ต้องระบุพิกัดร้าน' });
 
+    // mode=rating: ขอเฉพาะคะแนน/จำนวนรีวิว (ไม่ขอรีวิว/เวลาเปิด/เว็บไซต์ ซึ่งเป็นฟิลด์ที่คิดเงินแพงกว่า) ใช้โหลดอัตโนมัติ
+    const lite = req.body && req.body.mode === 'rating';
+    const fieldMask = lite
+      ? ['places.id', 'places.displayName', 'places.rating', 'places.userRatingCount', 'places.googleMapsUri']
+      : ['places.id', 'places.displayName', 'places.formattedAddress', 'places.rating', 'places.userRatingCount',
+         'places.reviews', 'places.googleMapsUri', 'places.websiteUri', 'places.regularOpeningHours'];
     try {
       const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY.value(),
-          'X-Goog-FieldMask': [
-            'places.id', 'places.displayName', 'places.formattedAddress',
-            'places.rating', 'places.userRatingCount', 'places.reviews',
-            'places.googleMapsUri', 'places.websiteUri', 'places.regularOpeningHours'
-          ].join(',')
+          'X-Goog-FieldMask': fieldMask.join(',')
         },
         body: JSON.stringify(searchBody)
       });
