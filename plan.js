@@ -912,6 +912,8 @@ function renderSG(){
 // ค้นหาได้ทั้งไทย/อังกฤษ/ญี่ปุ่น · แยกประเภทร้านช้อปปิ้ง · กรองทันทีที่พิมพ์ · เรียงตามความใกล้
 let GD_DATA = null, GD_LOADING = null, GD_VIEW = [], GD_POS = null, GD_TIMER = 0;
 let GD_CATEGORY = "shopping", GD_CITY = "all", GD_QUERY = "", GD_GROUP = "all", GD_SHOW_HIDDEN = false;
+let GD_AUTOG = true, GD_Q = [], GD_ACTIVE = 0, GD_BUDGET = 200, GD_PAUSE = 0, GD_IO = null, GD_BATCH = 0;
+const GD_RFAIL = Object.create(null), GD_PEND = Object.create(null);
 let GD_MAPON = false, GD_MAP = null, GD_MLAYER = null, GD_MAPLIST = [], GD_MARKERS = [], GD_FOCUS = null;
 let GD_MIN_RATING = 0, GD_SORT = "complete", GD_LIMIT = 40;
 const GD_GOOGLE = Object.create(null);
@@ -1177,7 +1179,7 @@ function gdMapDraw() {
     const grp = p._cat === "shopping" ? GD_GROUPS[gdGroup(p)] : null, emoji = grp ? grp[0] : String(GD_CATS[p._cat] || "📍").split(" ")[0];
     const icon = Lf.divIcon({className: "", iconSize: [30, 30], iconAnchor: [15, 15], html: `<div style="width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.35)">${emoji}</div>`});
     const sub = gdSub(p), d = gdDist(p);
-    const html = `<b>${gdEsc(gdTitle(p))}</b>${sub ? `<div>${gdEsc(sub)}</div>` : ""}<div style="color:#666">${gdEsc([grp ? grp[1] : "", p.city || "", d !== null ? gdFmtDist(d) : ""].filter(Boolean).join(" · "))}</div>`
+    const html = () => `<b>${gdEsc(gdTitle(p))}</b>${gdRating(p) !== null ? `<div style="color:#b26a00;font-weight:700">${gdRatingHtml(p)}</div>` : ""}${sub ? `<div>${gdEsc(sub)}</div>` : ""}<div style="color:#666">${gdEsc([grp ? grp[1] : "", p.city || "", d !== null ? gdFmtDist(d) : ""].filter(Boolean).join(" · "))}</div>`
       + `<div style="margin-top:6px;display:flex;gap:10px"><a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}" target="_blank" rel="noopener">🧭 นำทาง</a><a href="#" onclick="gdAddMap(${i});return false">➕ เพิ่มลงแผน</a></div>`;
     GD_MARKERS[i] = Lf.marker(c, {icon}).addTo(GD_MLAYER).bindPopup(html);
   });
@@ -1201,6 +1203,44 @@ function gdGoogleHtml(g) {
   const rating = Number(g.rating), count = Number(g.userRatingCount);
   const reviews = gdArray(g.reviews).slice(0, 5).map(rv => `<div style="padding:8px 0;border-top:1px solid var(--line)"><b style="color:var(--amb)">${"★".repeat(Math.max(0, Math.min(5, Number(rv.rating) || 0)))}</b> <span class="note">${rv.authorAttribution?.uri && /^https:\/\//.test(rv.authorAttribution.uri) ? `<a href="${gdEsc(rv.authorAttribution.uri)}" target="_blank" rel="noopener" style="color:var(--sky)">${gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")}</a>` : gdEsc(rv.authorAttribution?.displayName || "ผู้รีวิว Google")} · ${gdEsc(rv.relativePublishTimeDescription || "")}</span><div style="font-size:13px;margin-top:3px">${gdEsc(rv.text?.text || rv.text || "")}</div></div>`).join("");
   return `<div style="margin-top:6px"><b>${gdEsc(g.name || "Google Places match")}</b>${g.address ? `<div class="note">${gdEsc(g.address)}</div>` : ""}<div><b style="color:var(--amb)">★ ${Number.isFinite(rating) ? rating.toFixed(1) : "ไม่มีคะแนน"}/5</b> <span class="note">${Number.isFinite(count) ? count.toLocaleString("th-TH") + " รีวิว" : ""}</span>${g.googleMapsUri ? ` · <a href="${gdEsc(g.googleMapsUri)}" target="_blank" rel="noopener" style="color:var(--sky)">Google Maps ↗</a>` : ""}${g.websiteUri ? ` · <a href="${gdEsc(g.websiteUri)}" target="_blank" rel="noopener" style="color:var(--sky)">เว็บไซต์ ↗</a>` : ""}</div></div>${reviews || '<div class="note">Google Places ไม่ส่งรีวิวสำหรับสถานที่นี้</div>'}<div class="note">ข้อมูลและรีวิวจาก Google · แสดงตามเงื่อนไขการระบุแหล่งที่มาของ Google</div>`;
+}
+// ---------- โหลดคะแนน Google อัตโนมัติ (เฉพาะคะแนน/จำนวนรีวิว ทำงานเมื่อการ์ดเลื่อนเข้าจอ) ----------
+function gdToggleAuto() { GD_AUTOG = !GD_AUTOG; if (GD_AUTOG) GD_PAUSE = 0; gdRender(); }
+function gdRatingHtml(p) { const r = gdRating(p), n = gdReviewCount(p); return r === null ? "" : `★ ${r.toFixed(1)}${n !== null ? ` <small class="note">(${n.toLocaleString("th-TH")})</small>` : ""}`; }
+function gdQueue(p) {
+  const k = gdKey(p);
+  if (!GD_AUTOG || !gdHasGoogle() || !gdCoord(p) || GD_GOOGLE[k] || GD_RFAIL[k] || GD_PEND[k] || Date.now() < GD_PAUSE) return;
+  GD_PEND[k] = 1; GD_Q.push(p); gdPump();
+}
+async function gdPump() {
+  while (GD_ACTIVE < 3 && GD_Q.length) {
+    if (GD_BUDGET <= 0) { GD_Q.length = 0; Object.keys(GD_PEND).forEach(k => delete GD_PEND[k]); gdToast("โหลดคะแนนอัตโนมัติครบโควตาของรอบนี้แล้ว · กดปุ่มที่การ์ดเพื่อโหลดเพิ่ม"); return; }
+    const p = GD_Q.shift(); GD_BUDGET--; GD_ACTIVE++;
+    gdAutoLoad(p).finally(() => { GD_ACTIVE--; if (!GD_Q.length && !GD_ACTIVE && GD_BATCH && (GD_SORT === "rating" || GD_SORT === "reviews")) { GD_BATCH = 0; gdRenderList(); } else gdPump(); });
+  }
+}
+async function gdAutoLoad(p) {
+  const k = gdKey(p);
+  try {
+    const c = gdCoord(p);
+    const r = await fetch(window.GETOH_PLACES_API_URL, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({mode: "rating", query: [p.name_en || p.name, p.city, "Japan"].filter(Boolean).join(" "), latitude: c[0], longitude: c[1]})});
+    if (r.status === 429) { GD_PAUSE = Date.now() + 60000; GD_Q.length = 0; return; }
+    if (r.status === 404) { GD_RFAIL[k] = 1; return; }
+    const data = await r.json(); if (!r.ok) throw Error(data.error || r.status);
+    const place = data.place || data; if (!place || !place.id) { GD_RFAIL[k] = 1; return; }
+    GD_GOOGLE[k] = Object.assign({_lite: true}, place); GD_BATCH++;
+    document.querySelectorAll("[data-gk]").forEach(el => { if (el.getAttribute("data-gk") === k) { const s = el.querySelector(".gd-rt"); if (s) s.innerHTML = gdRatingHtml(p); const b = el.querySelector(".gd-gb"); if (b) b.textContent = "⭐ ดูรีวิว Google"; } });
+  } catch (e) { GD_RFAIL[k] = 1; console.warn("auto rating failed", e); }
+  finally { delete GD_PEND[k]; }
+}
+function gdObserve() {
+  if (GD_IO) { GD_IO.disconnect(); GD_IO = null; }
+  if (!GD_AUTOG || !gdHasGoogle()) return;
+  const sortByStars = GD_SORT === "rating" || GD_SORT === "reviews";
+  if (sortByStars) { GD_VIEW.forEach(gdQueue); return; }   // เรียงตามดาว: โหลดทุกใบที่แสดงเพื่อให้เรียงได้จริง
+  if (!("IntersectionObserver" in window)) { GD_VIEW.slice(0, 12).forEach(gdQueue); return; }
+  GD_IO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { GD_IO.unobserve(e.target); const p = GD_VIEW[Number(e.target.getAttribute("data-gi"))]; if (p) gdQueue(p); } }), {rootMargin: "300px"});
+  document.querySelectorAll("#gd-list article[data-gk]").forEach(el => GD_IO.observe(el));
 }
 async function gdGoogleLookup(i) {
   const p = GD_VIEW[i]; if (!p) return;
@@ -1256,13 +1296,13 @@ function gdCard(p, i) {
     lk("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(gdTitle(p) + " " + (p.city || "Japan")), "⭐ รีวิวใน Google Maps"),
     p.website && /^https?:\/\//i.test(p.website) ? lk(p.website, "🌐 เว็บไซต์") : ""
   ].filter(Boolean).join("");
-  const gBtn = gdHasGoogle() ? `<button class="chip" style="min-height:34px" onclick="gdGoogleLookup(${i})">⭐ โหลดคะแนน Google</button>` : "";
-  return `<article style="padding:12px 0;border-top:1px solid var(--line)">
-   <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0"><b>${gdEsc(gdTitle(p))}</b>${sub ? `<div class="note" style="margin:0">${gdEsc(sub)}</div>` : ""}</div>${rating !== null ? `<span style="white-space:nowrap;color:var(--amb);font-weight:700">★ ${rating.toFixed(1)}${count !== null ? ` <small class="note">(${count.toLocaleString("th-TH")})</small>` : ""}</span>` : ""}</div>
+  const gBtn = gdHasGoogle() && !(g.id && !g._lite) ? `<button class="chip gd-gb" style="min-height:34px" onclick="gdGoogleLookup(${i})">${g._lite ? "⭐ ดูรีวิว Google" : "⭐ โหลดคะแนนและรีวิว"}</button>` : "";
+  return `<article data-gk="${gdEsc(key)}" data-gi="${i}" style="padding:12px 0;border-top:1px solid var(--line)">
+   <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0"><b>${gdEsc(gdTitle(p))}</b>${sub ? `<div class="note" style="margin:0">${gdEsc(sub)}</div>` : ""}</div><span class="gd-rt" style="white-space:nowrap;color:var(--amb);font-weight:700">${gdRatingHtml(p)}</span></div>
    <div style="margin-top:4px">${tags}</div>${lines}
    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:6px 0">${links}</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" style="min-height:34px" onclick="gdAdd(${i})">＋ เพิ่มในแผนวันนี้</button>${gBtn}</div>
-   <div id="gd-g-${i}">${g.id ? gdGoogleHtml(g) : ""}</div></article>`;
+   <div id="gd-g-${i}">${g.id && !g._lite ? gdGoogleHtml(g) : ""}</div></article>`;
 }
 function gdRenderList() {
   const listEl = document.getElementById("gd-list"); if (!listEl || !GD_DATA) return;
@@ -1297,7 +1337,7 @@ function gdRenderList() {
     }
   }
   listEl.innerHTML = shown.map(gdCard).join("") + empty;
-  GD_MAPLIST = r.list.slice(0, 300); gdMapDraw();
+  GD_MAPLIST = r.list.slice(0, 300); gdMapDraw(); gdObserve();
   const moreEl = document.getElementById("gd-more");
   if (moreEl) moreEl.innerHTML = r.list.length > GD_LIMIT ? `<button class="btn o" style="margin-top:8px" onclick="gdShowMore()">แสดงเพิ่มอีก ${Math.min(40, r.list.length - GD_LIMIT)} รายการ (เหลือ ${r.list.length - GD_LIMIT})</button>` : "";
 }
@@ -1330,7 +1370,7 @@ function gdRender() {
  <div id="gd-meta" style="margin-top:6px"></div>
   <div style="margin:6px 0"><button class="chip ${GD_MAPON ? "on" : ""}" onclick="gdToggleMap()">🗺️ ${GD_MAPON ? "ซ่อนแผนที่" : "แสดงผลบนแผนที่"}</button></div>
   <div id="gd-map" style="display:${GD_MAPON ? "block" : "none"};height:340px;border-radius:12px;border:1px solid var(--line);margin:0 0 8px;z-index:0"></div>
- ${gdHasGoogle() ? '<div class="note">การเรียงตามดาวใช้กับรายการที่กด "โหลดคะแนน Google" แล้วเท่านั้น (ร้านที่ยังไม่โหลดอยู่ท้ายรายการ ไม่ถูกซ่อน)</div>' : ""}
+ ${gdHasGoogle() ? `<div style="margin:4px 0"><button class="chip ${GD_AUTOG ? "on" : ""}" style="min-height:34px" onclick="gdToggleAuto()">⭐ โหลดคะแนน Google อัตโนมัติ: ${GD_AUTOG ? "เปิด" : "ปิด"}</button> <span class="note">โหลดเมื่อร้านเลื่อนเข้าจอ · ร้านที่ยังไม่มีคะแนนอยู่ท้ายเมื่อเรียงตามดาว</span></div>` : ""}
  <div id="gd-list"></div><div id="gd-more"></div>
  <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🌤️ พยากรณ์อากาศ</summary><div style="margin-top:8px">${wxHtml || '<div class="note">ยังไม่มีข้อมูลอากาศสำหรับตัวกรองนี้</div>'}</div></details>
  <div class="note" style="margin-top:8px">ข้อมูลพื้นฐาน: © OpenStreetMap contributors (ODbL) · เวลาเปิด-ปิดมาจากชุมชน OSM โปรดเช็กอีกครั้งก่อนไป · อากาศ: Open-Meteo${gdHasGoogle() ? " · คะแนน/รีวิว: Google Places" : ""}</div>
