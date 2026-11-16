@@ -37,6 +37,18 @@
         ".write": "now < 1798761600000 && (!data.exists() || !newData.exists())",
         ".validate": "newData.hasChildren(['name','ts','days','d']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40 && newData.child('ts').isNumber()"
       }
+    },
+    "game": {
+      "scores": {
+        ".read": true,
+        ".indexOn": [
+          "s"
+        ],
+        "$id": {
+          ".write": "now < 1798761600000 && !data.exists()",
+          ".validate": "newData.hasChildren(['n','s','t']) && newData.child('n').isString() && newData.child('n').val().length > 0 && newData.child('n').val().length <= 12 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 99999 && newData.child('t').isNumber()"
+        }
+      }
     }
   }
 }
