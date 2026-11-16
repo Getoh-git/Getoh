@@ -358,14 +358,42 @@ nav button.on{font-weight:700}
 .hx.snow .hx-snow i{animation-play-state:running}
 @keyframes hxfall{from{top:-6px;transform:translateX(0)}to{top:100%;transform:translateX(var(--x))}}
 @media(prefers-reduced-motion:reduce){.hx-snow{display:none}}
+/* v52: ช่องอุณหภูมิกดดูรายละเอียด · ฉากสีต่างกันต่อเมือง · เหมาะกับมือถือ · ซ่อนกราฟฟิกบนจอคอม */
+.hx{background-color:#FFB38A;background-image:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.34) 100%);transition:background-color 1.2s ease;-webkit-tap-highlight-color:transparent}
+.hx[data-c=osaka]{background-color:#FFB38A}
+.hx[data-c=kyoto]{background-color:#F7C0D6}
+.hx[data-c=nara]{background-color:#9ED8F0}
+.hx[data-c=kobe]{background-color:#86CBEA}
+.hx[data-c=kanazawa]{background-color:#FFD27A}
+.hx[data-c=snow]{background-color:#C9D9E6}
+button.hx-temp{border:0;font:inherit;cursor:pointer;touch-action:manipulation;min-height:64px;box-shadow:0 2px 0 rgba(18,48,26,.18)}
+button.hx-temp:active{transform:translateY(1px)}
+button.hx-temp:focus-visible,.hx-go:focus-visible,.hx-foot .btn:focus-visible{outline:3px solid #12301a;outline-offset:2px}
+.hx-more{color:#1d4a29!important;font-weight:700;font-size:11px;margin-top:3px;text-decoration:underline;text-underline-offset:2px}
+.hx-couple{--k:1.15;left:15%!important;bottom:7%;transform:none;transition:none}
+.hx-scene{aspect-ratio:360/205}
+.hx-go,.hx-foot .btn{min-height:44px;touch-action:manipulation}
+.hx-sh .wx{margin-top:0}
+.sh-body .wx{margin:4px 0 6px}
+@media(min-width:420px){.hx-couple{--k:1.4}}
+@media(min-width:560px){.hx-couple{--k:1.7}}
+@media(min-width:640px){.hx-couple{--k:2}}
+@media(max-width:380px){.hx .hx-top h1{max-width:calc(100% - 96px)}.hx-lab{max-width:calc(100% - 96px)}button.hx-temp{min-width:78px;padding:7px 9px}}
+@media(max-width:350px){.hx-more{display:none}button.hx-temp{min-height:56px}}
+/* จอคอม: ไม่แสดงฉาก/ตัวละคร/หิมะ แสดงเฉพาะตัวนับถอยหลัง */
+@media(min-width:768px){
+  .hx-scene,.hx-snow,.hx-go,.hx::before{display:none!important}
+  .hx{background-image:none;background-color:#DCE76F!important;border-radius:28px}
+  .hx-top{padding-bottom:22px}
+}
 </style>
 </head>
 <body>
 
 
 <section id="p-count" class="wrap">
-  <div class="hx" id="hx">
-    <div class="hx-temp" role="status" aria-label="อุณหภูมิโอซาก้าตอนนี้"><span class="hx-ti" id="hx-ti" aria-hidden="true">🌤️</span><b id="hx-tv">–°</b><small id="hx-tl">โอซาก้าตอนนี้</small></div>
+  <div class="hx" id="hx" data-c="osaka">
+    <button type="button" class="hx-temp" onclick="wxOpen()" aria-haspopup="dialog" aria-label="อุณหภูมิตอนนี้ แตะเพื่อดูรายละเอียดอากาศโอซาก้า"><span class="hx-ti" id="hx-ti" aria-hidden="true">🌤️</span><b id="hx-tv">–°</b><small id="hx-tl">โอซาก้าตอนนี้</small><small class="hx-more">ดูรายละเอียด ›</small></button>
     <div class="hx-top">
       <h1>เตรียมพร้อมสู่โอซาก้า 2027</h1>
       <div class="hx-lab" id="tlabel">เวลาที่เหลือจนถึงวันเดินทาง</div>
@@ -393,7 +421,6 @@ nav button.on{font-weight:700}
     </div>
   </div>
   <div class="jl" id="jl"></div>
-  <div id="wx"></div>
   <details class="jl-det"><summary>✈️ รายละเอียดไฟลท์ (บัตรโดยสาร)</summary><div id="flights"></div></details>
 
 </section>

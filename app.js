@@ -664,8 +664,11 @@ function wxCard(o){ // o: {cur,td,D,lab,tip,rain}
     <div class="wxp"><div class="wxph">📅 ${lab}</div>${rows}</div>
     <div class="wxt2">👕 ${tip}${rain?" · มีโอกาสฝน/หิมะ พกร่มด้วย":""}</div></div>`;
 }
+let WXHTML="";
+function wxOpen(){ // กดช่องอุณหภูมิมุมขวาบน → เปิดรายละเอียดอากาศเป็นแผ่นล่าง
+  openSheet("🌡️ อากาศโอซาก้า",WXHTML||'<p class="note">กำลังโหลดข้อมูลอากาศ…</p>');
+}
 async function wx(){
-  const box=$("wx");if(!box)return;
   const TH=["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."],J=t=>Math.floor((t+324e5)/864e5)*864e5,days=[];
   for(let t=J(F[0].arr);t<=J(F[F.length-1].dep);t+=864e5){const d=new Date(t);days.push({k:d.toISOString().slice(0,10),lb:`${TH[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth()+1}`})}
   let cur=null;const fc={};
@@ -676,7 +679,7 @@ async function wx(){
   const tip=avg<8?"หนาวมาก: ฮีทเทค + เสื้อกันหนาวหนา + ผ้าพันคอ ถุงมือ":avg<13?"หนาว: ฮีทเทค + โค้ทหรือแจ็กเก็ตหนา + ผ้าพันคอ":avg<18?"เย็น: เสื้อหนาวบางหรือแจ็กเก็ต":"อากาศไม่หนาว: เสื้อแขนยาวบางก็พอ";
   const lab=!live?"ค่าเฉลี่ยหลายปีช่วงทริป (พยากรณ์จริงจะขึ้นเมื่อวันเดินทางอยู่ในช่วง 16 วันข้างหน้า)":have<days.length?`พยากรณ์จริง ${have} จาก ${days.length} วัน · วันที่เหลือเป็นค่าเฉลี่ยหลายปี`:"พยากรณ์ช่วงทริป";
   const today=new Date(Date.now()+324e5).toISOString().slice(0,10);
-  box.innerHTML=wxCard({cur,td:fc[today],D,lab,tip,rain});
+  WXHTML=wxCard({cur,td:fc[today],D,lab,tip,rain});
   if(cur){HXT.osaka={t:Math.round(cur.temperature_2m),ic:wxIcon(cur.weather_code,cur.is_day!==0?1:0)};hxTemp()} // อุณหภูมิมุมขวาบนของหน้าแรก
   hxSnowT();
 }
@@ -707,11 +710,12 @@ async function hxSnowT(){ // ดึงอุณหภูมิทั้ง 6 เ
 function hxShow(i,first){ // เดินไปเมืองถัดไป: ฉากค่อย ๆ จางสลับ ตัวเลขค่อย ๆ นับไปที่อุณหภูมิใหม่
   const [k,n]=CITY6[i],hx=$("hx");if(!hx)return;hxI=i;hxCur=k;
   CITY6.forEach(c=>{const im=$(HX_IMG[c[0]]);if(!im)return;const on=c[0]===k;im.classList.toggle("on",on);im.setAttribute("aria-hidden",String(!on));if(on){im.style.animation="none";void im.offsetWidth;im.style.animation=""}});
-  hx.classList.toggle("snow",k==="snow");
+  hx.classList.toggle("snow",k==="snow");hx.dataset.c=k;
   const d=HXT[k],ti=$("hx-ti"),tl=$("hx-tl");if(tl)tl.textContent=n+"ตอนนี้";if(ti)ti.textContent=d?d.ic:"🌤️";
   if(first)hxTemp();else{hxTween(d?d.t:null,4000);jlDraw()}
 }
-function hxNext(){if(!hxPaused&&!document.hidden)hxShow((hxI+1)%CITY6.length);hxTimer=setTimeout(hxNext,HX_DWELL)}
+function hxDesk(){return window.matchMedia&&matchMedia("(min-width:768px)").matches} // จอคอมไม่แสดงกราฟฟิก จึงไม่ต้องเดินเมือง
+function hxNext(){if(!hxPaused&&!document.hidden&&!hxDesk())hxShow((hxI+1)%CITY6.length);hxTimer=setTimeout(hxNext,HX_DWELL)}
 function hxGo(){ // ปุ่มหยุด/เดินต่อ
   hxPaused=!hxPaused;const c=$("hx-couple"),b=$("hx-go");
   if(c)c.classList.toggle("walk",!hxPaused);if(b)b.textContent=hxPaused?"▶ เดินต่อ":"⏸ หยุดเดิน";
