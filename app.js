@@ -66,14 +66,25 @@ function flipValue(id,value){
   const el=$(id);if(!el)return;
   const next=String(value).padStart(2,"0");
   let digits=[...el.querySelectorAll(".flip-digit")];
+  const makeDigit=n=>`<span class="flip-digit" data-value="${n}" aria-hidden="true"><span class="flip-top"><span class="flip-number">${n}</span></span><span class="flip-bottom"><span class="flip-number">${n}</span></span></span>`;
   if(digits.length!==next.length){
-    el.innerHTML=[...next].map((n,i)=>`<span class="flip-digit" aria-hidden="true"><span class="flip-face">${n}</span></span>`).join("");
+    el.innerHTML=[...next].map(makeDigit).join("");
     el.setAttribute("aria-label",next);return;
   }
   [...next].forEach((n,i)=>{
-    const face=digits[i].querySelector(".flip-face");if(!face||face.textContent===n)return;
-    face.textContent=n;digits[i].classList.remove("is-flipping");void digits[i].offsetWidth;digits[i].classList.add("is-flipping");
-    clearTimeout(lastFlip[id+"-"+i]);lastFlip[id+"-"+i]=setTimeout(()=>digits[i]?.classList.remove("is-flipping"),520);
+    const digit=digits[i],old=digit.dataset.value??digit.querySelector(".flip-number")?.textContent??"0";
+    if(old===n||digit.classList.contains("is-flipping"))return;
+    digit.dataset.value=n;
+    const top=digit.querySelector(".flip-top .flip-number"),bottom=digit.querySelector(".flip-bottom .flip-number");
+    if(!top||!bottom)return;
+    digit.querySelector(".flip-flap")?.remove();
+    const flap=document.createElement("span");flap.className="flip-flap";
+    flap.innerHTML=`<span class="flip-flap-front"><span class="flip-number">${old}</span></span><span class="flip-flap-back"><span class="flip-number">${n}</span></span>`;
+    digit.appendChild(flap);digit.classList.add("is-flipping");
+    clearTimeout(lastFlip[id+"-"+i]);
+    lastFlip[id+"-"+i]=setTimeout(()=>{
+      top.textContent=n;bottom.textContent=n;digit.classList.remove("is-flipping");flap.remove();
+    },590);
   });
   el.setAttribute("aria-label",next);
 }
