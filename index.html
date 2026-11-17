@@ -489,6 +489,62 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 
 .compare-scroll{overflow-x:auto;border:1px solid #e9dfd3;border-radius:14px;background:#fff;max-width:100%;-webkit-overflow-scrolling:touch}.compare-table{border-collapse:separate;border-spacing:0;width:100%;min-width:620px;font-size:13px;color:#536174}.compare-table th,.compare-table td{padding:10px 12px;border-bottom:1px solid #eee7de;border-right:1px solid #f1ebe4;text-align:left;vertical-align:top}.compare-table thead th{background:#f8f2e9;min-width:170px}.compare-table thead th:first-child{min-width:112px}.compare-table tbody th{background:#fbf8f3;white-space:nowrap;color:#7a8290}.compare-table tr:last-child th,.compare-table tr:last-child td{border-bottom:0}.compare-table td:last-child,.compare-table th:last-child{border-right:0}.compare-hotel b,.compare-hotel small{display:block}.compare-hotel b{color:#34445a;line-height:1.4}.compare-hotel small{font-size:11px;color:#87909b;min-height:30px}.compare-hotel .btn{margin-top:7px;min-height:34px;font-size:11px;padding:0 10px}.compare-price{display:block;color:#3d6c5a;font-size:17px}.compare-table td small{display:block;color:#89919c;font-size:11px;margin-top:4px}.compare-negative{color:#a35d4b!important}
 
+
+
+/* v2: หน้าแรกจัดระยะใหม่ — ลดช่องว่างแนวตั้งและทำให้ข้อมูลสำคัญอยู่ใกล้กัน */
+#p-count.wrap{padding-top:10px;padding-bottom:24px}
+#p-count .hx{margin-bottom:0}
+#p-count .hx-top{padding:16px 18px 0}
+#p-count .hx-no{margin-bottom:6px}
+#p-count .hx .hx-top h1{margin:0;font-size:clamp(19px,4.8vw,24px);line-height:1.25}
+#p-count .hx-lab{margin-top:3px}
+#p-count .hx-days{margin-top:2px;gap:8px}
+#p-count .hx-days b{font-size:clamp(76px,23vw,112px);line-height:.88}
+#p-count .hx-days span{font-size:19px}
+#p-count .hx-hms{gap:6px;margin-top:7px}
+#p-count .hx-hms span{padding:4px 10px 5px;font-size:12px}
+#p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font-size:17px}
+#p-count .hx-row{margin-top:7px;gap:6px 9px}
+#p-count .hx-next{min-height:0;margin-top:0;font-size:12px}
+#p-count .hx-scene{aspect-ratio:360/178;margin-top:-24px}
+#p-count .hx-foot{padding:9px 12px 10px 16px;gap:8px}
+#p-count .hx-foot b{font-size:15px}
+#p-count .hx-foot small{font-size:12px}
+#p-count .hx-foot .btn{min-height:40px;padding:0 14px;font-size:13px}
+#p-count .jl{margin-top:9px;padding:11px 11px 8px;border-radius:16px}
+#p-count .jl-cap{margin-bottom:4px;font-size:13px}
+#p-count .jcg{gap:6px;margin:0 0 4px}
+#p-count .jc{padding:6px 4px;border-radius:12px}
+#p-count .jc span{font-size:18px}
+#p-count .jc b{font-size:21px}
+#p-count .jl-foot{font-size:10px;line-height:1.4}
+#p-count .jl-det{margin-top:8px}
+#p-count .jl-det summary{padding:6px 2px}
+@media(min-width:768px){
+  #p-count.wrap{max-width:820px;padding:18px 20px 28px}
+  #p-count .hx{border-radius:24px}
+  #p-count .hx-top{padding:20px 24px 16px}
+  #p-count .hx-no{margin-bottom:7px}
+  #p-count .hx .hx-top h1{font-size:27px}
+  #p-count .hx-lab{font-size:13px}
+  #p-count .hx-days{margin-top:0}
+  #p-count .hx-days b{font-size:104px;line-height:.86}
+  #p-count .hx-days span{font-size:21px}
+  #p-count .hx-hms{margin-top:8px}
+  #p-count .hx-row{margin-top:8px}
+  #p-count .hx-foot{padding:10px 18px}
+  #p-count .jl{margin-top:12px;padding:13px 14px 9px}
+}
+@media(max-width:380px){
+  #p-count .hx-top{padding:13px 14px 0}
+  #p-count .hx-days b{font-size:74px}
+  #p-count .hx-hms{gap:5px}
+  #p-count .hx-hms span{padding:4px 8px;font-size:11px}
+  #p-count .hx-scene{margin-top:-16px;aspect-ratio:360/166}
+  #p-count .hx-foot{padding:8px 9px 9px 12px}
+  #p-count .hx-foot .btn{padding:0 10px;font-size:12px}
+}
+
 </style>
 </head>
 <body>
