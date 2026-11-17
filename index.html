@@ -470,12 +470,111 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 .hx-city.long{font-size:clamp(20px,6.8vw,30px);letter-spacing:.24em;margin-right:-.24em}
 .hx-x.c,.hx-x.d{display:none}
 @media(min-width:560px){.hx-top{padding:34px 28px 0}.hx-scene{margin:26px 28px 0}.hx .hx-top h1{font-size:17px}.hx-hms span{min-width:96px}}
+
+
+/* ===== Getoh Home v2: Warm Minimal Dashboard (overlay patch) ===== */
+#p-count{max-width:1120px;padding:18px 16px 28px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px;align-items:start}
+.home-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:2px 2px 4px}
+.home-brand{font:600 28px/1 'Lexend','Sarabun',sans-serif;letter-spacing:-.06em;color:var(--ink)}
+.home-brand i{font-style:normal;color:#D9825B}
+.home-kicker{font:500 11px/1.4 'DM Mono',monospace;letter-spacing:.16em;color:#87936F;text-transform:uppercase;margin-top:5px}
+#p-count>.hx{grid-column:1;grid-row:2;margin:0;border:1px solid #E2D5C1;border-radius:24px;background:#F8E9D6;box-shadow:0 8px 24px rgba(75,62,45,.07);text-align:left}
+#p-count>.jl{grid-column:2;grid-row:2;margin:0;background:#FFFAF2;color:#34495B;border:1px solid #E7DDCE;border-radius:22px;padding:16px;box-shadow:0 5px 18px rgba(75,62,45,.045)}
+#p-count>.jl-det{grid-column:2;grid-row:3;margin:0;background:#FFFAF2;border:1px solid #E7DDCE;border-radius:16px;padding:8px 14px;color:#34495B}
+#p-count>.home-links{grid-column:1;grid-row:3}
+.home-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.home-links button{min-height:62px;border:1px solid #E7DDCE;border-radius:16px;background:#FFFAF2;color:#34495B;padding:10px 12px;text-align:left;font:500 14px/1.3 'IBM Plex Sans Thai','Sarabun',sans-serif;box-shadow:0 3px 10px rgba(75,62,45,.035);cursor:pointer}
+.home-links button span{display:block;font-size:20px;margin-bottom:3px}
+.home-links button:active{transform:scale(.985)}
+.home-section-label{grid-column:1/-1;margin:4px 2px -7px;color:#526276;font-weight:700;font-size:16px}
+#p-count .hx{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
+#p-count .hx-top{padding:20px 20px 0;text-align:left}
+#p-count .hx-meta{margin-bottom:12px;justify-content:flex-start}
+#p-count .hx-no{font-size:10px;letter-spacing:.15em}
+#p-count .hx-temp{margin-left:auto;min-height:38px;padding:5px 11px;background:#FFFAF2;border:1px solid #E5D7C3;border-radius:999px}
+#p-count .hx-ti{font-size:16px}
+#p-count .hx .hx-temp b{font:500 14px/1 'DM Mono',monospace}
+#p-count .hx .hx-top h1{font:600 21px/1.35 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#34495B;max-width:100%;letter-spacing:0}
+#p-count .hx-lab{font-size:12px;color:#7B8497;max-width:100%;margin-top:3px}
+#p-count .hx-days{flex-direction:row;align-items:baseline;gap:9px;margin-top:5px}
+#p-count .hx-days b{font:500 clamp(66px,17vw,104px)/.95 'Lexend','DM Mono',sans-serif;letter-spacing:-.06em;color:#34495B}
+#p-count .hx-days span{font:600 17px/1 'IBM Plex Sans Thai','Sarabun',sans-serif;letter-spacing:0;margin:0;opacity:1}
+#p-count .hx-hms{justify-content:flex-start;gap:0;margin-top:8px}
+#p-count .hx-hms span{min-width:60px;padding:0 12px;gap:3px;font:400 11px/1.3 'IBM Plex Sans Thai','Sarabun',sans-serif;letter-spacing:0;color:#7B8497}
+#p-count .hx-hms span:first-child{padding-left:0}
+#p-count .hx-hms span+span{border-left:1px solid #D9CCBA}
+#p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font:500 17px/1 'DM Mono',monospace;color:#34495B!important}
+#p-count .hx-row{justify-content:flex-start;margin-top:9px;gap:7px}
+#p-count .hx-next{width:auto;text-align:left;font:400 11px/1.4 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#7B8497;min-height:0;margin-right:auto}
+#p-count .hx-go{min-height:38px;padding:0 12px;font-size:12px;border-radius:999px}
+#p-count .hx-scene{margin:12px 12px 0;border-radius:17px;aspect-ratio:360/155;box-shadow:none;overflow:hidden}
+#p-count .hx-couple{--k:1.5;left:15%!important;bottom:6%;}
+#p-count .hx-foot{background:#FFFAF2;color:#34495B;border-top:1px solid #E7DDCE;border-radius:0 0 22px 22px;padding:13px 18px 15px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-align:left;align-items:center}
+#p-count .hx-coord{grid-column:1/-1;order:0;margin:0;font-size:9px}
+#p-count .hx-city{font:600 23px/1.1 'Lexend','Sarabun',sans-serif;letter-spacing:.12em;margin:0;color:#526F87;text-align:left}
+#p-count .hx-dt b{justify-content:flex-start;margin-top:3px;font:500 11px/1.3 'DM Mono','IBM Plex Sans Thai',monospace;letter-spacing:.04em}
+#p-count .hx-dt b::before,#p-count .hx-dt b::after{display:none}
+#p-count .hx-nt{margin-top:3px;font-size:11px}
+#p-count .hx-sw{display:none}
+#p-count .hx-foot .btn{grid-column:2;grid-row:2/5;margin:0;min-height:42px;padding:0 15px;border-radius:999px;font-size:12px;background:#D9825B;color:#fff;border:0}
+#p-count .jl-cap{font:600 14px/1.4 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#526F87;margin:0 0 10px}
+#p-count .jcg{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#p-count .jc{background:#F5EFE3;border:1px solid #E8DDCE;border-radius:13px;padding:9px 5px;color:#34495B}
+#p-count .jc.on{background:#F8E5D4;border-color:#D9825B}
+#p-count .jc b{font:500 22px/1.2 'DM Mono',monospace;color:#D9825B}
+#p-count .jc div{font:500 13px 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#34495B}
+#p-count .jc small{font:400 10px 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#8A887F}
+#p-count .jl-foot{font:400 10px/1.5 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#8A887F;margin-top:8px}
+#p-count .jl-det summary{font-size:14px;color:#34495B;padding:8px 0}
+#p-count .jl-det[open]{padding-bottom:12px}
+@media(max-width:719px){
+ #p-count{display:flex;flex-direction:column;gap:12px;padding:12px 13px 26px}
+ .home-head{width:100%;padding:2px 3px 3px}
+ .home-brand{font-size:25px}
+ #p-count>.hx,#p-count>.jl,#p-count>.jl-det,#p-count>.home-links{width:100%}
+ #p-count .hx-top{padding:17px 16px 0}
+ #p-count .hx .hx-top h1{font-size:19px}
+ #p-count .hx-days b{font-size:clamp(68px,22vw,94px)}
+ #p-count .hx-scene{aspect-ratio:360/158;margin:10px 9px 0}
+ #p-count .hx-couple{--k:1.25}
+ #p-count .hx-foot{padding:11px 14px 13px}
+ #p-count>.jl{padding:13px}
+ #p-count .jcg{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ #p-count .jc{padding:8px 3px 7px}
+ #p-count .jc b{font-size:19px}
+ #p-count .jc div{font-size:12px}
+ #p-count .jc small{font-size:9px}
+ #p-count>.jl-det{margin-top:0}
+ .home-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .home-links button{min-height:58px}
+}
+@media(max-width:360px){
+ #p-count .hx .hx-top h1{font-size:17px}
+ #p-count .hx-days b{font-size:64px}
+ #p-count .hx-hms span{min-width:54px;padding:0 8px}
+ #p-count .hx-go{padding:0 9px;font-size:11px}
+ #p-count .hx-foot .btn{padding:0 10px;font-size:11px}
+}
+@media(min-width:720px){
+ #p-count .hx-scene{aspect-ratio:360/155;margin-top:14px}
+ #p-count .hx-couple{--k:1.9}
+ #p-count .hx-top{padding:22px 24px 0}
+ #p-count .hx .hx-top h1{font-size:24px}
+ #p-count .hx-days b{font-size:100px}
+ #p-count .hx-foot{padding:14px 22px 16px}
+}
+@media(prefers-reduced-motion:reduce){#p-count .hx-sky.on{animation:none}}
+
 </style>
 </head>
 <body>
 
 
 <section id="p-count" class="wrap">
+  <header class="home-head">
+    <div><div class="home-brand">get<span><i>o</i></span>h</div><div class="home-kicker">YOUR LITTLE TRAVEL SPACE</div></div>
+    <span aria-hidden="true" style="font-size:22px;color:#9A927F">✦</span>
+  </header>
   <div class="hx" id="hx" data-c="osaka">
         <span class="hx-x a">+</span><span class="hx-x b">+</span>
     <div class="hx-top">
@@ -510,6 +609,14 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
     </div>
   </div>
   <div class="jl" id="jl"></div>
+  <div class="home-links" aria-label="ทางลัดหน้าแรก">
+    <button type="button" onclick="tab('plan')"><span>🗺️</span>แผนเที่ยว <small>ดูและจัดการกำหนดการ</small></button>
+    <button type="button" onclick="tab('hotels')"><span>🛏️</span>โรงแรม <small>ค้นหาและเปรียบเทียบที่พัก</small></button>
+    <button type="button" onclick="tab('prep')"><span>🧳</span>เตรียมตัว <small>รายการก่อนออกเดินทาง</small></button>
+    <button type="button" onclick="tab('style')"><span>👗</span>แต่งตัว <small>แนะนำสีเสื้อผ้า</small></button>
+    <button type="button" onclick="shopGo()"><span>🛍️</span>ค้นหาร้านค้า <small>ค้นหาร้านในแผนเที่ยว</small></button>
+    <button type="button" onclick="gameOpen()"><span>🎮</span>Play Games <small>เกมและกิจกรรมระหว่างทริป</small></button>
+  </div>
   <details class="jl-det"><summary>✈️ รายละเอียดไฟลท์ (บัตรโดยสาร)</summary><div id="flights"></div></details>
 
 </section>
