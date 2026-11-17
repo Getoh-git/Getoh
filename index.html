@@ -585,6 +585,28 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-days b{font-size:clamp(104px,18vw,148px)}
 }
 
+/* Countdown v4: subtle flip digits + travel milestones */
+#p-count .hx-milestone{display:inline-flex;align-items:center;gap:6px;min-height:25px;margin:6px 0 0;padding:4px 10px;border:1px solid rgba(63,95,134,.22);border-radius:999px;background:rgba(255,255,255,.38);color:#3F5F86;font-size:11px;line-height:1.25;letter-spacing:.01em;transition:background .35s,border-color .35s,transform .35s}
+#p-count .hx-ms-icon{font-size:13px;line-height:1}
+#p-count .hx-milestone.is-30{background:#FFF0D9;border-color:#E8B36D;color:#80572C}
+#p-count .hx-milestone.is-7{background:#FCE5D8;border-color:#E8A66E;color:#8B5037}
+#p-count .hx-milestone.is-1,#p-count .hx-milestone.is-today{background:#33496A;border-color:#33496A;color:#FFF4E6}
+#p-count .flip-unit{display:inline-block;perspective:420px;transform-style:preserve-3d;font-variant-numeric:tabular-nums}
+#p-count .flip-face{display:inline-block;transform-origin:50% 55%;backface-visibility:hidden;will-change:transform}
+#p-count .flip-unit.is-flipping .flip-face{animation:getohFlip .42s cubic-bezier(.2,.72,.25,1)}
+@keyframes getohFlip{0%{transform:rotateX(0);opacity:1}45%{transform:rotateX(-82deg);opacity:.35}55%{transform:rotateX(82deg);opacity:.35}100%{transform:rotateX(0);opacity:1}}
+#p-count .hx-milestone.is-changing{animation:milestonePop .55s ease}
+@keyframes milestonePop{0%{transform:scale(.96)}45%{transform:scale(1.045)}100%{transform:scale(1)}}
+@media(max-width:620px){
+  #p-count .hx-milestone{margin-top:5px;font-size:10px;min-height:23px;padding:3px 9px}
+  #p-count .hx-days{margin-top:3px}
+  #p-count .hx-days .flip-face{display:inline-block}
+}
+@media(prefers-reduced-motion:reduce){
+  #p-count .flip-unit.is-flipping .flip-face,#p-count .hx-milestone.is-changing{animation:none}
+  #p-count .flip-face{will-change:auto}
+}
+
 </style>
 </head>
 <body>
@@ -597,11 +619,12 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
       <div class="hx-meta"><span class="hx-no">TRIP / 2027 &middot; KANSAI</span><button type="button" class="hx-temp" onclick="wxOpen()" aria-haspopup="dialog" aria-label="อุณหภูมิตอนนี้ แตะเพื่อดูรายละเอียดอากาศโอซาก้า"><span class="hx-ti" id="hx-ti" aria-hidden="true">🌤️</span><b id="hx-tv">–°</b><small id="hx-tl">โอซาก้าตอนนี้</small><small class="hx-more">ดูรายละเอียด ›</small></button></div>
       <h1>เตรียมพร้อมสู่โอซาก้า 2027</h1>
       <div class="hx-lab" id="tlabel">เวลาที่เหลือจนถึงวันเดินทาง</div>
-      <div class="hx-days"><b id="td">00</b><span>วัน</span></div>
+      <div class="hx-milestone" id="hx-milestone" aria-live="polite"><span class="hx-ms-icon" aria-hidden="true">✨</span><span id="hx-ms-text">กำลังนับถอยหลังสู่วันเดินทาง</span></div>
+      <div class="hx-days"><b id="td" class="flip-unit"><span class="flip-face">00</span></b><span>วัน</span></div>
       <div class="hx-hms">
-        <span><b id="th">00</b>ชม.</span>
-        <span><b id="tm">00</b>นาที</span>
-        <span><b id="ts">00</b>วินาที</span>
+        <span><b id="th" class="flip-unit"><span class="flip-face">00</span></b>ชม.</span>
+        <span><b id="tm" class="flip-unit"><span class="flip-face">00</span></b>นาที</span>
+        <span><b id="ts" class="flip-unit"><span class="flip-face">00</span></b>วินาที</span>
       </div>
       <div class="hx-row"><div class="hx-next" id="tnext"></div><button type="button" class="hx-go" id="hx-go" onclick="hxGo()">⏸ หยุดเดิน</button><button type="button" class="hx-go hx-play" onclick="gameOpen()">🎮 Play games</button></div>
     </div>

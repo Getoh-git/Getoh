@@ -61,13 +61,29 @@ function jlDraw(){
   el.innerHTML=`<div class="jl-cap">${cap}</div><div class="jcg">${tiles}</div><div class="jl-foot">ตัวเลขใหญ่คืออุณหภูมิตอนนี้ (Open-Meteo) · บรรทัดเล็กคือช่วงปกติของเดือนก.พ. เป็นค่าประมาณ</div>`;
 }
 let lastFl=0;
+let lastMilestone="",lastFlip={};
+function flipValue(id,value){
+  const el=$(id);if(!el)return;const face=el.querySelector(".flip-face"),next=String(value).padStart(2,"0");
+  if(!face){el.textContent=next;return}
+  if(face.textContent===next)return;
+  face.textContent=next;el.classList.remove("is-flipping");void el.offsetWidth;el.classList.add("is-flipping");
+  clearTimeout(lastFlip[id]);lastFlip[id]=setTimeout(()=>el.classList.remove("is-flipping"),460);
+}
+function updateMilestone(days){
+  const box=$("hx-milestone"),label=$("hx-ms-text"),icon=box&&box.querySelector(".hx-ms-icon");if(!box||!label)return;
+  let key="normal",msg="ทุกวินาทีพาเราเข้าใกล้ทริปคันไซ",emoji="✨";
+  if(days<=0){key="today";msg="วันนี้แล้ว! พร้อมออกเดินทางกันหรือยัง?";emoji="✈️"}
+  else if(days<=1){key="1";msg="พรุ่งนี้แล้ว! เตรียมตัวให้พร้อมนะ";emoji="🧳"}
+  else if(days<=7){key="7";msg="อีกไม่ถึงหนึ่งสัปดาห์แล้ว!";emoji="🎉"}
+  else if(days<=30){key="30";msg="เข้าโค้งสุดท้าย อีกไม่ถึง 30 วันแล้ว";emoji="🌟"}
+  if(key!==lastMilestone){box.classList.remove("is-30","is-7","is-1","is-today","is-changing");if(key!=="normal")box.classList.add("is-"+key);void box.offsetWidth;box.classList.add("is-changing");lastMilestone=key}
+  label.textContent=msg;if(icon)icon.textContent=emoji;
+}
 function tick(){
   const now=Date.now(),nx=F.find(f=>now<f.dep);
-  const v=nx?nx.dep-now:0;
-  $("td").textContent=String(Math.floor(v/864e5)).padStart(2,"0");
-  $("th").textContent=String(Math.floor(v%864e5/36e5)).padStart(2,"0");
-  $("tm").textContent=String(Math.floor(v%36e5/6e4)).padStart(2,"0");
-  $("ts").textContent=String(Math.floor(v%6e4/1e3)).padStart(2,"0");
+  const v=nx?Math.max(0,nx.dep-now):0;
+  const days=Math.floor(v/864e5),hours=Math.floor(v%864e5/36e5),minutes=Math.floor(v%36e5/6e4),seconds=Math.floor(v%6e4/1e3);
+  flipValue("td",days);flipValue("th",hours);flipValue("tm",minutes);flipValue("ts",seconds);updateMilestone(days);
   $("tlabel").textContent=nx?`เหลือเวลาจนถึงเครื่องออก (${nx.title})`:"ทริปนี้จบแล้ว กลับถึงบ้านเรียบร้อย 🏠";
   $("tnext").textContent=nx?`${nx.from} ➔ ${nx.to} · ${nx.depD} เวลา ${nx.depT}`:"";
   if(!lastFl||now-lastFl>=6e4){lastFl=now;$("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("");jlDraw()} // การ์ดวาดใหม่ทุกนาที ไม่ใช่ทุกวินาที
