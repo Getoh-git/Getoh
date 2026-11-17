@@ -232,31 +232,40 @@ async function loadThumb(id){
     if(k){thumb[id]=d[k];const e=$("im-"+id);if(e)e.innerHTML=imgTag(d[k])}
   }catch(e){delete thumb[id]}
 }
+const DECISION={main:["ตัวเลือกหลัก","main"],backup:["ตัวเลือกสำรอง","backup"],chosen:["เลือกแล้ว","chosen"]};
+function statusLabel(h){const v=DECISION[h.decisionStatus];return v?`<span class="decision-pill ${v[1]}">${v[0]}</span>`:`<span class="decision-pill unset">ยังไม่กำหนดสถานะ</span>`}
+function statusActions(h){return `<div class="status-actions" onclick="event.stopPropagation()"><button class="${h.decisionStatus==="main"?"active main":""}" onclick="setDecisionStatus(${h.id},'main')">★ หลัก</button><button class="${h.decisionStatus==="backup"?"active backup":""}" onclick="setDecisionStatus(${h.id},'backup')">สำรอง</button><button class="${h.decisionStatus==="chosen"?"active chosen":""}" onclick="setDecisionStatus(${h.id},'chosen')">✓ เลือกแล้ว</button></div>`}
 function card(h){
   const on=sel.includes(h.id),src=thumb[h.id]||h.img||"",p=firstRv(h,"+"),n=firstRv(h,"-"),rl=rtLine(h);
-  return `<div class="card h ${on?"sel":""}" onclick="detail(${h.id})">
-    <div class="ph"><span class="im" id="im-${h.id}">${src?imgTag(esc(src)):""}</span>${src?"":"🏨 ยังไม่มีรูป · แตะเพื่อเพิ่ม"}
-      <span class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></span>
-      <button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button></div>
-    <div class="hb"><h3>${esc(h.name)}</h3><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
-      ${rl?`<div class="rtl">${rl}</div>`:""}${hgCardLine(h)}
-      <div class="rc">${rsum(h)} · 📐 ${h.size?h.size+" m²":"–"}${h.custom?" · เพิ่มเอง":""}</div>
+  return `<article class="card h ${on?"sel":""}" onclick="detail(${h.id})">
+    <div class="ph"><span class="im" id="im-${h.id}">${src?imgTag(esc(src)):""}</span>${src?"":"🏨 ยังไม่มีรูป"}<span class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></span><button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button><span class="photo-status">${statusLabel(h)}</span></div>
+    <div class="hb"><div class="hotel-name-row"><h3>${esc(h.name)}</h3><button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"＋"}</button></div><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
+      ${rl?`<div class="rtl">${rl}</div>`:""}${hgCardLine(h)}<div class="rc">${rsum(h)} · 📐 ${h.size?h.size+" m²":"–"}${h.custom?" · เพิ่มเอง":""}</div>
       ${p||n?`<div class="pq">${p?`<span class="g">👍 ${esc(p)}</span>`:""}${n?`<span class="b">👎 ${esc(n)}</span>`:""}</div>`:""}
-      <div class="meta"><span class="pr">${price(h)}<small> รวม ${NIGHTS} คืน</small><em class="tot">≈ ${night(h)} /คืน</em></span>
-        <span style="display:flex;gap:8px">${hasLL(h)?`<button class="pick" aria-label="ดูบนแผนที่" onclick="event.stopPropagation();showOnMap(${h.id})">📍</button>`:""}<button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"+"}</button></span></div></div></div>`;
+      <div class="hotel-price-row"><div><small>ราคารวม ${NIGHTS} คืน · ณ ${esc(OSAKA.priceDate||"ไม่ระบุ")}</small><strong>${price(h)}</strong><em>≈ ${night(h)} /คืน</em></div>${hasLL(h)?`<button class="map-mini" onclick="event.stopPropagation();showOnMap(${h.id})">📍 แผนที่</button>`:""}</div>${statusActions(h)}</div></article>`;
+}
+function renderDecisionBoard(){
+  const A=all(),chosen=A.filter(h=>h.decisionStatus==="chosen"),main=A.filter(h=>h.decisionStatus==="main"),backup=A.filter(h=>h.decisionStatus==="backup");
+  const el=$("decision-board"),stats=$("hotel-stats");if(!el||!stats)return;
+  stats.innerHTML=`<div><b>${A.length}</b><span>โรงแรมใน shortlist</span></div><div><b>${main.length}</b><span>ตัวเลือกหลัก</span></div><div><b>${backup.length}</b><span>ตัวเลือกสำรอง</span></div><div><b>${chosen.length}</b><span>เลือกแล้ว</span></div>`;
+  const group=(label,arr,cls)=>`<div class="decision-group"><div class="decision-group-title"><span class="decision-dot ${cls}"></span>${label}<b>${arr.length}</b></div>${arr.length?arr.slice(0,3).map(h=>`<button class="decision-mini" onclick="detail(${h.id})"><span>${esc(h.name)}</span><b>${price(h)}</b></button>`).join(""):`<div class="decision-empty">ยังไม่มีรายการ</div>`}</div>`;
+  el.innerHTML=group("เลือกแล้ว",chosen,"chosen")+group("ตัวเลือกหลัก",main,"main")+group("ตัวเลือกสำรอง",backup,"backup");
+}
+async function setDecisionStatus(id,status){
+  const h=find(id);if(!h)return;const next=h.decisionStatus===status?null:status;
+  const {id:_id,custom:_custom,deleted:_deleted,...body}=h;
+  if(next)body.decisionStatus=next;else delete body.decisionStatus;
+  await putHotel(id,body);renderDecisionBoard();
 }
 function draw(){
-  const q=$("q").value.toLowerCase(),min=+$("size").value,s=$("sort").value;
+  const q=$("q")?$("q").value.toLowerCase():"",min=$("size")?+$("size").value:0,s=$("sort")?$("sort").value:"id";
   const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
-  const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];
-  if(f)L.sort(f);
-  $("count").textContent=`พบ ${L.length} โรงแรม · ราคารวม ${NIGHTS} คืน ณ ${OSAKA.priceDate||"-"} · แตะการ์ดเพื่อดูรายละเอียด`;
-  $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมที่ตรงเงื่อนไข</div>`;
+  const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];if(f)L.sort(f);
+  $("count").textContent=`แสดง ${L.length} จาก ${all().length} โรงแรมที่คัดไว้ · ราคารวม ${NIGHTS} คืน · ราคาอ้างอิง ${OSAKA.priceDate||"–"}`;
+  $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมในรายการนี้</div>`;
   L.forEach(h=>{if(photoSet.has(h.id))loadThumb(h.id)});
-  $("n").textContent=sel.length;
-  $("act").classList.toggle("hide",!sel.length);
-  $("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
-  if(map)mapDraw();
+  $("n").textContent=sel.length;$("act").classList.toggle("hide",!sel.length);$("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
+  renderDecisionBoard();if(map)mapDraw();
 }
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
 
@@ -278,6 +287,7 @@ function detail(id){
   const map=h.map||"https://maps.google.com/?q="+encodeURIComponent(h.name+" Osaka");
   openSheet(h.name,`
     <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
+    <div class="detail-status"><b>สถานะการตัดสินใจ</b>${statusActions(h)}</div>
     <div class="pl"><span>📍 ${esc(h.area||"–")}</span><span>📐 ${h.size?h.size+" ตร.ม.":"–"}</span><span>⭐️ ${h.score!=null?h.score+"/10":"–"}</span><button class="fv" style="width:auto;padding:0 12px" onclick="fav(${id});detail(${id})">${favs.has(id)?"★ ชอบแล้ว":"☆ ชอบ"}</button></div>
     <div class="bk"><div><small class="note" style="margin:0">ราคารวม ${NIGHTS} คืน</small><div><b style="font-size:20px">${price(h)}</b></div><div class="note" style="margin:0">≈ ${night(h)} /คืน</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
@@ -609,13 +619,19 @@ async function migrateOld(){
 // ---------- เปรียบเทียบ / ส่ง LINE ----------
 function compare(){
   const L=all().filter(h=>sel.includes(h.id)).sort((a,b)=>(a.price??1e12)-(b.price??1e12));
-  openSheet("📊 เปรียบเทียบ",L.map((h,i)=>{const best=i===0&&h.price!=null;return `<div class="cmp ${best?"best":""}"><h3>${esc(h.name)}${best?" 🏆 ถูกสุด":""}</h3>
-    <div class="kv"><span>ราคารวม ${NIGHTS} คืน</span><b style="color:var(--grn)">${price(h)} <small>(≈${night(h)}/คืน)</small></b></div>
-    <div class="kv"><span>รีวิวเว็บจอง</span><b>${h.rt&&h.rt.length?h.rt.map(x=>x[1]).join(" / "):"–"}</b></div>
-    <div class="kv"><span>ขนาดห้อง</span><b>${h.size?h.size+" m²":"–"}</b></div>
-    <div class="kv"><span>คะแนน</span><b style="color:var(--amb)">${h.score!=null?"⭐️ "+h.score:"–"}</b></div>
-    <div class="kv"><span>ย่าน</span><b>${esc(h.area||"")}</b></div>
-    <div class="kv"><span>คอมเมนต์ห้อง</span><b>${rsum(h)}</b></div>${hgCmpRow(h)}</div>`}).join("")+hgCmpBtn());
+  if(!L.length){toast("เลือกโรงแรมอย่างน้อย 1 แห่งก่อนเปรียบเทียบ");return}
+  const rows=[
+    ["ราคา / ทั้งทริป",h=>`<b class="compare-price">${price(h)}</b><small>≈ ${night(h)} /คืน</small>`],
+    ["ขนาดห้อง",h=>h.size?`${h.size} m²`:"–"],
+    ["คะแนนรวม",h=>h.score!=null?`⭐ ${h.score}/10`:"–"],
+    ["ทำเล",h=>esc(h.area||"–")],
+    ["คะแนนทำเล",h=>h.loc!=null?`${h.loc}/10`:"–"],
+    ["รีวิวเว็บจอง",h=>h.rt&&h.rt.length?h.rt.map(x=>`${esc(x[0])} ${x[1]}`).join(" · "):"–"],
+    ["ข้อดี / ข้อสังเกต",h=>`${esc(firstRv(h,"+")||"ยังไม่มีข้อมูล")}${firstRv(h,"-")?`<small class="compare-negative">ข้อควรพิจารณา: ${esc(firstRv(h,"-"))}</small>`:""}`]
+  ];
+  const head=L.map(h=>`<th><div class="compare-hotel"><b>${esc(h.name)}</b><small>${esc(h.tag||h.area||"")}</small><button class="btn o" onclick="detail(${h.id})">ดูรายละเอียด</button></div></th>`).join("");
+  const body=rows.map(([label,fn])=>`<tr><th>${label}</th>${L.map(h=>`<td>${fn(h)}</td>`).join("")}</tr>`).join("");
+  openSheet("📊 เปรียบเทียบโรงแรม",`<p class="note">เปรียบเทียบจากข้อมูลที่บันทึกไว้ · ราคานี้เป็นราคาอ้างอิงในระบบ ไม่ใช่ราคาสดจากเว็บจอง</p><div class="compare-scroll"><table class="compare-table"><thead><tr><th>หัวข้อ</th>${head}</tr></thead><tbody>${body}</tbody></table></div>${hgCmpBtn()}<div class="note">ราคาอ้างอิง ณ ${esc(OSAKA.priceDate||"ไม่ระบุ")} · ควรเปิดเว็บไซต์จองเพื่อตรวจสอบราคาสุดท้ายและเงื่อนไขห้องพัก</div>`);
 }
 function copyLine(){
   const L=sel.length?all().filter(h=>sel.includes(h.id)):all();
@@ -631,6 +647,7 @@ function copyLine(){
   n.textContent=`${NIGHTS} คืนที่โอซาก้า`;
 })();
 setInterval(tick,1000);tick();chips();draw();
+const hotelMapDetails=$("hotel-map-details");if(hotelMapDetails)hotelMapDetails.addEventListener("toggle",()=>{if(hotelMapDetails.open&&map)setTimeout(()=>map.invalidateSize(),120)});
 sync();
 setInterval(()=>{if(!document.hidden)sync(true)},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync(true)});

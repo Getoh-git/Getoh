@@ -471,121 +471,30 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 .hx-x.c,.hx-x.d{display:none}
 @media(min-width:560px){.hx-top{padding:34px 28px 0}.hx-scene{margin:26px 28px 0}.hx .hx-top h1{font-size:17px}.hx-hms span{min-width:96px}}
 
-
-/* ===== Getoh Home v2: Warm Minimal Dashboard (overlay patch) ===== */
-#p-count{max-width:1120px;padding:18px 16px 28px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px;align-items:start}
-.home-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:2px 2px 4px}
-.home-brand{font:600 28px/1 'Lexend','Sarabun',sans-serif;letter-spacing:-.06em;color:var(--ink)}
-.home-brand i{font-style:normal;color:#D9825B}
-.home-kicker{font:500 11px/1.4 'DM Mono',monospace;letter-spacing:.16em;color:#87936F;text-transform:uppercase;margin-top:5px}
-#p-count>.hx{grid-column:1;grid-row:2;margin:0;border:1px solid #E2D5C1;border-radius:24px;background:#F8E9D6;box-shadow:0 8px 24px rgba(75,62,45,.07);text-align:left}
-#p-count>.jl{grid-column:2;grid-row:2;margin:0;background:#FFFAF2;color:#34495B;border:1px solid #E7DDCE;border-radius:22px;padding:16px;box-shadow:0 5px 18px rgba(75,62,45,.045)}
-#p-count>.jl-det{grid-column:2;grid-row:3;margin:0;background:#FFFAF2;border:1px solid #E7DDCE;border-radius:16px;padding:8px 14px;color:#34495B}
-#p-count>.home-links{grid-column:1;grid-row:3}
-.home-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.home-links button{min-height:62px;border:1px solid #E7DDCE;border-radius:16px;background:#FFFAF2;color:#34495B;padding:10px 12px;text-align:left;font:500 14px/1.3 'IBM Plex Sans Thai','Sarabun',sans-serif;box-shadow:0 3px 10px rgba(75,62,45,.035);cursor:pointer}
-.home-links button span{display:block;font-size:20px;margin-bottom:3px}
-.home-links button:active{transform:scale(.985)}
-.home-section-label{grid-column:1/-1;margin:4px 2px -7px;color:#526276;font-weight:700;font-size:16px}
-#p-count .hx{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
-#p-count .hx-top{padding:20px 20px 0;text-align:left}
-#p-count .hx-meta{margin-bottom:12px;justify-content:flex-start}
-#p-count .hx-no{font-size:10px;letter-spacing:.15em}
-#p-count .hx-temp{margin-left:auto;min-height:38px;padding:5px 11px;background:#FFFAF2;border:1px solid #E5D7C3;border-radius:999px}
-#p-count .hx-ti{font-size:16px}
-#p-count .hx .hx-temp b{font:500 14px/1 'DM Mono',monospace}
-#p-count .hx .hx-top h1{font:600 21px/1.35 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#34495B;max-width:100%;letter-spacing:0}
-#p-count .hx-lab{font-size:12px;color:#7B8497;max-width:100%;margin-top:3px}
-#p-count .hx-days{flex-direction:row;align-items:baseline;gap:9px;margin-top:5px}
-#p-count .hx-days b{font:500 clamp(66px,17vw,104px)/.95 'Lexend','DM Mono',sans-serif;letter-spacing:-.06em;color:#34495B}
-#p-count .hx-days span{font:600 17px/1 'IBM Plex Sans Thai','Sarabun',sans-serif;letter-spacing:0;margin:0;opacity:1}
-#p-count .hx-hms{justify-content:flex-start;gap:0;margin-top:8px}
-#p-count .hx-hms span{min-width:60px;padding:0 12px;gap:3px;font:400 11px/1.3 'IBM Plex Sans Thai','Sarabun',sans-serif;letter-spacing:0;color:#7B8497}
-#p-count .hx-hms span:first-child{padding-left:0}
-#p-count .hx-hms span+span{border-left:1px solid #D9CCBA}
-#p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font:500 17px/1 'DM Mono',monospace;color:#34495B!important}
-#p-count .hx-row{justify-content:flex-start;margin-top:9px;gap:7px}
-#p-count .hx-next{width:auto;text-align:left;font:400 11px/1.4 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#7B8497;min-height:0;margin-right:auto}
-#p-count .hx-go{min-height:38px;padding:0 12px;font-size:12px;border-radius:999px}
-#p-count .hx-scene{margin:12px 12px 0;border-radius:17px;aspect-ratio:360/155;box-shadow:none;overflow:hidden}
-#p-count .hx-couple{--k:1.5;left:15%!important;bottom:6%;}
-#p-count .hx-foot{background:#FFFAF2;color:#34495B;border-top:1px solid #E7DDCE;border-radius:0 0 22px 22px;padding:13px 18px 15px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-align:left;align-items:center}
-#p-count .hx-coord{grid-column:1/-1;order:0;margin:0;font-size:9px}
-#p-count .hx-city{font:600 23px/1.1 'Lexend','Sarabun',sans-serif;letter-spacing:.12em;margin:0;color:#526F87;text-align:left}
-#p-count .hx-dt b{justify-content:flex-start;margin-top:3px;font:500 11px/1.3 'DM Mono','IBM Plex Sans Thai',monospace;letter-spacing:.04em}
-#p-count .hx-dt b::before,#p-count .hx-dt b::after{display:none}
-#p-count .hx-nt{margin-top:3px;font-size:11px}
-#p-count .hx-sw{display:none}
-#p-count .hx-foot .btn{grid-column:2;grid-row:2/5;margin:0;min-height:42px;padding:0 15px;border-radius:999px;font-size:12px;background:#D9825B;color:#fff;border:0}
-#p-count .jl-cap{font:600 14px/1.4 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#526F87;margin:0 0 10px}
-#p-count .jcg{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-#p-count .jc{background:#F5EFE3;border:1px solid #E8DDCE;border-radius:13px;padding:9px 5px;color:#34495B}
-#p-count .jc.on{background:#F8E5D4;border-color:#D9825B}
-#p-count .jc b{font:500 22px/1.2 'DM Mono',monospace;color:#D9825B}
-#p-count .jc div{font:500 13px 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#34495B}
-#p-count .jc small{font:400 10px 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#8A887F}
-#p-count .jl-foot{font:400 10px/1.5 'IBM Plex Sans Thai','Sarabun',sans-serif;color:#8A887F;margin-top:8px}
-#p-count .jl-det summary{font-size:14px;color:#34495B;padding:8px 0}
-#p-count .jl-det[open]{padding-bottom:12px}
-@media(max-width:719px){
- #p-count{display:flex;flex-direction:column;gap:12px;padding:12px 13px 26px}
- .home-head{width:100%;padding:2px 3px 3px}
- .home-brand{font-size:25px}
- #p-count>.hx,#p-count>.jl,#p-count>.jl-det,#p-count>.home-links{width:100%}
- #p-count .hx-top{padding:17px 16px 0}
- #p-count .hx .hx-top h1{font-size:19px}
- #p-count .hx-days b{font-size:clamp(68px,22vw,94px)}
- #p-count .hx-scene{aspect-ratio:360/158;margin:10px 9px 0}
- #p-count .hx-couple{--k:1.25}
- #p-count .hx-foot{padding:11px 14px 13px}
- #p-count>.jl{padding:13px}
- #p-count .jcg{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
- #p-count .jc{padding:8px 3px 7px}
- #p-count .jc b{font-size:19px}
- #p-count .jc div{font-size:12px}
- #p-count .jc small{font-size:9px}
- #p-count>.jl-det{margin-top:0}
- .home-links{grid-template-columns:repeat(2,minmax(0,1fr))}
- .home-links button{min-height:58px}
-}
-@media(max-width:360px){
- #p-count .hx .hx-top h1{font-size:17px}
- #p-count .hx-days b{font-size:64px}
- #p-count .hx-hms span{min-width:54px;padding:0 8px}
- #p-count .hx-go{padding:0 9px;font-size:11px}
- #p-count .hx-foot .btn{padding:0 10px;font-size:11px}
-}
-@media(min-width:720px){
- #p-count .hx-scene{aspect-ratio:360/155;margin-top:14px}
- #p-count .hx-couple{--k:1.9}
- #p-count .hx-top{padding:22px 24px 0}
- #p-count .hx .hx-top h1{font-size:24px}
- #p-count .hx-days b{font-size:100px}
- #p-count .hx-foot{padding:14px 22px 16px}
-}
-@media(prefers-reduced-motion:reduce){#p-count .hx-sky.on{animation:none}}
+/* Getoh Warm Minimal · Hotel Decision Support refresh */
+#p-hotels{background:#f8f3eb;color:#2f3c4d;min-height:100vh;padding:0 0 36px}
+.hotel-shell{max-width:1280px;margin:0 auto;padding:18px 22px 36px}
+.hotel-hero{position:relative;overflow:hidden;border-radius:26px;padding:30px 32px 18px;background:linear-gradient(112deg,#fff8ed 0%,#f6dfc7 54%,#dce7ee 100%);border:1px solid #ead9c6;box-shadow:0 12px 34px rgba(82,65,47,.08)}
+.hotel-hero-copy{position:relative;z-index:1;max-width:680px}.eyebrow{font:600 11px/1.4 'DM Mono',monospace;letter-spacing:.14em;color:#a66b3f}.hotel-hero h1{font-size:clamp(25px,3vw,38px);color:#29394c;margin:7px 0}.hotel-hero p{color:#687386;margin:0;font-size:15px}.hotel-hero-art{position:absolute;right:5%;top:2px;font-size:110px;opacity:.2;filter:saturate(.65)}
+.hotel-stats{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}.hotel-stats>div{background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.9);border-radius:15px;padding:12px 15px;box-shadow:0 3px 12px rgba(82,65,47,.05)}.hotel-stats b{display:block;font-size:25px;line-height:1.15;color:#344c66}.hotel-stats span{font-size:12px;color:#7a8290}
+.hotel-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 2px 12px}.hotel-section-head h2{font-size:23px;margin:3px 0;color:#29394c}.hotel-section-head p{margin:0;color:#7b8490;font-size:13px}.hotel-add{width:auto;min-height:42px!important;white-space:nowrap}.hotel-toolbar{background:#fff;border:1px solid #eee2d4;border-radius:18px;padding:9px 14px;margin-bottom:16px}.hotel-toolbar .chips{padding:2px 0;flex-wrap:wrap;overflow:visible}.hotel-toolbar .chip{background:#fbf7f1;border-color:#e8ded2;color:#687386;min-height:36px}.hotel-toolbar .chip.on{background:#f7dfc6;border-color:#e8b98e;color:#80512e}.hotel-filter{border-top:1px solid #f0e8de;padding-top:7px}.hotel-filter summary{cursor:pointer;color:#687386;font-size:12px;padding:4px}.hotel-filter-inner{padding:8px 2px 4px}.hotel-filter input{width:100%;min-height:44px;border:1px solid #e6ddd2;background:#fff;border-radius:12px;padding:0 12px;color:#34445a}
+.hotel-content-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}.hotel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.hotel-grid .h{margin:0;border:1px solid #eadfd2;background:#fffaf4;border-radius:19px;box-shadow:0 5px 18px rgba(71,61,48,.06);transition:transform .18s ease,box-shadow .18s ease}.hotel-grid .h:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(71,61,48,.1)}.hotel-grid .h.sel{border-color:#d59b69;box-shadow:0 0 0 2px rgba(213,155,105,.2)}.hotel-grid .ph{height:174px;background:linear-gradient(135deg,#eee0ce,#d8e2e8);color:#758092}.hotel-grid .h .hb{padding:13px 14px 14px}.hotel-name-row{display:flex;align-items:start;gap:8px;justify-content:space-between}.hotel-name-row h3{font-size:16px;line-height:1.35;margin:0;color:#2d3c4e}.hotel-name-row .pick{width:36px;height:36px;min-width:36px;border:1px solid #ead9c6;background:#fff;color:#8b603d;font-size:19px}.hotel-price-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;margin-top:10px;border-top:1px solid #eee5db}.hotel-price-row small,.hotel-price-row em{display:block;font-size:11px;color:#87909b;font-style:normal}.hotel-price-row strong{display:block;font-size:22px;color:#3d6c5a;line-height:1.2}.map-mini{border:1px solid #e7d9c8;background:#fff;border-radius:10px;padding:8px 10px;color:#6b7a8a;font-size:12px}.photo-status{position:absolute;left:10px;bottom:10px;z-index:2}.decision-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;background:#f2eee8;color:#7b7e82}.decision-pill.main{background:#e7f0ff;color:#426b9d}.decision-pill.backup{background:#fff0d8;color:#9a6a24}.decision-pill.chosen{background:#e2f2e9;color:#39785b}.decision-pill.unset{background:rgba(255,255,255,.9);color:#7c8490}
+.status-actions{display:flex;gap:5px;margin-top:10px;padding-top:9px;border-top:1px solid #f0e8df}.status-actions button{flex:1;min-width:0;min-height:34px;border:1px solid #e8dfd5;border-radius:9px;background:#fff;color:#77808b;font-size:11px;padding:3px 4px}.status-actions button.active.main{background:#e7f0ff;border-color:#b9d1ee;color:#426b9d;font-weight:700}.status-actions button.active.backup{background:#fff0d8;border-color:#efd4a6;color:#9a6a24;font-weight:700}.status-actions button.active.chosen{background:#e2f2e9;border-color:#b7ddc7;color:#39785b;font-weight:700}
+.hotel-side{position:sticky;top:12px;display:grid;gap:12px}.decision-card,.hotel-map-box,.decision-note{background:#fffaf4;border:1px solid #eadfd2;border-radius:18px;padding:15px;box-shadow:0 4px 16px rgba(71,61,48,.045)}.side-title{font-weight:700;color:#34445a;margin-bottom:10px}.decision-group{padding:9px 0;border-top:1px solid #f0e8df}.decision-group-title{display:flex;align-items:center;gap:7px;font-size:13px;color:#596779}.decision-group-title b{margin-left:auto}.decision-dot{width:8px;height:8px;border-radius:50%;background:#aeb7c1}.decision-dot.main{background:#6c9ad0}.decision-dot.backup{background:#d9a34e}.decision-dot.chosen{background:#65a783}.decision-mini{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:#f8f4ed;border-radius:9px;padding:8px;margin-top:6px;color:#536174;font-size:11px}.decision-mini span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.decision-mini b{white-space:nowrap;color:#3d6c5a}.decision-empty{font-size:11px;color:#a1a6ad;padding:6px 0}.decision-card>.btn{margin-top:8px;background:#3f5f86;color:white}.decision-note{font-size:12px;color:#78818e;line-height:1.6}.decision-note b{color:#536174}.decision-note p{margin:5px 0 0}.hotel-map-box summary{cursor:pointer;font-weight:700;color:#596779}.hotel-map-box #map{height:280px;min-height:250px;margin-top:10px;border-color:#e6ded4}.hotel-side .note{font-size:11px}.hotel-content-grid .count{color:#7b8490;font-size:12px;margin:0 0 10px}
+.detail-status{padding:10px 0;border-top:1px solid #e9dfd3;border-bottom:1px solid #e9dfd3;margin:10px 0}.detail-status>b{font-size:13px;color:#6d7785}.detail-status .status-actions{border:0;margin-top:4px;padding:0}.sheet{background:#fffaf4;color:#34445a}.sheet header{background:#fffaf4}.sheet .cmp,.sheet .rv{background:#f7f2eb;color:#34445a}.sheet .kv{border-color:#e9dfd3}.sheet .note{color:#78818e}.sheet .btn{color:#fff}.sheet .btn.o{color:#34445a;background:#fff;border:1px solid #e6d9c9}
+@media(max-width:900px){.hotel-content-grid{grid-template-columns:1fr}.hotel-side{position:static;grid-template-columns:1fr 1fr}.decision-card{grid-row:span 2}}
+@media(max-width:620px){#p-hotels{padding-bottom:20px}.hotel-shell{padding:10px 12px 28px}.hotel-hero{padding:20px 17px 14px;border-radius:20px}.hotel-hero-art{font-size:74px;right:0;top:0}.hotel-hero p{max-width:78%;font-size:13px}.hotel-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:17px}.hotel-stats>div{padding:9px 11px}.hotel-stats b{font-size:21px}.hotel-section-head{align-items:center;margin:21px 2px 10px}.hotel-section-head h2{font-size:20px}.hotel-section-head p{font-size:11px}.hotel-add{font-size:12px;padding:0 10px}.hotel-toolbar{padding:7px 10px}.hotel-toolbar .chips{flex-wrap:nowrap;overflow-x:auto}.hotel-grid{grid-template-columns:1fr;gap:11px}.hotel-grid .ph{height:190px}.hotel-grid .h .hb{padding:12px}.hotel-side{grid-template-columns:1fr}.decision-card{grid-row:auto}.hotel-price-row strong{font-size:21px}.status-actions button{font-size:10px;min-height:36px}.hotel-side .hotel-map-box #map{height:260px}.hotel-section-head .eyebrow{font-size:9px}}
+@media(min-width:1100px){.hotel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 
-/* Getoh Hotel Discovery · Warm Minimal */
-.hotel-discovery{--hw-bg:#f7f4ee;--hw-card:#fffdf9;--hw-line:#e8dfd3;--hw-text:#39362f;--hw-muted:#837b70;--hw-accent:#9a7655;background:var(--hw-bg);color:var(--hw-text);border:1px solid var(--hw-line);border-radius:22px;padding:18px 14px;margin:12px 14px 18px;box-shadow:0 8px 24px rgba(67,52,35,.06)}
-.hotel-intro{max-width:760px;margin:0 auto 14px}.hotel-kicker{font:600 10px/1.4 'DM Mono',monospace;letter-spacing:.14em;color:var(--hw-accent)}
-.hotel-intro h2{font-size:25px;line-height:1.2;margin:5px 0;color:var(--hw-text);font-weight:600}.hotel-intro p{font-size:13px;color:var(--hw-muted);margin:0}
-.hotel-search-row{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px;max-width:760px;margin:0 auto}.hotel-search-row input{width:100%;min-width:0;min-height:48px;border:1px solid var(--hw-line);border-radius:13px;background:var(--hw-card);color:var(--hw-text);padding:0 13px;font-size:14px;outline:none}.hotel-search-row input:focus{border-color:var(--hw-accent);box-shadow:0 0 0 3px rgba(154,118,85,.12)}
-.hotel-search-btn{border:0;border-radius:13px;background:#6f765d;color:#fff;font-weight:600;font-size:14px;cursor:pointer}.hotel-search-btn:disabled{opacity:.55}.hotel-disclaimer,.hotel-feedback{max-width:760px;margin:8px auto 0;font-size:11px;line-height:1.5;color:var(--hw-muted)}.hotel-feedback{min-height:18px;font-weight:600;color:#71614e}
-.hotel-place-grid{display:grid;grid-template-columns:1fr;gap:10px;max-width:900px;margin:10px auto 0}.hotel-place-card{min-width:0;background:var(--hw-card);border:1px solid var(--hw-line);border-radius:16px;padding:14px;box-shadow:0 3px 12px rgba(67,52,35,.035)}.hotel-place-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.hotel-place-mark{font:600 9px 'DM Mono',monospace;letter-spacing:.12em;color:var(--hw-accent)}.hotel-google-label{font-size:10px;color:var(--hw-muted)}.hotel-place-card h4{font-size:16px;line-height:1.35;margin:8px 0 4px;color:var(--hw-text)}.hotel-place-address{font-size:12px;line-height:1.5;color:var(--hw-muted);margin:0;min-height:18px}.hotel-place-rating{font-size:12px;color:#927449;margin-top:7px}.hotel-place-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:12px}.hotel-place-actions a,.hotel-place-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 11px;border-radius:10px;border:1px solid var(--hw-line);background:transparent;color:#625744;text-decoration:none;font-size:11px;font-weight:600;cursor:pointer}.hotel-place-actions button:not(:disabled){background:#6f765d;border-color:#6f765d;color:#fff}.hotel-place-actions button:disabled{opacity:.55}.hotel-saved-head{display:flex;align-items:end;justify-content:space-between;gap:10px;max-width:900px;margin:24px auto 6px;padding-top:16px;border-top:1px solid var(--hw-line)}.hotel-saved-head h3{font-size:18px;margin:3px 0 0;color:var(--hw-text)}.hotel-count{font-size:11px;color:var(--hw-muted);padding-bottom:3px}.hotel-empty{background:rgba(255,255,255,.55);border:1px dashed #d9cdbd;border-radius:14px;padding:18px;text-align:center;color:var(--hw-muted);font-size:12px}.hotel-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:700}.hotel-status.is-primary{background:#e8eee1;color:#526447}.hotel-status.is-backup{background:#f2eadf;color:#866b4d}.hotel-status.is-selected{background:#e4eceb;color:#4e6d68}.hotel-price-block{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin-top:12px;padding:12px;border-radius:12px;background:#f5f0e8}.hotel-price-block span{font-size:10px;color:var(--hw-muted)}.hotel-price-block strong{grid-column:2;grid-row:1/3;font-size:20px;color:#617052}.hotel-price-block small{font-size:10px;color:var(--hw-muted)}.hotel-status-control{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:11px;color:var(--hw-muted)}.hotel-status-control select{max-width:170px;min-height:38px;border:1px solid var(--hw-line);border-radius:10px;background:var(--hw-card);color:var(--hw-text);padding:0 9px;font-size:12px}.hotel-booking-actions .hotel-remove{background:transparent!important;color:#9a6a5d!important;border-color:#e4cfc6!important}.hotel-live-note{font-size:10px;color:var(--hw-muted);margin:8px 0 0}.hotel-place-loading{min-height:70px;color:var(--hw-muted);font-size:12px}
-@media(min-width:720px){.hotel-discovery{max-width:1100px;margin:18px auto 24px;padding:24px}.hotel-place-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hotel-intro h2{font-size:30px}.hotel-search-row{grid-template-columns:minmax(0,1fr) 112px}}
+.compare-scroll{overflow-x:auto;border:1px solid #e9dfd3;border-radius:14px;background:#fff;max-width:100%;-webkit-overflow-scrolling:touch}.compare-table{border-collapse:separate;border-spacing:0;width:100%;min-width:620px;font-size:13px;color:#536174}.compare-table th,.compare-table td{padding:10px 12px;border-bottom:1px solid #eee7de;border-right:1px solid #f1ebe4;text-align:left;vertical-align:top}.compare-table thead th{background:#f8f2e9;min-width:170px}.compare-table thead th:first-child{min-width:112px}.compare-table tbody th{background:#fbf8f3;white-space:nowrap;color:#7a8290}.compare-table tr:last-child th,.compare-table tr:last-child td{border-bottom:0}.compare-table td:last-child,.compare-table th:last-child{border-right:0}.compare-hotel b,.compare-hotel small{display:block}.compare-hotel b{color:#34445a;line-height:1.4}.compare-hotel small{font-size:11px;color:#87909b;min-height:30px}.compare-hotel .btn{margin-top:7px;min-height:34px;font-size:11px;padding:0 10px}.compare-price{display:block;color:#3d6c5a;font-size:17px}.compare-table td small{display:block;color:#89919c;font-size:11px;margin-top:4px}.compare-negative{color:#a35d4b!important}
 
-.hotel-compare-wrap{max-width:900px;margin:18px auto 0;padding-top:14px;border-top:1px solid var(--hw-line)}.hotel-compare-heading{display:flex;justify-content:space-between;align-items:center;color:var(--hw-text);font-size:13px}.hotel-compare-heading button{border:0;background:transparent;color:var(--hw-muted);font-size:11px}.hotel-compare-list{display:flex;gap:9px;overflow-x:auto;padding:10px 0 5px;scroll-snap-type:x mandatory}.hotel-compare-item{flex:0 0 min(78%,250px);background:var(--hw-card);border:1px solid var(--hw-line);border-radius:13px;padding:12px;scroll-snap-align:start}.hotel-compare-item b{display:block;font-size:13px;color:var(--hw-text);margin-bottom:5px}.hotel-compare-item strong{font-size:17px;color:#617052}.hotel-compare-item small{display:block;color:var(--hw-muted);font-size:10px;margin-top:3px}.hotel-compare-toggle{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:10px;color:var(--hw-muted)}.hotel-compare-toggle input{accent-color:#6f765d}
 </style>
 </head>
 <body>
 
 
 <section id="p-count" class="wrap">
-  <header class="home-head">
-    <div><div class="home-brand">get<span><i>o</i></span>h</div><div class="home-kicker">YOUR LITTLE TRAVEL SPACE</div></div>
-    <span aria-hidden="true" style="font-size:22px;color:#9A927F">✦</span>
-  </header>
   <div class="hx" id="hx" data-c="osaka">
         <span class="hx-x a">+</span><span class="hx-x b">+</span>
     <div class="hx-top">
@@ -620,60 +529,24 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
     </div>
   </div>
   <div class="jl" id="jl"></div>
-  <div class="home-links" aria-label="ทางลัดหน้าแรก">
-    <button type="button" onclick="tab('plan')"><span>🗺️</span>แผนเที่ยว <small>ดูและจัดการกำหนดการ</small></button>
-    <button type="button" onclick="tab('hotels')"><span>🛏️</span>โรงแรม <small>ค้นหาและเปรียบเทียบที่พัก</small></button>
-    <button type="button" onclick="tab('prep')"><span>🧳</span>เตรียมตัว <small>รายการก่อนออกเดินทาง</small></button>
-    <button type="button" onclick="tab('style')"><span>👗</span>แต่งตัว <small>แนะนำสีเสื้อผ้า</small></button>
-    <button type="button" onclick="shopGo()"><span>🛍️</span>ค้นหาร้านค้า <small>ค้นหาร้านในแผนเที่ยว</small></button>
-    <button type="button" onclick="gameOpen()"><span>🎮</span>Play Games <small>เกมและกิจกรรมระหว่างทริป</small></button>
-  </div>
   <details class="jl-det"><summary>✈️ รายละเอียดไฟลท์ (บัตรโดยสาร)</summary><div id="flights"></div></details>
 
 </section>
 
 <section id="p-hotels" class="hide">
-  <section class="hotel-discovery">
-    <div class="hotel-intro"><span class="hotel-kicker">GETOH · STAY COLLECTION</span><h2>ค้นหาที่พักที่ใช่</h2><p>ค้นหาจาก Google Places แล้วบันทึกราคาและสถานะไว้ใน Getoh</p></div>
-    <div class="hotel-search-row"><input id="hotel-search-query" type="search" placeholder="ค้นหาโรงแรมหรือย่าน เช่น Namba, Osaka" aria-label="ค้นหาโรงแรม"><button id="hotel-search-btn" type="button" class="hotel-search-btn">ค้นหา</button></div>
-    <p class="hotel-disclaimer">ข้อมูลสถานที่จาก Google Places · ราคาใน Getoh มาจาก Firebase เท่านั้น · ราคาปัจจุบันตรวจสอบผ่านเว็บไซต์จองเอง</p>
-    <div id="hotel-search-feedback" class="hotel-feedback" aria-live="polite"></div>
-    <div id="hotel-search-results" class="hotel-place-grid"></div>
-    <div class="hotel-saved-head"><div><span class="hotel-kicker">YOUR SHORTLIST</span><h3>โรงแรมที่บันทึกไว้</h3></div><span id="hotel-saved-count" class="hotel-count">0 แห่ง</span></div>
-    <div id="hotel-saved-list" class="hotel-place-grid"><div class="hotel-empty">กำลังโหลดรายการโรงแรม…</div></div>
-    <div id="hotel-compare-wrap" class="hotel-compare-wrap" hidden><div class="hotel-compare-heading"><b>เปรียบเทียบโรงแรม</b><button id="hotel-compare-clear" type="button">ล้างรายการ</button></div><div id="hotel-compare-list" class="hotel-compare-list"></div></div>
-  </section>
-  <div class="bar">
-    <input type="search" id="q" placeholder="🔍 ค้นหาชื่อโรงแรม..." oninput="draw()">
-    <div class="chips" id="chips"></div>
-    <div class="row2">
-      <select id="size" onchange="draw()">
-        <option value="0">ทุกขนาดห้อง</option>
-        <option value="15">15 m² ขึ้นไป</option>
-        <option value="20">20 m² ขึ้นไป</option>
-        <option value="25">25 m² ขึ้นไป</option>
-      </select>
-      <select id="sort" onchange="draw()">
-        <option value="id">ลำดับเดิม</option>
-        <option value="pa">ราคา ต่ำ ➔ สูง</option>
-        <option value="pd">ราคา สูง ➔ ต่ำ</option>
-        <option value="sz">ห้องใหญ่ก่อน</option>
-        <option value="sc">คะแนนสูงก่อน</option>
-      </select>
+  <div class="hotel-shell">
+    <header class="hotel-hero">
+      <div class="hotel-hero-copy"><div class="eyebrow">GETOH · OSAKA TRIP 2027</div><h1>มาเลือกโรงแรมที่ใช่กันเถอะ 👋</h1><p>รวมตัวเลือกที่เราคัดไว้ เปรียบเทียบข้อมูล แล้วตัดสินใจร่วมกัน</p></div>
+      <div class="hotel-hero-art" aria-hidden="true">🏯</div>
+      <div class="hotel-stats" id="hotel-stats"></div>
+    </header>
+    <div class="hotel-section-head"><div><span class="eyebrow">OUR SHORTLIST</span><h2>โรงแรมที่เราสนใจ</h2><p>แตะการ์ดเพื่อดูรายละเอียด หรือกำหนดสถานะของโรงแรม</p></div><button class="btn o hotel-add" onclick="openForm()">＋ เพิ่มที่พัก</button></div>
+    <div class="hotel-toolbar"><div class="chips" id="chips"></div><details class="hotel-filter"><summary>ตัวกรองและจัดการข้อมูล</summary><div class="hotel-filter-inner"><input type="search" id="q" placeholder="ค้นหาชื่อโรงแรมในรายการที่คัดไว้..." oninput="draw()"><div class="row2"><select id="size" onchange="draw()"><option value="0">ทุกขนาดห้อง</option><option value="15">15 m² ขึ้นไป</option><option value="20">20 m² ขึ้นไป</option><option value="25">25 m² ขึ้นไป</option></select><select id="sort" onchange="draw()"><option value="id">ลำดับเดิม</option><option value="pa">ราคา ต่ำ → สูง</option><option value="pd">ราคา สูง → ต่ำ</option><option value="sz">ห้องใหญ่ก่อน</option><option value="sc">คะแนนสูงก่อน</option></select></div><button class="btn o" style="margin-top:8px" onclick="manage()">⚙️ จัดการข้อมูลโรงแรม</button></div></details></div>
+    <div class="hotel-content-grid"><main><div class="count" id="count"></div><div id="list" class="hotel-grid"></div></main>
+      <aside class="hotel-side"><div class="decision-card"><div class="side-title">📊 ภาพรวมการตัดสินใจ</div><div id="decision-board"></div><button class="btn" onclick="compare()">เปรียบเทียบโรงแรมที่เลือก</button><div class="note">เลือกโรงแรมด้วยปุ่ม ＋ บนการ์ด เพื่อเปรียบเทียบรายละเอียด</div></div>
+      <details class="hotel-map-box" id="hotel-map-details"><summary>🗺️ ดูตำแหน่งโรงแรมบนแผนที่</summary><div class="note" id="mnote">แตะหมุดเพื่อดูรายละเอียดโรงแรม</div><div id="mauto" style="margin-top:8px"></div><div id="map"></div><div class="count" id="mcount"></div><div id="munpin"></div></details>
+      <div class="decision-note"><b>💡 วิธีใช้ Getoh</b><p>กำหนดสถานะเป็นตัวเลือกหลัก ตัวเลือกสำรอง หรือเลือกแล้ว จากนั้นเลือกโรงแรมที่ต้องการเทียบเพื่อดูความต่างก่อนตัดสินใจ</p></div></aside>
     </div>
-    <div class="row2" style="margin-top:8px">
-      <button class="btn" style="min-height:44px;font-size:14px" onclick="openForm()">➕ เพิ่มที่พัก</button>
-      <button class="btn o" style="min-height:44px;font-size:14px" onclick="manage()">⚙️ ข้อมูล</button>
-    </div>
-  </div>
-  <div class="wrap" style="padding-top:0">
-    <div class="note" id="mnote" style="margin:8px 0 0">แตะหมุดเพื่อดูรายละเอียด · ตัวกรองด้านบนใช้กับทั้งรายการและแผนที่</div>
-    <div id="mauto" style="margin-top:8px"></div>
-    <div id="map"></div>
-    <div class="count" id="mcount"></div>
-    <div class="count" id="count"></div>
-    <div id="list"></div>
-    <div id="munpin"></div>
   </div>
 </section>
 
@@ -714,8 +587,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="hotels.js?v=22"></script>
-<script src="app.js?v=30"></script>
-<script src="hotel-search.js?v=1"></script>
+<script src="app.js?v=29"></script>
 <script src="prep.js?v=22"></script>
 <script src="getoh-config.js?v=1"></script>
 <script src="plan.js?v=52"></script>
