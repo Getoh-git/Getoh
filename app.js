@@ -63,11 +63,19 @@ function jlDraw(){
 let lastFl=0;
 let lastMilestone="",lastFlip={};
 function flipValue(id,value){
-  const el=$(id);if(!el)return;const face=el.querySelector(".flip-face"),next=String(value).padStart(2,"0");
-  if(!face){el.textContent=next;return}
-  if(face.textContent===next)return;
-  face.textContent=next;el.classList.remove("is-flipping");void el.offsetWidth;el.classList.add("is-flipping");
-  clearTimeout(lastFlip[id]);lastFlip[id]=setTimeout(()=>el.classList.remove("is-flipping"),460);
+  const el=$(id);if(!el)return;
+  const next=String(value).padStart(2,"0");
+  let digits=[...el.querySelectorAll(".flip-digit")];
+  if(digits.length!==next.length){
+    el.innerHTML=[...next].map((n,i)=>`<span class="flip-digit" aria-hidden="true"><span class="flip-face">${n}</span></span>`).join("");
+    el.setAttribute("aria-label",next);return;
+  }
+  [...next].forEach((n,i)=>{
+    const face=digits[i].querySelector(".flip-face");if(!face||face.textContent===n)return;
+    face.textContent=n;digits[i].classList.remove("is-flipping");void digits[i].offsetWidth;digits[i].classList.add("is-flipping");
+    clearTimeout(lastFlip[id+"-"+i]);lastFlip[id+"-"+i]=setTimeout(()=>digits[i]?.classList.remove("is-flipping"),520);
+  });
+  el.setAttribute("aria-label",next);
 }
 function updateMilestone(days){
   const box=$("hx-milestone"),label=$("hx-ms-text"),icon=box&&box.querySelector(".hx-ms-icon");if(!box||!label)return;

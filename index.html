@@ -607,6 +607,79 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .flip-face{will-change:auto}
 }
 
+
+/* Countdown graphic flip cards — Warm Minimal / Kansai travel edition */
+#p-count .hx-days{position:relative;}
+#p-count .hx-days>b.flip-unit{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  position:relative;padding:7px 13px 9px;margin:0;
+  font:inherit;line-height:1;letter-spacing:0;text-shadow:none;
+  border-radius:19px;background:rgba(255,255,255,.16);
+}
+#p-count .flip-digit{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:clamp(48px,13.2vw,62px);height:76px;overflow:hidden;
+  border:1px solid rgba(91,119,153,.28);border-radius:13px;
+  background:linear-gradient(155deg,#fffaf4 0%,#f7eee5 54%,#e9e2dc 100%);
+  box-shadow:0 8px 15px rgba(49,69,99,.16),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -3px 0 rgba(93,112,139,.10);
+  perspective:500px;
+}
+#p-count .flip-digit:before{
+  content:"";position:absolute;z-index:2;left:0;right:0;top:50%;height:1px;
+  background:rgba(54,76,108,.34);box-shadow:0 1px 0 rgba(255,255,255,.75);
+}
+#p-count .flip-digit:after{
+  content:"";position:absolute;z-index:3;left:-4px;top:calc(50% - 5px);width:8px;height:10px;
+  border-radius:0 5px 5px 0;background:linear-gradient(90deg,#526d91,#b8c8d9);
+  box-shadow:calc(clamp(48px,13.2vw,62px) - 8px) 0 0 #7890ad;
+}
+#p-count .flip-face{
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;font:600 54px/.95 'DM Mono','Sarabun',monospace;
+  letter-spacing:-.06em;color:#304c76;text-shadow:0 2px 0 #fff,0 4px 8px rgba(48,76,118,.12);
+  transform-origin:50% 50%;backface-visibility:hidden;
+}
+#p-count .flip-digit.is-flipping .flip-face{animation:getohCardFlip .48s cubic-bezier(.2,.72,.25,1)}
+@keyframes getohCardFlip{
+  0%{transform:rotateX(0);filter:brightness(1)}
+  42%{transform:rotateX(-78deg);filter:brightness(.84)}
+  58%{transform:rotateX(78deg);filter:brightness(1.08)}
+  100%{transform:rotateX(0);filter:brightness(1)}
+}
+#p-count #td.flip-unit:before{
+  content:"✿";position:absolute;z-index:4;left:5px;top:0;font:16px/1 sans-serif;
+  color:#e9a7b5;text-shadow:0 2px 4px rgba(190,111,133,.2);transform:rotate(-12deg);
+}
+#p-count #td.flip-unit:after{
+  content:"✈";position:absolute;z-index:4;right:1px;bottom:0;font:15px/1 sans-serif;
+  color:#7da6d2;text-shadow:0 2px 4px rgba(67,104,151,.2);transform:rotate(-12deg);
+}
+#p-count .hx-days>span{margin-top:4px;padding:5px 20px;border:1px solid rgba(87,116,151,.2);border-radius:999px;background:rgba(255,255,255,.45);font:600 12px/1.2 var(--th);letter-spacing:.12em;color:#405d83}
+#p-count .hx-hms{gap:8px;margin-top:11px}
+#p-count .hx-hms span{min-width:74px;padding:7px 9px 6px;gap:5px;border:1px solid rgba(91,119,153,.18);border-radius:12px;background:rgba(255,255,255,.38);letter-spacing:0}
+#p-count .hx-hms .flip-unit{display:flex;gap:2px;perspective:350px}
+#p-count .hx-hms .flip-digit{width:19px;height:27px;border-radius:5px;border-color:rgba(91,119,153,.2);box-shadow:0 2px 5px rgba(49,69,99,.1),inset 0 1px 0 #fff}
+#p-count .hx-hms .flip-digit:after{display:none}
+#p-count .hx-hms .flip-face{font:600 17px/1 'DM Mono',monospace;letter-spacing:-.05em;text-shadow:0 1px 0 #fff}
+#p-count .hx-hms .flip-digit:before{height:1px}
+#p-count .hx-milestone{box-shadow:0 3px 9px rgba(63,95,134,.07)}
+@media(max-width:380px){
+  #p-count .hx-days>b.flip-unit{gap:4px;padding:6px 10px 8px}
+  #p-count .flip-digit{width:43px;height:64px;border-radius:11px}
+  #p-count .flip-face{font-size:46px}
+  #p-count .flip-digit:after{box-shadow:calc(43px - 8px) 0 0 #7890ad}
+  #p-count .hx-hms span{min-width:66px;padding:6px 6px}
+}
+@media(min-width:621px){
+  #p-count .flip-digit{width:66px;height:88px;border-radius:15px}
+  #p-count .flip-face{font-size:62px}
+  #p-count .flip-digit:after{box-shadow:58px 0 0 #7890ad}
+  #p-count .hx-hms .flip-digit{width:22px;height:31px}
+}
+@media(prefers-reduced-motion:reduce){
+  #p-count .flip-digit.is-flipping .flip-face{animation:none}
+}
+
 </style>
 </head>
 <body>
