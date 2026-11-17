@@ -20,10 +20,10 @@ function dots(t,col){
 }
 function orbit(p,id){
   const x=14+p*272;
-  return `<svg viewBox="0 0 300 44" height="44"><defs><linearGradient id="g${id}"><stop offset="0" stop-color="#12301a"/><stop offset="1" stop-color="#B8CC2C"/></linearGradient><clipPath id="c${id}"><rect x="0" y="0" width="${x}" height="44"/></clipPath></defs>
+  return `<svg viewBox="0 0 300 44" height="44"><defs><linearGradient id="g${id}"><stop offset="0" stop-color="#33496A"/><stop offset="1" stop-color="#E8A66E"/></linearGradient><clipPath id="c${id}"><rect x="0" y="0" width="${x}" height="44"/></clipPath></defs>
   <ellipse cx="150" cy="22" rx="145" ry="14" fill="#E3E3CC"/>
   <ellipse cx="150" cy="22" rx="145" ry="14" fill="url(#g${id})" clip-path="url(#c${id})"/>
-  <g transform="translate(${x} 22) scale(.9)"><polygon fill="#12301a" points="10,0 4,-2 -2,-2 -8,-9 -11,-9 -7,-2 -11,-2 -13,-5 -15,-5 -13,0 -15,5 -13,5 -11,2 -7,2 -11,9 -8,9 -2,2 4,2"/></g></svg>`;
+  <g transform="translate(${x} 22) scale(.9)"><polygon fill="#33496A" points="10,0 4,-2 -2,-2 -8,-9 -11,-9 -7,-2 -11,-2 -13,-5 -15,-5 -13,0 -15,5 -13,5 -11,2 -7,2 -11,9 -8,9 -2,2 4,2"/></g></svg>`;
 }
 function fmtR(ms){
   const m=Math.max(0,Math.floor(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);
@@ -710,7 +710,7 @@ async function hxSnowT(){ // ดึงอุณหภูมิทั้ง 6 เ
 function hxShow(i,first){ // เดินไปเมืองถัดไป: ฉากค่อย ๆ จางสลับ ตัวเลขค่อย ๆ นับไปที่อุณหภูมิใหม่
   const [k,n]=CITY6[i],hx=$("hx");if(!hx)return;hxI=i;hxCur=k;
   CITY6.forEach(c=>{const im=$(HX_IMG[c[0]]);if(!im)return;const on=c[0]===k;im.classList.toggle("on",on);im.setAttribute("aria-hidden",String(!on));if(on){im.style.animation="none";void im.offsetWidth;im.style.animation=""}});
-  hx.classList.toggle("snow",k==="snow");hx.dataset.c=k;
+  hx.classList.toggle("snow",k==="snow");hx.dataset.c=k;const co=$("hx-coord"),cc=CITY6[i];if(co&&cc)co.textContent=Math.abs(cc[2]).toFixed(4)+"\u00b0N  "+Math.abs(cc[3]).toFixed(4)+"\u00b0E";
   const d=HXT[k],ti=$("hx-ti"),tl=$("hx-tl");if(tl)tl.textContent=n+"ตอนนี้";if(ti)ti.textContent=d?d.ic:"🌤️";
   if(first)hxTemp();else{hxTween(d?d.t:null,4000);jlDraw()}
 }
