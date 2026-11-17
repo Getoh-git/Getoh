@@ -545,6 +545,46 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-foot .btn{padding:0 10px;font-size:12px}
 }
 
+
+
+/* v3: Compact mobile home — tuned for 414px-wide phone screens */
+@media(max-width:620px){
+  #p-count.wrap{padding:8px 10px 20px}
+  #p-count .hx{border-radius:24px}
+  #p-count .hx-top{padding:18px 16px 0}
+  #p-count .hx .hx-top h1{font-size:15px;line-height:1.4}
+  #p-count .hx-lab{font-size:11px;margin-top:1px}
+  #p-count .hx-days{margin-top:4px}
+  #p-count .hx-days b{font-size:clamp(88px,24vw,108px);line-height:.84}
+  #p-count .hx-days span{font-size:10px;margin-top:5px}
+  #p-count .hx-hms{margin-top:10px}
+  #p-count .hx-hms span{min-width:68px;padding:0 8px;gap:4px;font-size:10px}
+  #p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font-size:20px}
+  #p-count .hx-row{margin-top:10px;gap:7px}
+  #p-count .hx-go{min-height:32px;padding:0 13px;font-size:11px}
+  #p-count .hx-next{font-size:10px}
+  #p-count .hx-scene{margin:12px 12px 0;aspect-ratio:360/165}
+  #p-count .hx-foot{padding:10px 12px 13px;gap:0}
+  #p-count .hx-coord{font-size:9px;letter-spacing:.04em;margin-bottom:6px}
+  #p-count .hx-city{font-size:clamp(25px,8vw,33px)}
+  #p-count .hx-dt b{margin-top:8px;font-size:11px}
+  #p-count .hx-dt b::before,#p-count .hx-dt b::after{flex-basis:28px}
+  #p-count .hx-nt{font-size:11px;margin-top:4px}
+  #p-count .hx-sw{margin-top:8px}
+  #p-count .hx-foot .btn{margin-top:10px;min-height:36px;font-size:12px}
+  #p-count .jl{margin-top:8px}
+}
+@media(max-width:380px){
+  #p-count .hx-top{padding:15px 13px 0}
+  #p-count .hx-days b{font-size:88px}
+  #p-count .hx-hms{margin-top:8px}
+  #p-count .hx-scene{margin:10px 10px 0;aspect-ratio:360/158}
+  #p-count .hx-foot{padding:8px 10px 11px}
+}
+@media(min-width:621px){
+  #p-count .hx-days b{font-size:clamp(104px,18vw,148px)}
+}
+
 </style>
 </head>
 <body>
