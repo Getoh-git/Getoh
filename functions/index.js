@@ -22,7 +22,64 @@ exports.placesLookup = onRequest(
     if (hits.length >= 90) return res.status(429).json({ error: 'เรียกถี่เกินไป ลองใหม่ใน 1 นาที' });
     hits.push(now); RATE.set(ip, hits); if (RATE.size > 5000) RATE.clear();
 
+    const mode = String((req.body && req.body.mode) || '');
     const query = String((req.body && req.body.query) || '').trim().slice(0, 180);
+
+    // Hotel search: Google Places is used as a live discovery source only.
+    // Persist only Place IDs in Firebase; do not cache Places names, addresses, photos or reviews.
+    if (mode === 'hotelSearch') {
+      if (query.length < 2) return res.status(400).json({ error: 'กรุณาระบุชื่อโรงแรมหรือพื้นที่' });
+      try {
+        const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY.value(),
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.googleMapsUri,places.websiteUri,places.location'
+          },
+          body: JSON.stringify({ textQuery: query, languageCode: 'th', regionCode: 'JP', includedType: 'lodging', strictTypeFiltering: true, pageSize: 10 })
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          console.error('Google hotel search error', response.status, payload);
+          return res.status(502).json({ error: 'ค้นหาโรงแรมจาก Google Places ไม่สำเร็จ กรุณาตรวจ API และ Billing' });
+        }
+        return res.status(200).json({
+          places: (payload.places || []).map(p => ({
+            id: p.id, name: p.displayName && p.displayName.text || '', address: p.formattedAddress || '',
+            rating: p.rating, userRatingCount: p.userRatingCount, googleMapsUri: p.googleMapsUri || '',
+            websiteUri: p.websiteUri || '', location: p.location || null
+          })), attribution: 'Google Maps'
+        });
+      } catch (error) {
+        console.error('hotelSearch failed', error);
+        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการค้นหาโรงแรม' });
+      }
+    }
+
+    if (mode === 'hotelDetails') {
+      const placeId = String((req.body && req.body.placeId) || '').trim();
+      if (!placeId || placeId.length > 200) return res.status(400).json({ error: 'Place ID ไม่ถูกต้อง' });
+      try {
+        const response = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(placeId), {
+          headers: {
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY.value(),
+            'X-Goog-FieldMask': 'id,displayName,formattedAddress,rating,userRatingCount,googleMapsUri,websiteUri,location'
+          }
+        });
+        const place = await response.json();
+        if (!response.ok) return res.status(502).json({ error: 'โหลดรายละเอียดโรงแรมไม่สำเร็จ' });
+        return res.status(200).json({ place: {
+          id: place.id, name: place.displayName && place.displayName.text || '', address: place.formattedAddress || '',
+          rating: place.rating, userRatingCount: place.userRatingCount, googleMapsUri: place.googleMapsUri || '',
+          websiteUri: place.websiteUri || '', location: place.location || null
+        }, attribution: 'Google Maps' });
+      } catch (error) {
+        console.error('hotelDetails failed', error);
+        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการโหลดรายละเอียดโรงแรม' });
+      }
+    }
+
     if (query.length < 2) return res.status(400).json({ error: 'กรุณาระบุชื่อสถานที่' });
 
     // ส่งพิกัดมาด้วยเพื่อให้ได้สาขา/ร้านที่ตรงจริง (ชื่ออย่าง ファミリーマート มีหลายร้อยสาขา)
