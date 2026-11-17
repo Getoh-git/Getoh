@@ -22,6 +22,29 @@
         }
       }
     },
+    "hotelSelections": {
+      ".read": true,
+      "$placeId": {
+        ".write": "now < 1798761600000",
+        ".validate": "newData.hasChildren(['placeId','status','updatedAt']) && newData.child('placeId').isString() && newData.child('placeId').val() === $placeId && newData.child('status').isString() && (newData.child('status').val() === 'primary' || newData.child('status').val() === 'backup' || newData.child('status').val() === 'selected') && newData.child('updatedAt').isNumber()"
+      }
+    },
+    "hotelPrices": {
+      ".read": true,
+      "$placeId": {
+        ".write": "now < 1798761600000",
+        ".validate": "newData.hasChildren(['price','currency','totalNights','priceDate','updatedAt']) && newData.child('price').isNumber() && newData.child('price').val() >= 0 && newData.child('currency').val() === 'THB' && newData.child('totalNights').isNumber() && newData.child('totalNights').val() > 0 && newData.child('priceDate').isString() && newData.child('updatedAt').isNumber()"
+      }
+    },
+    "hotelPriceHistory": {
+      ".read": true,
+      "$placeId": {
+        "$historyId": {
+          ".write": "now < 1798761600000",
+          ".validate": "newData.hasChildren(['price','currency','totalNights','priceDate','updatedAt']) && newData.child('price').isNumber() && newData.child('price').val() >= 0 && newData.child('currency').val() === 'THB' && newData.child('totalNights').isNumber() && newData.child('totalNights').val() > 0 && newData.child('priceDate').isString() && newData.child('updatedAt').isNumber()"
+        }
+      }
+    },
     "photos": {
       ".read": true,
       "$id": {
