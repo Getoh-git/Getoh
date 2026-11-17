@@ -710,7 +710,7 @@ async function hxSnowT(){ // ดึงอุณหภูมิทั้ง 6 เ
 function hxShow(i,first){ // เดินไปเมืองถัดไป: ฉากค่อย ๆ จางสลับ ตัวเลขค่อย ๆ นับไปที่อุณหภูมิใหม่
   const [k,n]=CITY6[i],hx=$("hx");if(!hx)return;hxI=i;hxCur=k;
   CITY6.forEach(c=>{const im=$(HX_IMG[c[0]]);if(!im)return;const on=c[0]===k;im.classList.toggle("on",on);im.setAttribute("aria-hidden",String(!on));if(on){im.style.animation="none";void im.offsetWidth;im.style.animation=""}});
-  hx.classList.toggle("snow",k==="snow");hx.dataset.c=k;const co=$("hx-coord"),cc=CITY6[i];if(co&&cc)co.textContent=Math.abs(cc[2]).toFixed(4)+"\u00b0N  "+Math.abs(cc[3]).toFixed(4)+"\u00b0E";
+  hx.classList.toggle("snow",k==="snow");hx.dataset.c=k;const ct=$("hx-city");if(ct){ct.textContent=k==="snow"?"SHIRAKAWA":k.toUpperCase();ct.classList.toggle("long",ct.textContent.length>7)}const co=$("hx-coord"),cc=CITY6[i];if(co&&cc)co.textContent=Math.abs(cc[2]).toFixed(4)+"\u00b0N  "+Math.abs(cc[3]).toFixed(4)+"\u00b0E";
   const d=HXT[k],ti=$("hx-ti"),tl=$("hx-tl");if(tl)tl.textContent=n+"ตอนนี้";if(ti)ti.textContent=d?d.ic:"🌤️";
   if(first)hxTemp();else{hxTween(d?d.t:null,4000);jlDraw()}
 }

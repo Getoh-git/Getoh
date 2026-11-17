@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Osaka Trip 2027</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@300;400;500;600&family=Lexend:wght@400;500;600;700&family=Sarabun:wght@200;300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@300;400;500;600&family=Lexend:wght@400;500;600;700&family=Sarabun:wght@200;300;400;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=Noto+Serif+Thai:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--line:#334155;--tx:#f8fafc;--mut:#94a3b8;--sky:#38bdf8;--grn:#34d399;--amb:#fbbf24;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -435,6 +435,41 @@ button.hx-temp{background:rgba(251,244,230,.85);border:1px solid rgba(51,73,106,
 .hx-foot>div{min-width:0}
 .jl{background:var(--ink);color:var(--paper)}.jl-cap{color:#F2C79B}
 .jc.on{border-color:#F2C79B}.jc b,.jl-n em{color:#F2C79B}
+
+/* ===== v61: จัดหน้าแรกใหม่ให้เหมือนโปสเตอร์ (กึ่งกลาง · ป้ายมุม · ชื่อเมืองตัวห่าง · แถบสี) ===== */
+.hx{--th:'IBM Plex Sans Thai','Sarabun',sans-serif;--ths:'Noto Serif Thai','Sarabun',serif;font-family:var(--th);text-align:center}
+.hx button{font-family:var(--th)}
+.hx-top{padding:30px 20px 0;text-align:center}
+.hx-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:22px}
+.hx-no{font:400 10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ink);opacity:.7;margin:0;text-align:left}
+button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min-width:0;min-height:30px;padding:4px 12px;border-radius:999px;background:transparent;border:1px solid rgba(51,73,106,.4)}
+.hx-ti{font-size:15px}.hx .hx-temp b{font:400 14px/1 var(--mono);letter-spacing:.04em}
+.hx-temp small{display:none}.hx-temp::after{content:"\203A";font:400 14px/1 var(--mono);color:var(--ink);opacity:.6}
+.hx .hx-top h1{max-width:none;font:400 15px/1.5 var(--ths);letter-spacing:.02em;color:var(--ink);margin:0}
+.hx-lab{max-width:none;font:300 12px/1.5 var(--th);color:#5C6A82;margin-top:2px}
+.hx-days{display:flex;flex-direction:column;align-items:center;gap:0;margin-top:8px}
+.hx-days b{font:300 clamp(104px,34vw,160px)/.86 var(--serif);letter-spacing:-.035em;color:var(--ink)}
+.hx-days span{font:400 11px/1 var(--mono);letter-spacing:.5em;margin:10px -.5em 0 0;color:var(--ink);opacity:.75}
+.hx-hms{display:flex;justify-content:center;gap:0;margin-top:20px}
+.hx-hms span{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;padding:0 10px;background:none;border:0;border-radius:0;font:300 10px/1 var(--th);letter-spacing:.14em;color:#5C6A82}
+.hx-hms span+span{border-left:1px solid rgba(51,73,106,.28)}
+.hx .hx-hms b,.hx .hx-hms #ts{font:400 24px/1 var(--mono);color:var(--ink)!important}
+.hx-row{justify-content:center;margin-top:16px;gap:8px}
+.hx-next{width:100%;text-align:center;font:400 11px/1.5 var(--mono);letter-spacing:.06em;color:#5C6A82;margin:0;min-height:0}
+.hx-go{min-height:34px;padding:0 16px;font:500 12px/1 var(--th);letter-spacing:.02em}
+.hx-scene{margin:22px 14px 0;border-radius:4px;aspect-ratio:360/205;box-shadow:inset 0 0 0 1px rgba(51,73,106,.2),0 0 0 1px rgba(51,73,106,.12);overflow:hidden}
+.hx-foot{background:transparent;border-top:0;display:flex;flex-direction:column;align-items:center;gap:0;padding:18px 20px 22px;text-align:center}
+.hx-coord{order:0;font:400 10px/1.4 var(--mono);letter-spacing:.14em;color:#7B8497;margin:0 0 10px;white-space:nowrap}
+.hx-city{font:500 clamp(26px,9vw,38px)/1 var(--serif);letter-spacing:.36em;margin-right:-.36em;color:#5F7FA3;text-transform:uppercase}
+.hx-dt b{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;font:400 12px/1 var(--mono);letter-spacing:.14em;color:var(--ink)}
+.hx-dt b::before,.hx-dt b::after{content:"";flex:0 0 38px;height:1px;background:var(--ink);opacity:.4}
+.hx-nt{font:300 12px/1.4 var(--th);color:#7B8497;margin-top:8px}
+.hx-sw{display:flex;gap:0;margin-top:14px}.hx-sw i{width:22px;height:7px}
+.hx-sw i:nth-child(1){background:#3C5878}.hx-sw i:nth-child(2){background:#7E9BBD}.hx-sw i:nth-child(3){background:#E08A55}.hx-sw i:nth-child(4){background:#F2B988}.hx-sw i:nth-child(5){background:#F6DCC0}
+.hx-foot .btn{margin-top:18px;min-height:40px;padding:0 22px;font:500 13px/1 var(--th);background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.hx-city.long{font-size:clamp(20px,6.8vw,30px);letter-spacing:.24em;margin-right:-.24em}
+.hx-x.c,.hx-x.d{display:none}
+@media(min-width:560px){.hx-top{padding:34px 28px 0}.hx-scene{margin:26px 28px 0}.hx .hx-top h1{font-size:17px}.hx-hms span{min-width:96px}}
 </style>
 </head>
 <body>
@@ -442,10 +477,9 @@ button.hx-temp{background:rgba(251,244,230,.85);border:1px solid rgba(51,73,106,
 
 <section id="p-count" class="wrap">
   <div class="hx" id="hx" data-c="osaka">
-    <button type="button" class="hx-temp" onclick="wxOpen()" aria-haspopup="dialog" aria-label="อุณหภูมิตอนนี้ แตะเพื่อดูรายละเอียดอากาศโอซาก้า"><span class="hx-ti" id="hx-ti" aria-hidden="true">🌤️</span><b id="hx-tv">–°</b><small id="hx-tl">โอซาก้าตอนนี้</small><small class="hx-more">ดูรายละเอียด ›</small></button>
-    <span class="hx-x a">+</span><span class="hx-x b">+</span>
+        <span class="hx-x a">+</span><span class="hx-x b">+</span>
     <div class="hx-top">
-      <div class="hx-no">TRIP / 2027 &middot; KANSAI</div>
+      <div class="hx-meta"><span class="hx-no">TRIP / 2027 &middot; KANSAI</span><button type="button" class="hx-temp" onclick="wxOpen()" aria-haspopup="dialog" aria-label="อุณหภูมิตอนนี้ แตะเพื่อดูรายละเอียดอากาศโอซาก้า"><span class="hx-ti" id="hx-ti" aria-hidden="true">🌤️</span><b id="hx-tv">–°</b><small id="hx-tl">โอซาก้าตอนนี้</small><small class="hx-more">ดูรายละเอียด ›</small></button></div>
       <h1>เตรียมพร้อมสู่โอซาก้า 2027</h1>
       <div class="hx-lab" id="tlabel">เวลาที่เหลือจนถึงวันเดินทาง</div>
       <div class="hx-days"><b id="td">00</b><span>วัน</span></div>
@@ -467,7 +501,11 @@ button.hx-temp{background:rgba(251,244,230,.85);border:1px solid rgba(51,73,106,
     </div>
     <div class="hx-snow" id="hx-snow" aria-hidden="true"></div>
     <div class="hx-foot">
-      <div><small class="hx-coord" id="hx-coord"></small><b id="hx-dates">ก.พ. 2027</b><small id="hx-nights">โอซาก้า</small></div>
+      <small class="hx-coord" id="hx-coord"></small>
+      <div class="hx-city" id="hx-city">OSAKA</div>
+      <div class="hx-dt"><b id="hx-dates">ก.พ. 2027</b></div>
+      <small class="hx-nt" id="hx-nights">โอซาก้า</small>
+      <div class="hx-sw" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
       <button class="btn" onclick="shopGo()">🛍️ ค้นหาร้านค้า</button>
     </div>
   </div>
