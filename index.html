@@ -294,9 +294,9 @@ nav button.on{font-weight:700}
 .hx-lab{font-size:13px;line-height:1.45;margin-top:2px;max-width:calc(100% - 108px);color:#3F5F86}
 .hx-days{display:flex;align-items:baseline;gap:10px;margin-top:6px}
 .hx-days b{font:400 clamp(92px,30vw,148px)/.95 'DM Mono','Sarabun',ui-monospace,monospace;letter-spacing:-.02em;color:#33496A;text-shadow:4px 4px 0 rgba(246,245,230,.75);font-variant-numeric:tabular-nums}
-.hx-days span{font-size:22px;font-weight:700}
+.hx-days>span{font-size:22px;font-weight:700}
 .hx-hms{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.hx-hms span{display:inline-flex;align-items:baseline;gap:5px;background:#33496A;color:#FBF4E6;border-radius:999px;padding:5px 13px 6px;font-size:13px}
+.hx-hms>span{display:inline-flex;align-items:baseline;gap:5px;background:#33496A;color:#FBF4E6;border-radius:999px;padding:5px 13px 6px;font-size:13px}
 .hx .hx-hms b,.hx .hx-hms #ts{font:400 20px/1 'DM Mono','Sarabun',ui-monospace,monospace;color:#F4C896!important;font-variant-numeric:tabular-nums}
 .hx-next{font-size:13px;margin-top:10px;color:#3F5F86;min-height:20px}
 .hx-scene{position:relative;z-index:0;margin-top:-44px;aspect-ratio:360/210}
@@ -310,9 +310,9 @@ nav button.on{font-weight:700}
 .hx-foot small{display:block;font-size:13px;color:#C9D3E3}
 .hx-foot .btn{width:auto;flex:none;padding:0 20px;background:#E8A66E;color:#33496A}
 .hx-h{font-size:18px;margin:22px 0 0}
-@media(min-width:560px){.hx-couple{--k:3}.hx .hx-top h1{font-size:22px}.hx-days span{font-size:26px}.hx-top{padding:26px 28px 0}.hx-foot{padding-left:28px;padding-right:20px}.hx-temp{top:22px;right:26px;min-width:96px;padding:10px 14px 9px}.hx .hx-temp b{font-size:38px}.hx-ti{font-size:26px}.hx-scene{margin-top:-60px}}
+@media(min-width:560px){.hx-couple{--k:3}.hx .hx-top h1{font-size:22px}.hx-days>span{font-size:26px}.hx-top{padding:26px 28px 0}.hx-foot{padding-left:28px;padding-right:20px}.hx-temp{top:22px;right:26px;min-width:96px;padding:10px 14px 9px}.hx .hx-temp b{font-size:38px}.hx-ti{font-size:26px}.hx-scene{margin-top:-60px}}
 @media(min-width:640px){.hx-couple{--k:4}}
-@media(max-width:380px){.hx .hx-top h1{font-size:16px}.hx-hms span{padding:4px 10px 5px}.hx-foot .btn{padding:0 14px;font-size:14px}.hx-scene{margin-top:-24px}}
+@media(max-width:380px){.hx .hx-top h1{font-size:16px}.hx-hms>span{padding:4px 10px 5px}.hx-foot .btn{padding:0 14px;font-size:14px}.hx-scene{margin-top:-24px}}
 @media(max-width:350px){.hx-scene{margin-top:-6px}}
 
 /* v51: แตะเดินทาง — ฉากเปลี่ยนจากโอซาก้าเป็นหิมะที่ชิราคาวาโกะ */
@@ -417,8 +417,8 @@ nav button{color:#C9D3E3}nav button.on{background:#F2C79B;color:var(--ink)}
 .hx .hx-top h1{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.01em;color:var(--ink)}
 .hx-lab{color:#5C6A82}
 .hx-days b{font:300 clamp(96px,32vw,150px)/.9 var(--serif);letter-spacing:-.03em;color:var(--ink);text-shadow:none}
-.hx-days span{color:var(--ink)}
-.hx-hms span{background:transparent;border:1px solid rgba(51,73,106,.45);color:var(--ink)}
+.hx-days>span{color:var(--ink)}
+.hx-hms>span{background:transparent;border:1px solid rgba(51,73,106,.45);color:var(--ink)}
 .hx .hx-hms b,.hx .hx-hms #ts{font:500 18px/1 var(--mono);color:var(--ink)!important}
 .hx-next{color:#5C6A82}
 button.hx-temp{background:rgba(251,244,230,.85);border:1px solid rgba(51,73,106,.35);box-shadow:none;border-radius:16px}
@@ -449,10 +449,10 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 .hx-lab{max-width:none;font:300 12px/1.5 var(--th);color:#5C6A82;margin-top:2px}
 .hx-days{display:flex;flex-direction:column;align-items:center;gap:0;margin-top:8px}
 .hx-days b{font:300 clamp(104px,34vw,160px)/.86 var(--serif);letter-spacing:-.035em;color:var(--ink)}
-.hx-days span{font:400 11px/1 var(--mono);letter-spacing:.5em;margin:10px -.5em 0 0;color:var(--ink);opacity:.75}
+.hx-days>span{font:400 11px/1 var(--mono);letter-spacing:.5em;margin:10px -.5em 0 0;color:var(--ink);opacity:.75}
 .hx-hms{display:flex;justify-content:center;gap:0;margin-top:20px}
-.hx-hms span{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;padding:0 10px;background:none;border:0;border-radius:0;font:300 10px/1 var(--th);letter-spacing:.14em;color:#5C6A82}
-.hx-hms span+span{border-left:1px solid rgba(51,73,106,.28)}
+.hx-hms>span{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;padding:0 10px;background:none;border:0;border-radius:0;font:300 10px/1 var(--th);letter-spacing:.14em;color:#5C6A82}
+.hx-hms>span+span{border-left:1px solid rgba(51,73,106,.28)}
 .hx .hx-hms b,.hx .hx-hms #ts{font:400 24px/1 var(--mono);color:var(--ink)!important}
 .hx-row{justify-content:center;margin-top:16px;gap:8px}
 .hx-next{width:100%;text-align:center;font:400 11px/1.5 var(--mono);letter-spacing:.06em;color:#5C6A82;margin:0;min-height:0}
@@ -469,7 +469,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 .hx-foot .btn{margin-top:18px;min-height:40px;padding:0 22px;font:500 13px/1 var(--th);background:transparent;color:var(--ink);border:1px solid var(--ink)}
 .hx-city.long{font-size:clamp(20px,6.8vw,30px);letter-spacing:.24em;margin-right:-.24em}
 .hx-x.c,.hx-x.d{display:none}
-@media(min-width:560px){.hx-top{padding:34px 28px 0}.hx-scene{margin:26px 28px 0}.hx .hx-top h1{font-size:17px}.hx-hms span{min-width:96px}}
+@media(min-width:560px){.hx-top{padding:34px 28px 0}.hx-scene{margin:26px 28px 0}.hx .hx-top h1{font-size:17px}.hx-hms>span{min-width:96px}}
 
 /* Getoh Warm Minimal · Hotel Decision Support refresh */
 #p-hotels{background:#f8f3eb;color:#2f3c4d;min-height:100vh;padding:0 0 36px}
@@ -500,9 +500,9 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 #p-count .hx-lab{margin-top:3px}
 #p-count .hx-days{margin-top:2px;gap:8px}
 #p-count .hx-days b{font-size:clamp(76px,23vw,112px);line-height:.88}
-#p-count .hx-days span{font-size:19px}
+#p-count .hx-days>span{font-size:19px}
 #p-count .hx-hms{gap:6px;margin-top:7px}
-#p-count .hx-hms span{padding:4px 10px 5px;font-size:12px}
+#p-count .hx-hms>span{padding:4px 10px 5px;font-size:12px}
 #p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font-size:17px}
 #p-count .hx-row{margin-top:7px;gap:6px 9px}
 #p-count .hx-next{min-height:0;margin-top:0;font-size:12px}
@@ -529,7 +529,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-lab{font-size:13px}
   #p-count .hx-days{margin-top:0}
   #p-count .hx-days b{font-size:104px;line-height:.86}
-  #p-count .hx-days span{font-size:21px}
+  #p-count .hx-days>span{font-size:21px}
   #p-count .hx-hms{margin-top:8px}
   #p-count .hx-row{margin-top:8px}
   #p-count .hx-foot{padding:10px 18px}
@@ -539,7 +539,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-top{padding:13px 14px 0}
   #p-count .hx-days b{font-size:74px}
   #p-count .hx-hms{gap:5px}
-  #p-count .hx-hms span{padding:4px 8px;font-size:11px}
+  #p-count .hx-hms>span{padding:4px 8px;font-size:11px}
   #p-count .hx-scene{margin-top:-16px;aspect-ratio:360/166}
   #p-count .hx-foot{padding:8px 9px 9px 12px}
   #p-count .hx-foot .btn{padding:0 10px;font-size:12px}
@@ -556,9 +556,9 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-lab{font-size:11px;margin-top:1px}
   #p-count .hx-days{margin-top:4px}
   #p-count .hx-days b{font-size:clamp(88px,24vw,108px);line-height:.84}
-  #p-count .hx-days span{font-size:10px;margin-top:5px}
+  #p-count .hx-days>span{font-size:10px;margin-top:5px}
   #p-count .hx-hms{margin-top:10px}
-  #p-count .hx-hms span{min-width:68px;padding:0 8px;gap:4px;font-size:10px}
+  #p-count .hx-hms>span{min-width:68px;padding:0 8px;gap:4px;font-size:10px}
   #p-count .hx .hx-hms b,#p-count .hx .hx-hms #ts{font-size:20px}
   #p-count .hx-row{margin-top:10px;gap:7px}
   #p-count .hx-go{min-height:32px;padding:0 13px;font-size:11px}
@@ -656,7 +656,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 }
 #p-count .hx-days>span{margin-top:4px;padding:5px 20px;border:1px solid rgba(87,116,151,.2);border-radius:999px;background:rgba(255,255,255,.45);font:600 12px/1.2 var(--th);letter-spacing:.12em;color:#405d83}
 #p-count .hx-hms{gap:8px;margin-top:11px}
-#p-count .hx-hms span{min-width:74px;padding:7px 9px 6px;gap:5px;border:1px solid rgba(91,119,153,.18);border-radius:12px;background:rgba(255,255,255,.38);letter-spacing:0}
+#p-count .hx-hms>span{min-width:74px;padding:7px 9px 6px;gap:5px;border:1px solid rgba(91,119,153,.18);border-radius:12px;background:rgba(255,255,255,.38);letter-spacing:0}
 #p-count .hx-hms .flip-unit{display:flex;gap:2px;perspective:350px}
 #p-count .hx-hms .flip-digit{width:19px;height:27px;border-radius:5px;border-color:rgba(91,119,153,.2);box-shadow:0 2px 5px rgba(49,69,99,.1),inset 0 1px 0 #fff}
 #p-count .hx-hms .flip-digit:after{display:none}
@@ -668,7 +668,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .flip-digit{width:43px;height:64px;border-radius:11px}
   #p-count .flip-face{font-size:46px}
   #p-count .flip-digit:after{box-shadow:calc(43px - 8px) 0 0 #7890ad}
-  #p-count .hx-hms span{min-width:66px;padding:6px 6px}
+  #p-count .hx-hms>span{min-width:66px;padding:6px 6px}
 }
 @media(min-width:621px){
   #p-count .flip-digit{width:66px;height:88px;border-radius:15px}
