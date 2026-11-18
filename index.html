@@ -859,6 +859,18 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-acts{margin-top:8px}
 }
 @media(max-height:680px){#p-count .hx-nt,#p-count .hx-lab{display:none}#p-count .hx-scene{aspect-ratio:360/132}#p-count #td .flip-digit{height:78px}}
+/* v9: ฉากไม่ถูกตัดความสูง (SVG เนื้อหาชิดขอบบน) — ใช้สัดส่วนจริง 360/210 และไม่ขยาย/เลื่อนภาพ */
+#p-count .hx-scene{aspect-ratio:360/210}
+#p-count .hx-sky,#p-count .hx-sky.on{object-fit:contain;object-position:50% 100%;animation:none;transform:none}
+@media(max-height:820px){#p-count .hx-nt{display:none}}
+/* v9b: ประหยัดความสูง — ป้าย "วัน" อยู่ข้างเลขเหมือน ชม./นาที/วินาที, ลดช่องว่างหัวการ์ด */
+@media(max-height:820px){
+  #p-count .hx-meta{margin-bottom:0}
+  #p-count .hx .hx-top h1{margin:0}
+  #p-count .hx-days{display:flex;flex-direction:row;align-items:flex-end;justify-content:center;gap:8px}
+  #p-count .hx-days::before{content:"";flex:0 0 40px}
+  #p-count .hx-days>span{flex:0 0 40px;margin:0 0 6px;padding:2px 0;text-align:center}
+}
 </style>
 </head>
 <body>
@@ -964,6 +976,6 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 <script src="getoh-config.js?v=1"></script>
 <script src="plan.js?v=52"></script>
 <script src="style.js?v=22"></script>
-<script src="game.js?v=6"></script>
+<script src="game.js?v=7"></script>
 </body>
 </html>

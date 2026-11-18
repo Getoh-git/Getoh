@@ -166,7 +166,7 @@ const B=(()=>{
 
 /* ================= Game 2: City Runner ================= */
 const R=(()=>{
-  const W=360,H=200,GY=182,PX=46;
+  const W=360,H=220,GY=202,PX=46;
   const ST=[["Osaka","📦","🐙"],["Kyoto","⛩️","🍡"],["Nara","🦌","🍪"],["Kobe","⚓","🥩"],["Kanazawa","🏮","✨"],["Shirakawa-go","⛄","🍵"]];
   let S;const score=()=>Math.floor(S.dist/8)+S.bonus;
   function reset(){S={t:0,dist:0,bonus:0,items:0,sp:125,y:GY,vy:0,jumps:0,obs:[],col:[],pw:[],pt:[],gap:230,stage:0,zones:1,fade:1,banner:1.6,shield:0,mag:0,inv:0,streak:0,mt:0,mult:1}}
@@ -283,6 +283,10 @@ function css(){
 #gm button:focus-visible,#gm input:focus-visible{outline:3px solid #F4C896;outline-offset:2px}
 #gm{overscroll-behavior:contain}#gm button,#gm summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #gm .gm-set{margin-top:12px;border:1px solid #4A6A92;border-radius:16px;padding:0 12px 10px}#gm .gm-set summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600;color:#F4C896}
+#gm .gm-jump{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:76px;border:0;border-radius:18px;background:#F4C896;color:#33496A;font:700 30px/1 ${FD};cursor:pointer;box-shadow:0 6px 0 #B5834E,0 10px 18px rgba(0,0,0,.28);user-select:none;-webkit-user-select:none;transition:transform .05s,box-shadow .05s}
+#gm .gm-jump small{font:700 12px/1 ${FD};letter-spacing:.2em}
+#gm .gm-jump.down,#gm .gm-jump:active{transform:translateY(5px);box-shadow:0 1px 0 #B5834E,0 3px 8px rgba(0,0,0,.28)}
+#gm .gm-jump+.gm-go{margin-top:16px}
 body.gm-open>*:not(#gm):not(script):not(style):not(link){visibility:hidden}body.gm-open *{animation-play-state:paused!important}`;
   document.head.appendChild(s);
 }
@@ -333,7 +337,12 @@ function pick(g){cur=g;cv.style.display="block";root.querySelector(".gm-back").s
 function start(){
   if(st==="play")return;
   GAMES[cur].reset();st="play";
-  panel.innerHTML=`<button class="gm-go alt" id="gm-end">🏁 End game</button>`;panel.querySelector("#gm-end").onclick=over;
+  panel.innerHTML=(cur==="run"?`<button class="gm-jump" id="gm-jump" aria-label="Jump (Arrow Up)"><span aria-hidden="true">▲</span><small>JUMP</small></button>`:"")+`<button class="gm-go alt" id="gm-end">🏁 End game</button>`;panel.querySelector("#gm-end").onclick=over;
+  const jb=panel.querySelector("#gm-jump");
+  if(jb){const R_=GAMES.run,dn=e=>{e.preventDefault();jb.classList.add("down");if(st==="play")R_.down()},upf=()=>{if(jb.classList.contains("down")){jb.classList.remove("down");R_.up()}};
+    jb.addEventListener("pointerdown",dn);jb.addEventListener("pointerup",upf);jb.addEventListener("pointerleave",upf);jb.addEventListener("pointercancel",upf);
+    jb.addEventListener("keydown",e=>{if((e.code==="Space"||e.code==="Enter")&&!e.repeat){e.preventDefault();jb.classList.add("down");if(st==="play")R_.down()}});
+    jb.addEventListener("keyup",e=>{if(e.code==="Space"||e.code==="Enter"){e.preventDefault();upf()}})}
 }
 function over(){
   if(st!=="play")return;st="over";const G=GAMES[cur],sc=G.score(),isBest=sc>0&&sc>best[cur];
