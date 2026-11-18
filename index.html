@@ -766,6 +766,23 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 #p-count .hx-sky{object-fit:cover;object-position:50% 100%}
 @media(min-width:621px){#p-count .hx-scene{aspect-ratio:360/190}}
 
+/* v6: เลข ชม./นาที/วินาที ใหญ่ขึ้น ไม่มีกรอบครอบ + บรรทัดเวลาออก/ถึง */
+#p-count .hx-hms{max-width:none;gap:14px;margin-top:10px}
+#p-count .hx-hms>span{background:none;border:0;box-shadow:none;padding:0;gap:5px;flex:0 0 auto;min-width:0;font-size:11px;font-weight:600;color:#405d83}
+#p-count .hx-hms .flip-unit{gap:4px}
+#p-count .hx-hms .flip-digit{width:34px;height:48px;border-radius:9px}
+#p-count .hx-hms .flip-top,#p-count .hx-hms .flip-bottom{border-radius:8px}
+#p-count .hx-hms .flip-top{border-radius:8px 8px 0 0}#p-count .hx-hms .flip-bottom{border-radius:0 0 8px 8px}
+#p-count .hx-hms .flip-flap-front,#p-count .hx-hms .flip-flap-back{border-radius:8px 8px 0 0}
+#p-count .hx-hms .flip-number{font-size:32px;letter-spacing:-.04em}
+@media(max-width:380px){#p-count .hx-hms{gap:10px}#p-count .hx-hms .flip-digit{width:30px;height:44px}#p-count .hx-hms .flip-number{font-size:28px}}
+@media(min-width:621px){#p-count .hx-hms .flip-digit{width:40px;height:56px}#p-count .hx-hms .flip-number{font-size:38px}}
+#p-count .hx-next{line-height:1.45;text-align:center}
+#p-count .hx-next .nx-r,#p-count .hx-next .nx-t{display:block}
+#p-count .hx-next .nx-r{font-weight:600;font-size:11px;letter-spacing:.08em}
+#p-count .hx-next .nx-t{font-size:11px;margin-top:1px}
+@media(max-width:380px){#p-count .hx-next .nx-t{font-size:10px}}
+#p-count .hx-next .nx-ap{font-weight:600;color:#405d83}
 </style>
 </head>
 <body>
@@ -865,7 +882,7 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="hotels.js?v=22"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=31"></script>
 <script src="prep.js?v=22"></script>
 <script src="getoh-config.js?v=1"></script>
 <script src="plan.js?v=52"></script>

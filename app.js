@@ -104,7 +104,7 @@ function tick(){
   const days=Math.floor(v/864e5),hours=Math.floor(v%864e5/36e5),minutes=Math.floor(v%36e5/6e4),seconds=Math.floor(v%6e4/1e3);
   flipValue("td",days);flipValue("th",hours);flipValue("tm",minutes);flipValue("ts",seconds);updateMilestone(days);
   $("tlabel").textContent=nx?`เหลือเวลาจนถึงเครื่องออก (${nx.title})`:"ทริปนี้จบแล้ว กลับถึงบ้านเรียบร้อย 🏠";
-  $("tnext").textContent=nx?`${nx.from} ➔ ${nx.to} · ${nx.depD} เวลา ${nx.depT}`:"";
+  $("tnext").innerHTML=nx?`<span class="nx-r">${nx.from} ➔ ${nx.to}</span>${nx.apT?`<span class="nx-t nx-ap">ถึงสนามบิน ${nx.apT}</span>`:""}<span class="nx-t">ออก ${nx.depD} ${nx.depT} · ถึง ${nx.arrD} ${nx.arrT} (${ZONE[nx.to]||""})</span>`:"";
   if(!lastFl||now-lastFl>=6e4){lastFl=now;$("flights").innerHTML=F.map((f,i)=>flightCard(f,now,i)).join("");jlDraw()} // การ์ดวาดใหม่ทุกนาที ไม่ใช่ทุกวินาที
 }
 
