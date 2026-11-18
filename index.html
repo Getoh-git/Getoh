@@ -761,6 +761,11 @@ button.hx-temp{position:static;flex-direction:row;align-items:center;gap:6px;min
   #p-count .hx-milestone.is-changing{animation:none}
 }
 
+/* v5: แก้อัตราส่วนภาพฉากหน้าแรก — ใช้อัตราส่วนเดียว และให้ภาพเต็มกรอบ (ไม่ letterbox) */
+#p-count .hx-scene{aspect-ratio:360/185;overflow:hidden}
+#p-count .hx-sky{object-fit:cover;object-position:50% 100%}
+@media(min-width:621px){#p-count .hx-scene{aspect-ratio:360/190}}
+
 </style>
 </head>
 <body>
