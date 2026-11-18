@@ -6,16 +6,19 @@ const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorag
 const esc2=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const img=s=>{const i=new Image();i.src=s;return i};
 let root,cv,cx,panel,bar,sndBtn,raf=0,lt=0,open=false,cur=null,k=1,st="menu";
-let mode=ls(LS.m)||(navigator.onLine?"on":"off"),nick=ls(LS.n)||"";
+let mode=ls(LS.m)||"off",nick=ls(LS.n)||"";
 const best={block:+ls(LS.block)||0,run:+ls(LS.run)||0};
 let muted=ls(LS.snd)==="0",AC=null;
 const rr=(x,y,w,h,r)=>{cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()};
 
 /* ---------- text on canvas: always shrinks to fit the width ---------- */
-function fitT(s,x,y,maxW,px,w=600){let p=px;cx.font=`${w} ${p}px ${FD}`;while(p>9&&cx.measureText(s).width>maxW){p--;cx.font=`${w} ${p}px ${FD}`}cx.fillText(s,x,y)}
+let FT={}; // cache of fitted font sizes (measureText every frame is slow)
+function fitP(key,s,maxW,px,w){let p=FT[key];if(p===undefined){p=px;cx.font=`${w} ${p}px ${FD}`;while(p>9&&cx.measureText(s).width>maxW){p--;cx.font=`${w} ${p}px ${FD}`}if(Object.keys(FT).length>300)FT={};FT[key]=p}return p}
+function fitT(s,x,y,maxW,px,w=600){const p=fitP(s+"|"+maxW+"|"+px+"|"+w,s,maxW,px,w);cx.font=`${w} ${p}px ${FD}`;cx.fillText(s,x,y)}
 function bigT(s,x,y,maxW,px,col,w=700){ // outlined text for pop-ups
-  let p=px;cx.font=`${w} ${p}px ${FD}`;while(p>10&&cx.measureText(s).width>maxW){p--;cx.font=`${w} ${p}px ${FD}`}
+  const p=fitP("b"+s+"|"+maxW+"|"+px+"|"+w,s,maxW,px,w);cx.font=`${w} ${p}px ${FD}`;
   cx.lineJoin="round";cx.lineWidth=Math.max(3,p/4);cx.strokeStyle="#33496A";cx.strokeText(s,x,y);cx.fillStyle=col;cx.fillText(s,x,y)}
+try{document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener("loadingdone",()=>{FT={}})}catch(e){}
 
 /* ---------- sound (tiny synth, no files) + haptics ---------- */
 function snd(f,d=.1,type="sine",v=.06,slide=0){
@@ -29,6 +32,16 @@ const vibe=p=>{if(!muted)try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 
 const CITIES=[["Osaka","Takoyaki time!"],["Kyoto","Temple trails"],["Nara","Mind the deer"],["Kobe","Harbor breeze"],["Kanazawa","Lantern lanes"],["Shirakawa-go","Snowy village"]];
 const SCN=["osaka","kyoto","nara","kobe","kanazawa","shirakawa"],SC=SCN.map(n=>img(n+"-scene.svg")),walk=img("couple-walk.png"),jump=img("couple-jump.png");
+/* ---------- render caches: pre-rasterised scenes / blocks / emoji (per-frame SVG, gradient and emoji drawing is what made the games feel heavy) ---------- */
+let SCC=[],SPR={},BL=null;
+const clearCaches=()=>{SCC=[];SPR={};BL=null};
+function scn(i){const im=SC[i];if(!im||!im.complete)return null;let c=SCC[i];
+  if(!c){try{const w=Math.max(1,Math.round(360*k)),h=Math.max(1,Math.round(210*k));c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);SCC[i]=c}catch(e){return null}}
+  return c}
+function emo(ch,px){const bs=Math.ceil(px*1.5),sz=Math.max(2,Math.round(bs*k)),key=ch+"|"+px+"|"+sz;let c=SPR[key];
+  if(!c){c=document.createElement("canvas");c.width=c.height=sz;const o=cx;cx=c.getContext("2d");cx.scale(sz/bs,sz/bs);cx.font=`${px}px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif`;cx.textAlign="center";cx.textBaseline="alphabetic";cx.fillText(ch,bs/2,bs*.8);cx=o;SPR[key]=c}
+  return[c,bs]}
+function emoAt(ch,px,x,y){const[c,bs]=emo(ch,px);cx.drawImage(c,x-bs/2,y-bs*.8,bs,bs)}
 
 /* ================= Game 1: Block Puzzle ================= */
 const B=(()=>{
@@ -47,7 +60,8 @@ const B=(()=>{
   const lines=g=>{const R=[],Cc=[];for(let i=0;i<N;i++){if(g[i].every(Boolean))R.push(i);if(g.every(r=>r[i]))Cc.push(i)}return[R,Cc]};
   function refill(){for(let t=0;t<40;t++){const a=[0,1,2].map(()=>mk(SH[Math.random()*SH.length|0],1+(Math.random()*COL.length|0)));if(a.some(anyFit)||t===39){S.pcs=a;return}}}
   const target=d=>{const p=S.pcs[d.i];return[Math.round((d.y-OFF-p.h*C/2-BY)/C),Math.round((d.x-p.w*C/2-BX)/C)]};
-  function reset(){S={g:grid(),pcs:[null,null,null],sc:0,disp:0,combo:0,maxCombo:0,miss:0,lines:0,drag:null,fx:[],pt:[],pop:null,shake:0,flash:0,stage:0,fade:1,banner:0};refill()}
+  function okc(){S.ok=S.pcs.map(p=>p?anyFit(p):false)}
+  function reset(){S={g:grid(),pcs:[null,null,null],sc:0,disp:0,combo:0,maxCombo:0,miss:0,lines:0,drag:null,fx:[],pt:[],pop:null,shake:0,flash:0,stage:0,fade:1,banner:0};refill();okc()}
   function place(i,r0,c0){
     const p=S.pcs[i];p.cells.forEach(([r,c])=>{S.g[r0+r][c0+c]=p.color});let gain=p.cells.length;
     snd(240+p.cells.length*22,.09,"triangle",.07);
@@ -64,18 +78,27 @@ const B=(()=>{
       for(let j=0;j<Math.min(n+2,6);j++)later(()=>snd(500+j*95+S.combo*18,.15,"sine",.07),j*65);
       vibe(n>1?[18,30,18]:18);
     }else{S.miss++;if(S.miss>=3)S.combo=0} // combo survives up to 2 moves without a clear
-    S.sc+=gain;S.pcs[i]=null;if(S.pcs.every(v=>!v))refill();
+    S.sc+=gain;S.pcs[i]=null;if(S.pcs.every(v=>!v))refill();okc();
     const ns=Math.floor(S.sc/400)%SC.length;
     if(ns!==S.stage){S.stage=ns;S.fade=0;S.banner=2;[523,659,784,1046].forEach((f,j)=>later(()=>snd(f,.2,"triangle",.07),j*90))}
-    if(!S.pcs.some(v=>v&&anyFit(v)))api.end();
+    if(!S.ok.some(Boolean))api.end();
   }
-  function blk(x,y,s,ci,a=1){
+  function blkRaw(x,y,s,ci,a=1){
     const[l,b,d]=COL[ci-1];cx.globalAlpha=a;
     const g=cx.createLinearGradient(0,y,0,y+s);g.addColorStop(0,l);g.addColorStop(.45,b);g.addColorStop(1,d);
     cx.fillStyle=g;rr(x+1,y+1,s-2,s-2,s*.2);cx.fill();
     cx.fillStyle="rgba(255,255,255,.32)";rr(x+s*.14,y+s*.12,s*.72,s*.2,s*.1);cx.fill();
     cx.strokeStyle="rgba(0,0,0,.28)";cx.lineWidth=1;rr(x+1.5,y+1.5,s-3,s-3,s*.2);cx.stroke();cx.globalAlpha=1;
   }
+  function blkSpr(ci,s){const sz=Math.max(2,Math.round(s*k)),key=ci+"|"+sz;let c=SPR[key];
+    if(!c){c=document.createElement("canvas");c.width=c.height=sz;const o=cx;cx=c.getContext("2d");cx.scale(sz/s,sz/s);blkRaw(0,0,s,ci,1);cx=o;SPR[key]=c}return c}
+  function blk(x,y,s,ci,a=1){cx.globalAlpha=a;cx.drawImage(blkSpr(ci,s),x,y,s,s);cx.globalAlpha=1}
+  function boardLayer(){if(BL)return BL;const sz=N*C+14,w=Math.max(2,Math.round(sz*k)),lc=document.createElement("canvas");lc.width=lc.height=w;
+    const o=cx;cx=lc.getContext("2d");cx.scale(w/sz,w/sz);cx.translate(-(BX-7),-(BY-7));
+    cx.fillStyle="rgba(10,28,16,.8)";rr(BX-7,BY-7,N*C+14,N*C+14,16);cx.fill();cx.strokeStyle="rgba(184,204,44,.55)";cx.lineWidth=2;cx.stroke();
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){cx.fillStyle=(r+c)%2?"rgba(255,255,255,.05)":"rgba(255,255,255,.09)";rr(BX+c*C+1.5,BY+r*C+1.5,C-3,C-3,7);cx.fill()}
+    cx=o;BL=lc;return lc}
+  const NOSET=new Set();
   const api={W,H,maxW:420,key:"block",path:"/game/scores",title:"🧩 Block Puzzle",
     desc:"Drag pieces onto the 8×8 board. Fill a full row or column to clear it. Chain clears for combos, and the city changes every 400 points.",
     score:()=>S?S.sc:0,
@@ -97,9 +120,9 @@ const B=(()=>{
       const bgc=BG[stage],gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,bgc[0]);gr.addColorStop(1,bgc[1]);cx.fillStyle=gr;cx.fillRect(-10,-10,W+20,H+20);
       // faint skyline of the current city behind the header
       cx.imageSmoothingEnabled=true;
-      const pb=SC[(stage+SC.length-1)%SC.length],cb=SC[stage],sy=BY-8-210;
-      if(S.fade<1&&pb.complete){cx.globalAlpha=.3*(1-S.fade);cx.drawImage(pb,0,sy,W,210)}
-      if(cb.complete){cx.globalAlpha=.3*S.fade;cx.drawImage(cb,0,sy,W,210)}
+      const pb=scn((stage+SC.length-1)%SC.length),cb=scn(stage),sy=BY-8-210;
+      if(S.fade<1&&pb){cx.globalAlpha=.3*(1-S.fade);cx.drawImage(pb,0,sy,W,210)}
+      if(cb){cx.globalAlpha=.3*S.fade;cx.drawImage(cb,0,sy,W,210)}
       cx.globalAlpha=1;cx.imageSmoothingEnabled=true;
       // header: score / city + combo / best
       cx.textBaseline="alphabetic";cx.textAlign="left";cx.fillStyle="#c5d6ba";fitT("Score",20,26,100,14,500);
@@ -109,12 +132,13 @@ const B=(()=>{
       cx.textAlign="right";cx.fillStyle="#FBF4E6";fitT(String(Math.max(best.block,S.sc)),W-20,64,150,34,700);
       if(S.combo>1){cx.textAlign="center";cx.fillStyle="#FFB347";fitT("Combo ×"+S.combo,W/2,60,110,17,700)}
       // board
-      cx.fillStyle="rgba(10,28,16,.8)";rr(BX-7,BY-7,N*C+14,N*C+14,16);cx.fill();cx.strokeStyle="rgba(184,204,44,.55)";cx.lineWidth=2;cx.stroke();
-      let pv=null,pr=0,pc=0;const hl=new Set();
-      if(S.drag&&S.pcs[S.drag.i]){const p=S.pcs[S.drag.i];[pr,pc]=target(S.drag);
-        if(fits(p,pr,pc)){pv=p;const g=S.g.map(r=>r.slice());p.cells.forEach(([r,c])=>{g[pr+r][pc+c]=1});const[R,Cc]=lines(g);R.forEach(r=>{for(let c=0;c<N;c++)hl.add(r*N+c)});Cc.forEach(c=>{for(let r=0;r<N;r++)hl.add(r*N+c)})}}
+      cx.drawImage(boardLayer(),BX-7,BY-7,N*C+14,N*C+14);
+      let pv=null,pr=0,pc=0,hl=NOSET;
+      if(S.drag&&S.pcs[S.drag.i]){const p=S.pcs[S.drag.i];[pr,pc]=target(S.drag);const hk=S.drag.i+":"+pr+":"+pc+":"+S.sc;
+        if(S.hk!==hk){S.hk=hk;S.hv=null;S.hh=NOSET;
+          if(fits(p,pr,pc)){S.hv=p;const g=S.g.map(r=>r.slice());p.cells.forEach(([r,c])=>{g[pr+r][pc+c]=1});const[R,Cc]=lines(g),h=new Set();R.forEach(r=>{for(let c=0;c<N;c++)h.add(r*N+c)});Cc.forEach(c=>{for(let r=0;r<N;r++)h.add(r*N+c)});S.hh=h}}
+        pv=S.hv;hl=S.hh}else S.hk=null;
       for(let r=0;r<N;r++)for(let c=0;c<N;c++){const x=BX+c*C,y=BY+r*C;
-        cx.fillStyle=(r+c)%2?"rgba(255,255,255,.05)":"rgba(255,255,255,.09)";rr(x+1.5,y+1.5,C-3,C-3,7);cx.fill();
         if(S.g[r][c])blk(x,y,C,S.g[r][c]);
         if(hl.has(r*N+c)){cx.fillStyle="rgba(246,245,230,.34)";rr(x+1,y+1,C-2,C-2,7);cx.fill()}}
       if(pv)pv.cells.forEach(([r,c])=>blk(BX+(pc+c)*C,BY+(pr+r)*C,C,pv.color,.6));
@@ -129,7 +153,7 @@ const B=(()=>{
         bigT(S.pop.txt,W/2,yy,W-50,32,"#FBF4E6");bigT(S.pop.sub,W/2,yy+30,W-50,19,"#F4C896",600);cx.globalAlpha=1}}
       // piece tray
       cx.fillStyle="rgba(10,28,16,.92)";rr(8,TY-16,W-16,H-TY+8,18);cx.fill();
-      S.pcs.forEach((p,i)=>{if(!p||(S.drag&&S.drag.i===i))return;const s=Math.min(24,100/p.w,70/p.h),ox=60+i*120-p.w*s/2,oy=TY+24-p.h*s/2,ok=anyFit(p);p.cells.forEach(([r,c])=>blk(ox+c*s,oy+r*s,s,p.color,ok?1:.3))});
+      S.pcs.forEach((p,i)=>{if(!p||(S.drag&&S.drag.i===i))return;const s=Math.min(24,100/p.w,70/p.h),ox=60+i*120-p.w*s/2,oy=TY+24-p.h*s/2,ok=S.ok[i];p.cells.forEach(([r,c])=>blk(ox+c*s,oy+r*s,s,p.color,ok?1:.3))});
       if(S.drag&&S.pcs[S.drag.i]){const p=S.pcs[S.drag.i],ox=S.drag.x-p.w*C/2,oy=S.drag.y-OFF-p.h*C/2;cx.fillStyle="rgba(0,0,0,.25)";p.cells.forEach(([r,c])=>{rr(ox+c*C+4,oy+r*C+10,C-6,C-6,8);cx.fill()});p.cells.forEach(([r,c])=>blk(ox+c*C,oy+r*C,C,p.color))}
       if(S.flash>0){cx.globalAlpha=Math.min(.6,S.flash);cx.fillStyle="#fff";cx.fillRect(-10,-10,W+20,H+20);cx.globalAlpha=1;S.flash=Math.max(0,S.flash-dt*1.6)}
       cx.restore();
@@ -145,7 +169,7 @@ const R=(()=>{
   const W=360,H=200,GY=182,PX=46;
   const ST=[["Osaka","📦","🐙"],["Kyoto","⛩️","🍡"],["Nara","🦌","🍪"],["Kobe","⚓","🥩"],["Kanazawa","🏮","✨"],["Shirakawa-go","⛄","🍵"]];
   let S;const score=()=>Math.floor(S.dist/8)+S.bonus;
-  function reset(){S={t:0,dist:0,bonus:0,items:0,sp:125,y:GY,vy:0,jumps:0,obs:[],col:[],pw:[],pt:[],gap:90,stage:0,zones:1,fade:1,banner:1.6,shield:0,mag:0,inv:0,streak:0,mt:0,mult:1}}
+  function reset(){S={t:0,dist:0,bonus:0,items:0,sp:125,y:GY,vy:0,jumps:0,obs:[],col:[],pw:[],pt:[],gap:230,stage:0,zones:1,fade:1,banner:1.6,shield:0,mag:0,inv:0,streak:0,mt:0,mult:1}}
   function jumpNow(){ // up to 2 jumps; release early for a short hop
     if(S.y>=GY-.5){S.vy=-340;S.jumps=1;snd(380,.12,"square",.035,320)}
     else if(S.jumps<2){S.vy=-300;S.jumps=2;snd(520,.12,"square",.035,380)}}
@@ -200,13 +224,13 @@ const R=(()=>{
     draw(dt){
       if(!S)reset();if(st==="play")step(dt);if(st!=="play"&&st!=="over"&&st!=="menu")return;
       const t=ST[S.stage];cx.imageSmoothingEnabled=true;cx.clearRect(0,0,W,H);cx.fillStyle="#F4DCC4";cx.fillRect(0,0,W,H);
-      const pb=SC[(S.stage+SC.length-1)%SC.length],cb=SC[S.stage];
-      if(S.fade<1&&pb.complete)cx.drawImage(pb,0,H-210,W,210);cx.globalAlpha=S.fade;if(cb.complete)cx.drawImage(cb,0,H-210,W,210);cx.globalAlpha=1;
+      const pb=scn((S.stage+SC.length-1)%SC.length),cb=scn(S.stage);
+      if(S.fade<1&&pb)cx.drawImage(pb,0,H-210,W,210);cx.globalAlpha=S.fade;if(cb)cx.drawImage(cb,0,H-210,W,210);cx.globalAlpha=1;
       cx.fillStyle="rgba(51,73,106,.55)";const off=Math.floor(S.dist)%32;for(let x=-off;x<W;x+=32)cx.fillRect(x,H-9,16,3);
-      cx.font="24px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";cx.textAlign="center";cx.textBaseline="alphabetic";
-      for(const o of S.obs){if(o.fly)cx.fillText("🐦",o.x+12,o.y+8+Math.sin(S.t*9)*3);else for(let i=0;i<o.n;i++)cx.fillText(t[1],o.x+9+i*18,GY+2)}
-      for(const c of S.col)cx.fillText(t[2],c.x,c.y+8);
-      for(const p of S.pw)cx.fillText(p.type,p.x,p.y+8+Math.sin(S.t*6)*3);
+      cx.textBaseline="alphabetic";
+      for(const o of S.obs){if(o.fly)emoAt("🐦",24,o.x+12,o.y+8+Math.sin(S.t*9)*3);else for(let i=0;i<o.n;i++)emoAt(t[1],24,o.x+9+i*18,GY+2)}
+      for(const c of S.col)emoAt(t[2],24,c.x,c.y+8);
+      for(const p of S.pw)emoAt(p.type,24,p.x,p.y+8+Math.sin(S.t*6)*3);
       const air=S.y<GY-.5,fr=Math.floor(S.t*8)%2;
       cx.save();if(S.inv>0)cx.globalAlpha=Math.floor(S.t*14)%2?.35:.9;
       if(air&&jump.complete)cx.drawImage(jump,0,0,57,68,PX,S.y-46,38,45);else if(walk.complete)cx.drawImage(walk,57*(1+fr),0,57,68,PX,S.y-46-(fr?1:0),38,45);
@@ -256,7 +280,10 @@ function css(){
 #gm .gm-lb li{display:flex;gap:10px;align-items:baseline;padding:8px 6px;border-top:1px dashed rgba(233,234,210,.22)}
 #gm .gm-lb li.me{background:rgba(184,204,44,.16);border-radius:10px}
 #gm .gm-lb li b{flex:none;width:28px;color:#E8A66E;font-weight:600}#gm .gm-lb li span{flex:1;min-width:0;overflow-wrap:anywhere}#gm .gm-lb li i{flex:none;font:600 17px ${FD};font-style:normal;color:#F4C896}
-#gm button:focus-visible,#gm input:focus-visible{outline:3px solid #F4C896;outline-offset:2px}`;
+#gm button:focus-visible,#gm input:focus-visible{outline:3px solid #F4C896;outline-offset:2px}
+#gm{overscroll-behavior:contain}#gm button,#gm summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#gm .gm-set{margin-top:12px;border:1px solid #4A6A92;border-radius:16px;padding:0 12px 10px}#gm .gm-set summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600;color:#F4C896}
+body.gm-open>*:not(#gm):not(script):not(style):not(link){visibility:hidden}body.gm-open *{animation-play-state:paused!important}`;
   document.head.appendChild(s);
 }
 function build(){
@@ -264,47 +291,47 @@ function build(){
   root=document.createElement("div");root.id="gm";root.setAttribute("role","dialog");root.setAttribute("aria-modal","true");root.setAttribute("aria-label","Game corner");
   root.innerHTML=`<div class="gm-bar"><button class="gm-back" aria-label="Back to game list">←</button><b></b><button class="gm-snd" aria-label="Toggle sound"></button><button class="gm-x" aria-label="Close games">✕</button></div><canvas></canvas><div class="gm-p"></div>`;
   document.body.appendChild(root);
-  bar=root.querySelector(".gm-bar b");cv=root.querySelector("canvas");cx=cv.getContext("2d");panel=root.querySelector(".gm-p");sndBtn=root.querySelector(".gm-snd");
+  bar=root.querySelector(".gm-bar b");cv=root.querySelector("canvas");cx=cv.getContext("2d",{alpha:false});panel=root.querySelector(".gm-p");sndBtn=root.querySelector(".gm-snd");
   const paintSnd=()=>{sndBtn.textContent=muted?"🔇":"🔊";sndBtn.setAttribute("aria-pressed",String(!muted))};paintSnd();
   sndBtn.onclick=()=>{muted=!muted;ls(LS.snd,muted?"0":"1");paintSnd();if(!muted)snd(660,.1,"triangle",.06)};
-  root.querySelector(".gm-x").onclick=close;root.querySelector(".gm-back").onclick=chooser;
-  const P=e=>{const r=cv.getBoundingClientRect(),G=GAMES[cur];return[(e.clientX-r.left)*G.W/r.width,(e.clientY-r.top)*G.H/r.height]};
-  cv.addEventListener("pointerdown",e=>{if(!cur)return;e.preventDefault();const[x,y]=P(e);if(GAMES[cur].down(x,y)){try{cv.setPointerCapture(e.pointerId)}catch(_){}}});
-  cv.addEventListener("pointermove",e=>{if(cur){const[x,y]=P(e);GAMES[cur].move(x,y)}});
-  cv.addEventListener("pointerup",()=>{if(cur)GAMES[cur].up()});
-  cv.addEventListener("pointercancel",()=>{if(cur)GAMES[cur].cancel()});
-  addEventListener("resize",fit);
+  root.querySelector(".gm-x").onclick=close;root.querySelector(".gm-back").onclick=()=>chooser();
+  let rect=null; // measure the canvas once per touch, not on every pointermove
+  const P=e=>{const r=rect||cv.getBoundingClientRect(),G=GAMES[cur];return[(e.clientX-r.left)*G.W/r.width,(e.clientY-r.top)*G.H/r.height]};
+  cv.addEventListener("pointerdown",e=>{if(!cur)return;e.preventDefault();rect=cv.getBoundingClientRect();const[x,y]=P(e);if(GAMES[cur].down(x,y)){try{cv.setPointerCapture(e.pointerId)}catch(_){}}});
+  cv.addEventListener("pointermove",e=>{if(cur&&rect){const[x,y]=P(e);GAMES[cur].move(x,y)}});
+  cv.addEventListener("pointerup",()=>{rect=null;if(cur)GAMES[cur].up()});
+  cv.addEventListener("pointercancel",()=>{rect=null;if(cur)GAMES[cur].cancel()});
+  addEventListener("resize",()=>{rect=null;fit()});
 }
-function fit(){ // high-resolution canvas (follows devicePixelRatio) so everything stays sharp
-  if(!cur||!cv||cv.style.display==="none")return;const G=GAMES[cur],dpr=Math.min(3,window.devicePixelRatio||1);
+function fit(){ // sharp canvas, but capped at 2x so phones don't have to fill a huge bitmap every frame
+  if(!cur||!cv||cv.style.display==="none")return;const G=GAMES[cur],dpr=Math.min(2,window.devicePixelRatio||1);
   cv.style.width=`min(100%,${G.maxW}px,calc((100vh - 190px)*${G.W/G.H}))`;cv.style.aspectRatio=`${G.W}/${G.H}`;
-  const w=cv.getBoundingClientRect().width||G.W;cv.width=Math.round(w*dpr);cv.height=Math.round(w*dpr*G.H/G.W);k=cv.width/G.W;
+  const w=cv.getBoundingClientRect().width||G.W,nw=Math.round(w*dpr),nh=Math.round(w*dpr*G.H/G.W);
+  if(cv.width!==nw||cv.height!==nh){cv.width=nw;cv.height=nh;clearCaches()}
+  k=cv.width/G.W;
 }
 function frame(ts){
-  if(!open)return;const dt=Math.min(.05,lt?(ts-lt)/1000:.016);lt=ts;
-  if(cur){cx.setTransform(k,0,0,k,0,0);cx.save();GAMES[cur].draw(dt);cx.restore()}
+  if(!open||!cur)return;const dt=Math.min(.05,lt?(ts-lt)/1000:.016);lt=ts;
+  cx.setTransform(k,0,0,k,0,0);cx.save();GAMES[cur].draw(dt);cx.restore();
   raf=requestAnimationFrame(frame);
 }
 const modeSeg=()=>`<div class="gm-seg" role="group" aria-label="Game mode"><button data-m="off" class="${mode==="off"?"on":""}">📴 Offline</button><button data-m="on" class="${mode==="on"?"on":""}">🌐 Online</button></div>`;
 function bindSeg(after){panel.querySelectorAll(".gm-seg button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;ls(LS.m,mode);after()})}
 
-function chooser(){
-  cur=null;st="menu";cv.style.display="none";root.querySelector(".gm-back").style.display="none";bar.textContent="🎮 Choose a game";
-  panel.innerHTML=Object.values(GAMES).map(g=>`<button class="gm-card" data-g="${g.key}"><b>${g.title}</b><span>${g.desc}</span><i>Best: ${best[g.key]}</i></button>`).join("")+`<p class="gm-note">Play offline (your best score stays on this device) or online (shared trip leaderboard).</p>`;
+/* one screen: pick a game and it starts right away (score mode lives in a small drawer below the list) */
+function chooser(keep){
+  cancelAnimationFrame(raf);cur=null;st="menu";cv.style.display="none";root.querySelector(".gm-back").style.display="none";bar.textContent="🎮 Choose a game";
+  panel.innerHTML=Object.values(GAMES).map(g=>`<button class="gm-card" data-g="${g.key}"><b>${g.title}</b><span>${g.desc}</span><i>Best: ${best[g.key]} · Tap to play</i></button>`).join("")
+    +`<details class="gm-set"${mode==="on"||keep===true?" open":""}><summary>⚙️ Score mode: ${mode==="on"?"Online":"Offline"}</summary>${modeSeg()}`
+    +(mode==="on"?`<input id="gm-nick" maxlength="12" placeholder="Nickname (up to 12 characters)" autocomplete="nickname" value="${esc2(nick)}"><p class="gm-note">Your score is posted to the shared leaderboard. Needs an internet connection.</p>`
+      :`<p class="gm-note">No internet needed. Your best score is saved on this device.</p>`)+`</details>`;
   panel.querySelectorAll(".gm-card").forEach(b=>b.onclick=()=>pick(b.dataset.g));
+  bindSeg(()=>chooser(true));
+  const ni=panel.querySelector("#gm-nick");if(ni)ni.oninput=()=>{nick=ni.value.replace(/[<>]/g,"").trim().slice(0,12);ls(LS.n,nick)};
 }
-function pick(g){cur=g;cv.style.display="block";root.querySelector(".gm-back").style.display="";bar.textContent=GAMES[g].title;GAMES[g].reset();menu()}
-function menu(){
-  st="menu";const G=GAMES[cur];G.reset();fit();
-  panel.innerHTML=modeSeg()+`<p class="gm-note">${G.desc}</p>`+(mode==="on"
-    ?`<input id="gm-nick" maxlength="12" placeholder="Nickname (up to 12 characters)" autocomplete="nickname" value="${esc2(nick)}"><p class="gm-note">Your score is posted to the shared leaderboard. Needs an internet connection.</p>`
-    :`<p class="gm-note">No internet needed. Your best score is saved on this device · Current best: <b>${best[cur]}</b></p>`)
-    +`<button class="gm-go" id="gm-start">Start playing</button>`+(mode==="on"?`<ol class="gm-lb" id="gm-lb"><li><span>Loading leaderboard…</span></li></ol>`:"");
-  bindSeg(menu);panel.querySelector("#gm-start").onclick=start;if(mode==="on")board();
-}
+function pick(g){cur=g;cv.style.display="block";root.querySelector(".gm-back").style.display="";bar.textContent=GAMES[g].title;fit();st="menu";start();lt=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame)}
 function start(){
   if(st==="play")return;
-  if(mode==="on"){const v=document.getElementById("gm-nick");if(v){nick=v.value.replace(/[<>]/g,"").trim().slice(0,12);ls(LS.n,nick)}}
   GAMES[cur].reset();st="play";
   panel.innerHTML=`<button class="gm-go alt" id="gm-end">🏁 End game</button>`;panel.querySelector("#gm-end").onclick=over;
 }
@@ -314,15 +341,15 @@ function over(){
   snd(330,.35,"sawtooth",.05,-200);vibe(60);
   panel.innerHTML=`<div class="gm-res">${sc} points</div><p class="gm-note" style="text-align:center">${isBest?"🏆 New personal best! · ":""}Best: ${best[cur]}${G.sub?`<br>${G.sub()}`:""}</p>
   ${mode==="on"?`<p class="gm-note" id="gm-st" style="text-align:center">Submitting your score…</p><ol class="gm-lb" id="gm-lb"></ol>`:""}
-  <button class="gm-go" id="gm-again">Play again</button><button class="gm-go alt" id="gm-menu">Change mode / nickname</button><button class="gm-go alt" id="gm-pick">Choose another game</button>`;
-  panel.querySelector("#gm-again").onclick=()=>{st="menu";start()};panel.querySelector("#gm-menu").onclick=menu;panel.querySelector("#gm-pick").onclick=chooser;
+  <button class="gm-go" id="gm-again">Play again</button><button class="gm-go alt" id="gm-pick">🎮 All games</button>`;
+  panel.querySelector("#gm-again").onclick=()=>{st="menu";start()};panel.querySelector("#gm-pick").onclick=()=>chooser();
   if(mode==="on")submit(sc);
 }
 async function submit(sc){
   const el=panel.querySelector("#gm-st"),G=GAMES[cur];
-  if(!nick){if(el)el.textContent="Enter a nickname in the menu first to post your score.";return board()}
+  if(!nick){if(el)el.textContent="Add a nickname in ⚙️ Score mode (game list) to post your score.";return board()}
   if(sc<=0){if(el)el.textContent="No score to submit yet.";return board()}
-  try{if(typeof dbx!=="function")throw 0;await dbx("POST",G.path,{n:nick,s:Math.min(99999,sc),t:Date.now()});if(el)el.textContent="✅ Score submitted!"}
+  try{if(typeof dbx!=="function")throw 0;await dbx("POST",G.path,{n:nick,s:Math.min(99999,sc),t:Date.now()},"",6000);if(el)el.textContent="✅ Score submitted!"}
   catch(e){if(el)el.innerHTML=`⚠️ Couldn't submit (you may be offline, or the database rules aren't set up). Your score is still saved on this device. <button class="gm-go alt" id="gm-retry" style="margin-top:8px">Try again</button>`;
     const r=panel.querySelector("#gm-retry");if(r)r.onclick=()=>{el.textContent="Submitting your score…";submit(sc)}}
   board();
@@ -330,7 +357,7 @@ async function submit(sc){
 async function board(){
   const G=GAMES[cur];if(!G)return;
   try{if(typeof dbx!=="function")throw 0;
-    const o=await dbx("GET",G.path,undefined,'?orderBy="s"&limitToLast=10');
+    const o=await dbx("GET",G.path,undefined,'?orderBy="s"&limitToLast=10',6000);
     const L=Object.values(o||{}).filter(x=>x&&typeof x.s==="number").sort((a,b)=>b.s-a.s).slice(0,10),el=document.getElementById("gm-lb");if(!el)return;
     const M=["🥇","🥈","🥉"];
     el.innerHTML=L.length?L.map((x,i)=>{const n=String(x.n||"Anonymous").slice(0,12);return`<li${nick&&n===nick?' class="me"':""}><b>${M[i]||i+1}</b><span>${esc2(n)}</span><i>${x.s}</i></li>`}).join(""):"<li><span>No scores yet. Be the first!</span></li>";
@@ -341,9 +368,10 @@ function key(e){
   if(cur&&GAMES[cur].keydown&&!(e.target&&e.target.tagName==="INPUT"))GAMES[cur].keydown(e);
 }
 function keyU(e){if(open&&cur&&GAMES[cur].keyup&&!(e.target&&e.target.tagName==="INPUT"))GAMES[cur].keyup(e)}
-function openGame(){build();open=true;root.style.display="flex";document.body.style.overflow="hidden";addEventListener("keydown",key);addEventListener("keyup",keyU);chooser();lt=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);root.querySelector(".gm-x").focus();
+function openGame(){build();open=true;document.body.classList.add("gm-open");root.style.display="flex";document.body.style.overflow="hidden";addEventListener("keydown",key);addEventListener("keyup",keyU);chooser();root.querySelector(".gm-x").focus();
   try{document.fonts&&document.fonts.load("600 16px Lexend")}catch(e){}}
-function close(){open=false;cancelAnimationFrame(raf);if(root)root.style.display="none";document.body.style.overflow="";removeEventListener("keydown",key);removeEventListener("keyup",keyU)}
-document.addEventListener("visibilitychange",()=>{if(!open)return;cancelAnimationFrame(raf);if(!document.hidden){lt=0;raf=requestAnimationFrame(frame)}});
+function close(){open=false;cancelAnimationFrame(raf);cur=null;if(root)root.style.display="none";document.body.classList.remove("gm-open");document.body.style.overflow="";removeEventListener("keydown",key);removeEventListener("keyup",keyU);
+  try{typeof tick==="function"&&tick()}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(!open||!cur)return;cancelAnimationFrame(raf);if(!document.hidden){lt=0;raf=requestAnimationFrame(frame)}});
 window.gameOpen=openGame;
 })();

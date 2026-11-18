@@ -99,6 +99,7 @@ function updateMilestone(days){
   label.textContent=msg;if(icon)icon.textContent=emoji;
 }
 function tick(){
+  if(document.body.classList.contains("gm-open"))return; // เกมเปิดอยู่ ไม่ต้องอัปเดตหน้าแรกเบื้องหลัง
   const now=Date.now(),nx=F.find(f=>now<f.dep);
   const v=nx?Math.max(0,nx.dep-now):0;
   const days=Math.floor(v/864e5),hours=Math.floor(v%864e5/36e5),minutes=Math.floor(v%36e5/6e4),seconds=Math.floor(v%6e4/1e3);
@@ -115,10 +116,13 @@ const BASE_IDS=new Set(OSAKA.hotels.map(h=>h.id));
 let remote={},online=null; // remote: id -> ข้อมูลจาก Firebase (ที่เพิ่ม/แก้/ลบ)
 try{remote=JSON.parse(localStorage.getItem(CACHE)||"{}")||{}}catch(e){remote={}}
 const cacheSave=()=>{try{localStorage.setItem(CACHE,JSON.stringify(remote))}catch(e){}};
-async function dbx(method,path,body,qs=""){
-  const r=await fetch(`${DB}${path}.json${qs}`,{method,headers:body!==undefined?{"Content-Type":"application/json"}:undefined,body:body!==undefined?JSON.stringify(body):undefined});
-  if(!r.ok)throw new Error("HTTP "+r.status);
-  return r.json();
+async function dbx(method,path,body,qs="",ms=0){ // ms>0 = ตัดการเชื่อมต่อเมื่อช้าเกินกำหนด (เกมใช้ 6 วินาที กันค้าง)
+  const ac=ms&&window.AbortController?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),ms):0;
+  try{
+    const r=await fetch(`${DB}${path}.json${qs}`,{method,headers:body!==undefined?{"Content-Type":"application/json"}:undefined,body:body!==undefined?JSON.stringify(body):undefined,signal:ac?ac.signal:undefined});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return await r.json();
+  }finally{clearTimeout(tm)}
 }
 const db=(method,path,body)=>dbx(method,"/hotels"+path,body);
 let photoSet=new Set(),phCache={}; // photoSet = id โรงแรมที่มีรูป, phCache = รูปที่โหลดแล้ว
@@ -684,7 +688,7 @@ function copyLine(){
 setInterval(tick,1000);tick();chips();draw();
 const hotelMapDetails=$("hotel-map-details");if(hotelMapDetails)hotelMapDetails.addEventListener("toggle",()=>{if(hotelMapDetails.open&&map)setTimeout(()=>map.invalidateSize(),120)});
 sync();
-setInterval(()=>{if(!document.hidden)sync(true)},20000);
+setInterval(()=>{if(!document.hidden&&!document.body.classList.contains("gm-open"))sync(true)},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync(true)});
 
 // ---------- อากาศโอซาก้า ----------
@@ -767,10 +771,10 @@ function hxShow(i,first){ // เดินไปเมืองถัดไป: �
   if(first)hxTemp();else{hxTween(d?d.t:null,4000);jlDraw()}
 }
 function hxDesk(){return window.matchMedia&&matchMedia("(min-width:768px)").matches} // จอคอมไม่แสดงกราฟฟิก จึงไม่ต้องเดินเมือง
-function hxNext(){if(!hxPaused&&!document.hidden&&!hxDesk())hxShow((hxI+1)%CITY6.length);hxTimer=setTimeout(hxNext,HX_DWELL)}
+function hxNext(){if(!hxPaused&&!document.hidden&&!hxDesk()&&!document.body.classList.contains("gm-open"))hxShow((hxI+1)%CITY6.length);hxTimer=setTimeout(hxNext,HX_DWELL)}
 function hxGo(){ // ปุ่มหยุด/เดินต่อ
   hxPaused=!hxPaused;const c=$("hx-couple"),b=$("hx-go");
-  if(c)c.classList.toggle("walk",!hxPaused);if(b)b.textContent=hxPaused?"▶ เดินต่อ":"⏸ หยุดเดิน";
+  if(c)c.classList.toggle("walk",!hxPaused);if(b){b.textContent=hxPaused?"▶":"⏸";b.setAttribute("aria-label",hxPaused?"เดินต่อ":"หยุดเดิน");b.title=hxPaused?"เดินต่อ":"หยุดเดิน"}
   const s=document.querySelector(".hx-sky.on");if(s)s.style.animationPlayState=hxPaused?"paused":"running";
 }
 function hxStart(){const c=$("hx-couple");if(c)c.classList.add("walk");hxShow(0,true);hxSnowT();hxTimer=setTimeout(hxNext,HX_DWELL)}
