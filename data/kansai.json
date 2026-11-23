@@ -5,17 +5,17 @@
     "engine_version": "1.2",
     "status": "partial",
     "counts": {
-      "attractions": 412,
+      "attractions": 410,
       "restaurants": 560,
       "cafes": 581,
       "shopping": 1920,
       "transport": 357
     },
     "fresh_counts": {
-      "attractions": 412,
-      "restaurants": 452,
-      "cafes": 581,
-      "shopping": 585,
+      "attractions": 147,
+      "restaurants": 108,
+      "cafes": 0,
+      "shopping": 0,
       "transport": 0
     },
     "city_counts": {
@@ -24,7 +24,7 @@
         "Kyoto": 79,
         "Nara": 79,
         "Kobe": 51,
-        "Kanazawa": 98
+        "Kanazawa": 96
       },
       "restaurants": {
         "Osaka": 118,
@@ -57,13 +57,25 @@
     },
     "weather_cities_updated": 5,
     "failures": [
-      "restaurants: Kobe: The read operation timed out",
-      "shopping: Osaka: The read operation timed out",
+      "attractions: Osaka: HTTP Error 504: Gateway Timeout",
+      "attractions: Kyoto: The read operation timed out",
+      "attractions: Nara: The read operation timed out",
+      "restaurants: Osaka: The read operation timed out",
+      "restaurants: Kyoto: The read operation timed out",
+      "restaurants: Nara: The read operation timed out",
+      "restaurants: Kanazawa: The read operation timed out",
+      "cafes: Osaka: skipped (time budget used up)",
+      "cafes: Kyoto: skipped (time budget used up)",
+      "cafes: Nara: skipped (time budget used up)",
+      "cafes: Kobe: skipped (time budget used up)",
+      "cafes: Kanazawa: skipped (time budget used up)",
+      "cafes: no usable fresh data; kept previous snapshot",
       "shopping: Osaka: skipped (time budget used up)",
       "shopping: Kyoto: skipped (time budget used up)",
       "shopping: Nara: skipped (time budget used up)",
       "shopping: Kobe: skipped (time budget used up)",
       "shopping: Kanazawa: skipped (time budget used up)",
+      "shopping: no usable fresh data; kept previous snapshot",
       "transport: Osaka: skipped (time budget used up)",
       "transport: Kyoto: skipped (time budget used up)",
       "transport: Nara: skipped (time budget used up)",
@@ -71,7 +83,7 @@
       "transport: Kanazawa: skipped (time budget used up)",
       "transport: no usable fresh data; kept previous snapshot"
     ],
-    "last_attempt_at": "2026-11-22T02:43:33+00:00",
+    "last_attempt_at": "2026-11-23T03:18:11+00:00",
     "sources": [
       "OpenStreetMap (Overpass API)",
       "Open-Meteo"
@@ -94,56 +106,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-22",
-          "weather_code": 1,
-          "temperature_max_c": 12.1,
-          "temperature_min_c": 5.2,
-          "precipitation_probability_max": 2
-        },
-        {
           "date": "2026-11-23",
-          "weather_code": 2,
-          "temperature_max_c": 12.6,
-          "temperature_min_c": 4.5,
+          "weather_code": 1,
+          "temperature_max_c": 12.9,
+          "temperature_min_c": 4.7,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-24",
-          "weather_code": 63,
+          "weather_code": 65,
           "temperature_max_c": 15.7,
-          "temperature_min_c": 7.4,
+          "temperature_min_c": 7.6,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
           "weather_code": 2,
-          "temperature_max_c": 11.6,
-          "temperature_min_c": 3.8,
+          "temperature_max_c": 11.2,
+          "temperature_min_c": 6.6,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-26",
           "weather_code": 45,
           "temperature_max_c": 12.6,
-          "temperature_min_c": 1.9,
+          "temperature_min_c": 2.2,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 80,
-          "temperature_max_c": 17.3,
-          "temperature_min_c": 7.7,
-          "precipitation_probability_max": 32
+          "weather_code": 81,
+          "temperature_max_c": 19.1,
+          "temperature_min_c": 6.6,
+          "precipitation_probability_max": 48
         },
         {
           "date": "2026-11-28",
-          "weather_code": 80,
+          "weather_code": 81,
           "temperature_max_c": 17.6,
-          "temperature_min_c": 7.8,
-          "precipitation_probability_max": 44
+          "temperature_min_c": 10.4,
+          "precipitation_probability_max": 49
+        },
+        {
+          "date": "2026-11-29",
+          "weather_code": 2,
+          "temperature_max_c": 13.9,
+          "temperature_min_c": 4.6,
+          "precipitation_probability_max": 12
         }
       ],
-      "updated_at": "2026-11-22T03:04:25+00:00"
+      "updated_at": "2026-11-23T03:38:45+00:00"
     },
     "kyoto": {
       "city": "Kyoto",
@@ -153,56 +165,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-22",
-          "weather_code": 1,
-          "temperature_max_c": 11.4,
-          "temperature_min_c": 3.2,
-          "precipitation_probability_max": 2
-        },
-        {
           "date": "2026-11-23",
           "weather_code": 1,
           "temperature_max_c": 12.6,
-          "temperature_min_c": 3.6,
+          "temperature_min_c": 4.1,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-24",
-          "weather_code": 63,
-          "temperature_max_c": 12.6,
+          "weather_code": 65,
+          "temperature_max_c": 12.4,
           "temperature_min_c": 6.9,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
           "weather_code": 2,
-          "temperature_max_c": 11.0,
-          "temperature_min_c": 1.6,
-          "precipitation_probability_max": 12
+          "temperature_max_c": 10.7,
+          "temperature_min_c": 5.3,
+          "precipitation_probability_max": 4
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 11.9,
-          "temperature_min_c": -0.2,
+          "temperature_max_c": 12.4,
+          "temperature_min_c": 1.1,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 55,
-          "temperature_max_c": 16.6,
-          "temperature_min_c": 6.7,
-          "precipitation_probability_max": 31
+          "weather_code": 81,
+          "temperature_max_c": 18.3,
+          "temperature_min_c": 5.4,
+          "precipitation_probability_max": 42
         },
         {
           "date": "2026-11-28",
-          "weather_code": 80,
-          "temperature_max_c": 17.8,
-          "temperature_min_c": 4.8,
-          "precipitation_probability_max": 40
+          "weather_code": 81,
+          "temperature_max_c": 18.2,
+          "temperature_min_c": 7.7,
+          "precipitation_probability_max": 44
+        },
+        {
+          "date": "2026-11-29",
+          "weather_code": 1,
+          "temperature_max_c": 12.7,
+          "temperature_min_c": 2.2,
+          "precipitation_probability_max": 16
         }
       ],
-      "updated_at": "2026-11-22T03:04:25+00:00"
+      "updated_at": "2026-11-23T03:38:45+00:00"
     },
     "nara": {
       "city": "Nara",
@@ -212,56 +224,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-22",
-          "weather_code": 2,
-          "temperature_max_c": 11.1,
-          "temperature_min_c": 3.4,
-          "precipitation_probability_max": 2
-        },
-        {
           "date": "2026-11-23",
           "weather_code": 1,
-          "temperature_max_c": 13.0,
-          "temperature_min_c": 2.8,
+          "temperature_max_c": 13.1,
+          "temperature_min_c": 3.1,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-24",
           "weather_code": 65,
-          "temperature_max_c": 13.7,
-          "temperature_min_c": 5.7,
+          "temperature_max_c": 15.1,
+          "temperature_min_c": 6.7,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
-          "weather_code": 3,
-          "temperature_max_c": 10.3,
-          "temperature_min_c": 3.4,
-          "precipitation_probability_max": 2
+          "weather_code": 2,
+          "temperature_max_c": 10.4,
+          "temperature_min_c": 4.7,
+          "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 12.3,
-          "temperature_min_c": 2.9,
+          "temperature_max_c": 12.8,
+          "temperature_min_c": 3.5,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 53,
-          "temperature_max_c": 18.1,
-          "temperature_min_c": 5.9,
-          "precipitation_probability_max": 29
+          "weather_code": 81,
+          "temperature_max_c": 19.5,
+          "temperature_min_c": 4.7,
+          "precipitation_probability_max": 47
         },
         {
           "date": "2026-11-28",
-          "weather_code": 80,
-          "temperature_max_c": 17.2,
-          "temperature_min_c": 6.5,
-          "precipitation_probability_max": 44
+          "weather_code": 81,
+          "temperature_max_c": 16.9,
+          "temperature_min_c": 9.2,
+          "precipitation_probability_max": 49
+        },
+        {
+          "date": "2026-11-29",
+          "weather_code": 3,
+          "temperature_max_c": 13.4,
+          "temperature_min_c": 4.9,
+          "precipitation_probability_max": 12
         }
       ],
-      "updated_at": "2026-11-22T03:04:25+00:00"
+      "updated_at": "2026-11-23T03:38:45+00:00"
     },
     "kobe": {
       "city": "Kobe",
@@ -271,56 +283,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-22",
-          "weather_code": 1,
-          "temperature_max_c": 11.2,
-          "temperature_min_c": 5.0,
-          "precipitation_probability_max": 4
-        },
-        {
           "date": "2026-11-23",
-          "weather_code": 2,
-          "temperature_max_c": 13.6,
-          "temperature_min_c": 7.3,
+          "weather_code": 1,
+          "temperature_max_c": 13.1,
+          "temperature_min_c": 6.7,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-24",
-          "weather_code": 63,
-          "temperature_max_c": 16.7,
+          "weather_code": 65,
+          "temperature_max_c": 18.4,
           "temperature_min_c": 6.7,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
           "weather_code": 2,
-          "temperature_max_c": 11.1,
-          "temperature_min_c": 4.8,
+          "temperature_max_c": 10.6,
+          "temperature_min_c": 5.9,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 11.9,
-          "temperature_min_c": 5.6,
+          "temperature_max_c": 12.5,
+          "temperature_min_c": 6.3,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
           "weather_code": 80,
-          "temperature_max_c": 17.9,
-          "temperature_min_c": 11.3,
-          "precipitation_probability_max": 35
+          "temperature_max_c": 18.3,
+          "temperature_min_c": 10.4,
+          "precipitation_probability_max": 49
         },
         {
           "date": "2026-11-28",
-          "weather_code": 80,
+          "weather_code": 51,
           "temperature_max_c": 16.8,
-          "temperature_min_c": 7.3,
-          "precipitation_probability_max": 41
+          "temperature_min_c": 9.7,
+          "precipitation_probability_max": 51
+        },
+        {
+          "date": "2026-11-29",
+          "weather_code": 2,
+          "temperature_max_c": 13.4,
+          "temperature_min_c": 7.6,
+          "precipitation_probability_max": 10
         }
       ],
-      "updated_at": "2026-11-22T03:04:25+00:00"
+      "updated_at": "2026-11-23T03:38:45+00:00"
     },
     "kanazawa": {
       "city": "Kanazawa",
@@ -330,56 +342,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-22",
-          "weather_code": 61,
-          "temperature_max_c": 9.0,
-          "temperature_min_c": 4.5,
-          "precipitation_probability_max": 100
-        },
-        {
           "date": "2026-11-23",
-          "weather_code": 3,
-          "temperature_max_c": 13.3,
-          "temperature_min_c": 4.5,
+          "weather_code": 2,
+          "temperature_max_c": 13.9,
+          "temperature_min_c": 5.4,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-24",
           "weather_code": 65,
-          "temperature_max_c": 14.1,
-          "temperature_min_c": 7.5,
+          "temperature_max_c": 15.5,
+          "temperature_min_c": 6.7,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
-          "weather_code": 80,
-          "temperature_max_c": 7.7,
-          "temperature_min_c": 4.1,
+          "weather_code": 55,
+          "temperature_max_c": 9.3,
+          "temperature_min_c": 6.4,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-26",
           "weather_code": 51,
-          "temperature_max_c": 14.3,
-          "temperature_min_c": 6.5,
-          "precipitation_probability_max": 22
+          "temperature_max_c": 14.6,
+          "temperature_min_c": 7.6,
+          "precipitation_probability_max": 8
         },
         {
           "date": "2026-11-27",
-          "weather_code": 2,
-          "temperature_max_c": 19.4,
-          "temperature_min_c": 9.9,
-          "precipitation_probability_max": 15
+          "weather_code": 51,
+          "temperature_max_c": 20.0,
+          "temperature_min_c": 7.5,
+          "precipitation_probability_max": 25
         },
         {
           "date": "2026-11-28",
-          "weather_code": 55,
-          "temperature_max_c": 16.6,
-          "temperature_min_c": 6.8,
-          "precipitation_probability_max": 100
+          "weather_code": 80,
+          "temperature_max_c": 17.5,
+          "temperature_min_c": 8.7,
+          "precipitation_probability_max": 93
+        },
+        {
+          "date": "2026-11-29",
+          "weather_code": 81,
+          "temperature_max_c": 11.0,
+          "temperature_min_c": 7.1,
+          "precipitation_probability_max": 98
         }
       ],
-      "updated_at": "2026-11-22T03:04:25+00:00"
+      "updated_at": "2026-11-23T03:38:45+00:00"
     }
   },
   "events": [],
@@ -6455,7 +6467,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1259448039",
@@ -6478,7 +6490,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423054556",
@@ -6501,7 +6513,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11516762",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423072783",
@@ -6524,7 +6536,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423077236",
@@ -6547,7 +6559,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11580839",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423079195",
@@ -6570,7 +6582,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11589727",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423079203",
@@ -6593,7 +6605,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11589762",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423083509",
@@ -6613,10 +6625,10 @@
         "longitude": 135.1884501,
         "address": "2, 中央区, 神戸市",
         "website": null,
-        "opening_hours": "Mo-Su,PH 10:00-18:00",
+        "opening_hours": null,
         "phone": null,
         "wikidata": "Q5364119",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423083530",
@@ -6639,7 +6651,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423083974",
@@ -6662,7 +6674,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q17219226",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1423093071",
@@ -6685,7 +6697,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1911040322",
@@ -6708,7 +6720,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11590151",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1911041550",
@@ -6731,7 +6743,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-2579008635",
@@ -6754,7 +6766,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-2822569002",
@@ -6777,7 +6789,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11352108",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-2924055456",
@@ -6800,7 +6812,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3018105021",
@@ -6823,7 +6835,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3071335142",
@@ -6846,7 +6858,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3210115876",
@@ -6869,7 +6881,7 @@
         "opening_hours": "11:00-18:00",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3821187051",
@@ -6892,7 +6904,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3821190446",
@@ -6915,7 +6927,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-3902921341",
@@ -6938,7 +6950,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4235132663",
@@ -6961,7 +6973,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4409743589",
@@ -6984,7 +6996,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4826442951",
@@ -7007,7 +7019,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4826443727",
@@ -7030,7 +7042,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q6406436",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4826452219",
@@ -7053,7 +7065,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-4832725314",
@@ -7076,7 +7088,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5157103322",
@@ -7099,7 +7111,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5160791099",
@@ -7122,7 +7134,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5160791100",
@@ -7145,7 +7157,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5160794622",
@@ -7168,7 +7180,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5160794623",
@@ -7191,7 +7203,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5164131671",
@@ -7211,10 +7223,10 @@
         "longitude": 135.1880309,
         "address": "",
         "website": null,
-        "opening_hours": "Mo-Su,PH 10:00-18:00",
+        "opening_hours": null,
         "phone": null,
         "wikidata": "Q11295340",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5164285771",
@@ -7237,7 +7249,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q116944054",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5164285772",
@@ -7260,7 +7272,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5498391015",
@@ -7283,7 +7295,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5499074089",
@@ -7306,7 +7318,7 @@
         "opening_hours": "10:00-18:00",
         "phone": "+81 78 327 4680",
         "wikidata": "Q11589757",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5499222850",
@@ -7329,7 +7341,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11589726",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5520397975",
@@ -7352,7 +7364,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5638327221",
@@ -7375,7 +7387,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q5364704",
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-5972234386",
@@ -7398,7 +7410,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6108824835",
@@ -7421,7 +7433,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6207346690",
@@ -7444,7 +7456,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6228978888",
@@ -7467,7 +7479,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6229000331",
@@ -7490,7 +7502,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6229000332",
@@ -7513,7 +7525,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6229022480",
@@ -7536,7 +7548,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6229027106",
@@ -7559,7 +7571,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6280534606",
@@ -7582,7 +7594,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-6283669863",
@@ -7605,7 +7617,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:49:50+00:00"
+        "updated_at": "2026-11-23T03:25:26+00:00"
       },
       {
         "id": "osm-node-1420929245",
@@ -7623,12 +7635,12 @@
         "city": "Kanazawa",
         "latitude": 36.559048,
         "longitude": 136.648206,
-        "address": "石川県金沢市千日町3-22",
+        "address": "",
         "website": null,
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11453044",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1420929561",
@@ -7646,12 +7658,12 @@
         "city": "Kanazawa",
         "latitude": 36.569281,
         "longitude": 136.663588,
-        "address": "石川県金沢市大手町10-3",
+        "address": "",
         "website": null,
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1420933583",
@@ -7674,7 +7686,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q17192984",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1420933594",
@@ -7692,12 +7704,12 @@
         "city": "Kanazawa",
         "latitude": 36.596909,
         "longitude": 136.597004,
-        "address": "石川県金沢市金石本町ロ55",
+        "address": "",
         "website": null,
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11586272",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1420934968",
@@ -7720,7 +7732,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1420935330",
@@ -7738,12 +7750,12 @@
         "city": "Kanazawa",
         "latitude": 36.573436,
         "longitude": 136.675066,
-        "address": "石川県金沢市卯辰町ト10",
+        "address": "",
         "website": null,
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-1428682886",
@@ -7766,7 +7778,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2075954453",
@@ -7789,7 +7801,7 @@
         "opening_hours": "09:30-17:00",
         "phone": "076-247-8110",
         "wikidata": "Q11629456",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2081722286",
@@ -7812,7 +7824,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2081761970",
@@ -7835,7 +7847,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143881212",
@@ -7855,18 +7867,18 @@
         "longitude": 136.6680572,
         "address": "",
         "website": "https://www.kanazawa-museum.jp/minzoku/",
-        "opening_hours": "09:30-17:00",
+        "opening_hours": "9:30-17:00",
         "phone": "076-222-5740",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998214",
         "source": "OpenStreetMap",
         "osm_type": "node",
         "osm_id": 2143998214,
-        "name": "金沢市立安江金箔工芸館",
-        "name_en": "Kanazawa Yasue Gold Leaf Museum",
+        "name": "安江金箔工芸館",
+        "name_en": "Yasue Gold Leaf Museum",
         "name_th": null,
         "brand": null,
         "brand_en": null,
@@ -7878,10 +7890,10 @@
         "longitude": 136.6659874,
         "address": "",
         "website": "https://www.kanazawa-museum.jp/kinpaku/",
-        "opening_hours": "09:30-17:00",
-        "phone": "+81 76 251 8950",
+        "opening_hours": "9:30-17:00",
+        "phone": "076-251-8950",
         "wikidata": "Q42898428",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998216",
@@ -7901,10 +7913,10 @@
         "longitude": 136.6671625,
         "address": "",
         "website": "https://www.kanazawa-museum.jp/shusei/",
-        "opening_hours": "09:30-17:00",
+        "opening_hours": "9:30-17:00",
         "phone": "076-251-4300",
         "wikidata": "Q11490424",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998224",
@@ -7924,10 +7936,10 @@
         "longitude": 136.6052317,
         "address": "",
         "website": "https://www.kanazawa-museum.jp/maibun/",
-        "opening_hours": "09:30-16:30",
+        "opening_hours": "9:30-16:30",
         "phone": "076-240-2371",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998240",
@@ -7950,7 +7962,7 @@
         "opening_hours": "Tu-Su 10:00-18:00",
         "phone": "076-220-2790",
         "wikidata": "Q11647524",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998242",
@@ -7973,7 +7985,7 @@
         "opening_hours": "Tu-Su 09:30-16:30",
         "phone": "076-221-8011",
         "wikidata": "Q11648713",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2143998244",
@@ -7996,7 +8008,7 @@
         "opening_hours": "09:00-17:00",
         "phone": "076-263-1951",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147847",
@@ -8019,7 +8031,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11274768",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147848",
@@ -8042,7 +8054,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147851",
@@ -8065,7 +8077,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147852",
@@ -8088,7 +8100,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147854",
@@ -8111,7 +8123,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147855",
@@ -8134,7 +8146,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147856",
@@ -8157,7 +8169,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147857",
@@ -8180,7 +8192,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147858",
@@ -8203,7 +8215,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147862",
@@ -8226,7 +8238,7 @@
         "opening_hours": null,
         "phone": "076-220-2356",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147863",
@@ -8249,7 +8261,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147865",
@@ -8272,7 +8284,7 @@
         "opening_hours": null,
         "phone": "076-220-2356",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147869",
@@ -8295,7 +8307,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147872",
@@ -8318,7 +8330,7 @@
         "opening_hours": "Mo-Su 08:30-16:30",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147873",
@@ -8341,7 +8353,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2146147874",
@@ -8364,7 +8376,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2483718848",
@@ -8387,7 +8399,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-2837485304",
@@ -8395,7 +8407,7 @@
         "osm_type": "node",
         "osm_id": 2837485304,
         "name": "金沢菓子木型美術館",
-        "name_en": "Kanazawa Confectionery Wooden Molds Museum",
+        "name_en": null,
         "name_th": null,
         "brand": null,
         "brand_en": null,
@@ -8403,14 +8415,14 @@
         "subtype": "museum",
         "cuisine": null,
         "city": "Kanazawa",
-        "latitude": 36.5695015,
-        "longitude": 136.663901,
-        "address": "大手町, 金沢市",
-        "website": "https://www.morihachi.co.jp/honten_museum",
-        "opening_hours": "Mo-Su 09:00-17:00",
-        "phone": "+81-076-262-6251",
+        "latitude": 36.5695817,
+        "longitude": 136.6639737,
+        "address": "",
+        "website": null,
+        "opening_hours": null,
+        "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-3331878606",
@@ -8433,7 +8445,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-3335332453",
@@ -8456,7 +8468,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-3335406213",
@@ -8479,7 +8491,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4108103506",
@@ -8502,7 +8514,7 @@
         "opening_hours": "24/7",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4192557995",
@@ -8525,7 +8537,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4351519494",
@@ -8548,30 +8560,30 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11625080",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
-        "id": "osm-node-4410940591",
+        "id": "osm-node-4407686093",
         "source": "OpenStreetMap",
         "osm_type": "node",
-        "osm_id": 4410940591,
-        "name": "Boukodai observatory",
-        "name_en": "Boukodai observatory",
+        "osm_id": 4407686093,
+        "name": "近江町市場",
+        "name_en": "Ōmi-chō market 近江町市場",
         "name_th": null,
         "brand": null,
         "brand_en": null,
         "category": "attractions",
-        "subtype": "viewpoint",
+        "subtype": "attraction",
         "cuisine": null,
         "city": "Kanazawa",
-        "latitude": 36.5708902,
-        "longitude": 136.6778969,
+        "latitude": 36.5714434,
+        "longitude": 136.656035,
         "address": "",
-        "website": null,
+        "website": "https://ohmicho-ichiba.com/",
         "opening_hours": null,
-        "phone": null,
+        "phone": "0762311462",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4410987292",
@@ -8594,7 +8606,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4702925192",
@@ -8617,7 +8629,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4702925193",
@@ -8640,7 +8652,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4702953789",
@@ -8663,7 +8675,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4849383238",
@@ -8686,7 +8698,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4849383239",
@@ -8709,7 +8721,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-4849389029",
@@ -8732,7 +8744,30 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
+      },
+      {
+        "id": "osm-node-4849389030",
+        "source": "OpenStreetMap",
+        "osm_type": "node",
+        "osm_id": 4849389030,
+        "name": "sakuda (applying gold leaf)",
+        "name_en": "sakuda (applying gold leaf)",
+        "name_th": null,
+        "brand": null,
+        "brand_en": null,
+        "category": "attractions",
+        "subtype": "artwork",
+        "cuisine": null,
+        "city": "Kanazawa",
+        "latitude": 36.5738494,
+        "longitude": 136.666315,
+        "address": "",
+        "website": null,
+        "opening_hours": null,
+        "phone": null,
+        "wikidata": null,
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-5194305424",
@@ -8755,7 +8790,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11442593",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-5598863992",
@@ -8778,7 +8813,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-5735752853",
@@ -8801,7 +8836,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-5762623153",
@@ -8824,7 +8859,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6153523855",
@@ -8847,7 +8882,7 @@
         "opening_hours": "Mo-Fr 07:00-17:00, Sa-Su 07:00-21:00",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6153523882",
@@ -8870,7 +8905,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6199655992",
@@ -8893,7 +8928,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6201257217",
@@ -8916,7 +8951,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6361338785",
@@ -8939,7 +8974,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6388726585",
@@ -8962,7 +8997,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6410507113",
@@ -8985,7 +9020,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6410508126",
@@ -9008,7 +9043,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6410508394",
@@ -9031,7 +9066,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6410508458",
@@ -9054,7 +9089,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-6447160526",
@@ -9077,7 +9112,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478246",
@@ -9100,7 +9135,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478247",
@@ -9123,7 +9158,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478248",
@@ -9146,7 +9181,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478249",
@@ -9169,7 +9204,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478250",
@@ -9192,7 +9227,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7035478251",
@@ -9215,7 +9250,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7121532187",
@@ -9238,7 +9273,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7121548285",
@@ -9261,7 +9296,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7121590485",
@@ -9284,7 +9319,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7128140486",
@@ -9307,7 +9342,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7169619492",
@@ -9330,7 +9365,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": "Q11653513",
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7169628786",
@@ -9353,7 +9388,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-7567851985",
@@ -9376,7 +9411,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8176313620",
@@ -9399,7 +9434,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8259993959",
@@ -9422,7 +9457,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8259993960",
@@ -9445,30 +9480,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
-      },
-      {
-        "id": "osm-node-8356934244",
-        "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 8356934244,
-        "name": "箔巧館",
-        "name_en": "Hakukoukan",
-        "name_th": null,
-        "brand": null,
-        "brand_en": null,
-        "category": "attractions",
-        "subtype": "museum",
-        "cuisine": null,
-        "city": "Kanazawa",
-        "latitude": 36.5612925,
-        "longitude": 136.5980798,
-        "address": "1, 森戸二丁目, 金沢市",
-        "website": "https://kanazawa.hakuichi.co.jp/",
-        "opening_hours": "Jan 01 off",
-        "phone": "+81 76 240 8911",
-        "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8413974645",
@@ -9491,7 +9503,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8493930176",
@@ -9514,7 +9526,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8735964217",
@@ -9537,7 +9549,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-8816369517",
@@ -9560,7 +9572,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-10767561005",
@@ -9583,7 +9595,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-11001038905",
@@ -9606,7 +9618,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-11059500437",
@@ -9629,7 +9641,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-12550123198",
@@ -9652,7 +9664,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-13260943001",
@@ -9675,30 +9687,7 @@
         "opening_hours": null,
         "phone": "+81 762456450",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
-      },
-      {
-        "id": "osm-node-13305417109",
-        "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 13305417109,
-        "name": "Endless Concerto",
-        "name_en": "Endless Concerto",
-        "name_th": null,
-        "brand": null,
-        "brand_en": null,
-        "category": "attractions",
-        "subtype": "artwork",
-        "cuisine": null,
-        "city": "Kanazawa",
-        "latitude": 36.5764333,
-        "longitude": 136.6472997,
-        "address": "",
-        "website": null,
-        "opening_hours": null,
-        "phone": null,
-        "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-13307601226",
@@ -9721,7 +9710,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-13457808513",
@@ -9744,7 +9733,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
         "id": "osm-node-13512538452",
@@ -9767,99 +9756,76 @@
         "opening_hours": "Mo-Sa 11:00-17:00; We off",
         "phone": "+81 762410015",
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       },
       {
-        "id": "osm-node-13906067501",
+        "id": "osm-way-182344311",
         "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 13906067501,
-        "name": "Shintate-matchi",
+        "osm_type": "way",
+        "osm_id": 182344311,
+        "name": "金沢市老舗記念館",
+        "name_en": "Shinise Kinenkan Museum",
+        "name_th": null,
+        "brand": null,
+        "brand_en": null,
+        "category": "attractions",
+        "subtype": "museum",
+        "cuisine": null,
+        "city": "Kanazawa",
+        "latitude": 36.5626609,
+        "longitude": 136.6503517,
+        "address": "",
+        "website": null,
+        "opening_hours": "9:30-17:00",
+        "phone": "076-220-2524",
+        "wikidata": null,
+        "updated_at": "2026-11-23T03:26:50+00:00"
+      },
+      {
+        "id": "osm-way-197980653",
+        "source": "OpenStreetMap",
+        "osm_type": "way",
+        "osm_id": 197980653,
+        "name": "金沢２１世紀美術館",
+        "name_en": "21st Century Museum of Contemporary Art, Kanazawa",
+        "name_th": null,
+        "brand": null,
+        "brand_en": null,
+        "category": "attractions",
+        "subtype": "museum",
+        "cuisine": null,
+        "city": "Kanazawa",
+        "latitude": 36.5608466,
+        "longitude": 136.6582102,
+        "address": "",
+        "website": "https://www.kanazawa21.jp/",
+        "opening_hours": "Su-Th 10:00-18:00; Fr-Sa 10:00-20:00",
+        "phone": "076-220-2800",
+        "wikidata": "Q3242206",
+        "updated_at": "2026-11-23T03:26:50+00:00"
+      },
+      {
+        "id": "osm-way-296797610",
+        "source": "OpenStreetMap",
+        "osm_type": "way",
+        "osm_id": 296797610,
+        "name": "近世資料館",
         "name_en": null,
         "name_th": null,
         "brand": null,
         "brand_en": null,
         "category": "attractions",
-        "subtype": "attraction",
+        "subtype": "museum",
         "cuisine": null,
         "city": "Kanazawa",
-        "latitude": 36.5561611,
-        "longitude": 136.655868,
+        "latitude": 36.5699933,
+        "longitude": 136.6516051,
         "address": "",
         "website": null,
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
-      },
-      {
-        "id": "osm-node-13906069001",
-        "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 13906069001,
-        "name": "preserved area",
-        "name_en": null,
-        "name_th": null,
-        "brand": null,
-        "brand_en": null,
-        "category": "attractions",
-        "subtype": "attraction",
-        "cuisine": null,
-        "city": "Kanazawa",
-        "latitude": 36.5565717,
-        "longitude": 136.6548429,
-        "address": "",
-        "website": null,
-        "opening_hours": null,
-        "phone": null,
-        "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
-      },
-      {
-        "id": "osm-node-13955302900",
-        "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 13955302900,
-        "name": "Nagamachi Training School Garden",
-        "name_en": null,
-        "name_th": null,
-        "brand": null,
-        "brand_en": null,
-        "category": "attractions",
-        "subtype": "attraction",
-        "cuisine": null,
-        "city": "Kanazawa",
-        "latitude": 36.5638735,
-        "longitude": 136.6517308,
-        "address": "",
-        "website": null,
-        "opening_hours": null,
-        "phone": null,
-        "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
-      },
-      {
-        "id": "osm-node-13956955497",
-        "source": "OpenStreetMap",
-        "osm_type": "node",
-        "osm_id": 13956955497,
-        "name": "Gallery Blue",
-        "name_en": "Gallery Blue",
-        "name_th": null,
-        "brand": null,
-        "brand_en": null,
-        "category": "attractions",
-        "subtype": "gallery",
-        "cuisine": null,
-        "city": "Kanazawa",
-        "latitude": 36.5618964,
-        "longitude": 136.6546896,
-        "address": "",
-        "website": null,
-        "opening_hours": null,
-        "phone": null,
-        "wikidata": null,
-        "updated_at": "2026-11-22T02:50:25+00:00"
+        "updated_at": "2026-11-23T03:26:50+00:00"
       }
     ],
     "restaurants": [
@@ -17566,7 +17532,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-835475958",
@@ -17589,7 +17555,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-836036241",
@@ -17612,7 +17578,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-836036799",
@@ -17635,7 +17601,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837194455",
@@ -17658,7 +17624,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837194459",
@@ -17681,7 +17647,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837194463",
@@ -17704,7 +17670,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837194477",
@@ -17727,7 +17693,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837196354",
@@ -17750,7 +17716,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837196356",
@@ -17770,10 +17736,10 @@
         "longitude": 135.2375815,
         "address": "",
         "website": null,
-        "opening_hours": "Mo-Su,PH 08:00-21:00",
+        "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837719598",
@@ -17796,7 +17762,7 @@
         "opening_hours": "24/7",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837885432",
@@ -17819,7 +17785,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837885433",
@@ -17842,7 +17808,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-837885443",
@@ -17865,7 +17831,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-844547303",
@@ -17888,7 +17854,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-953896452",
@@ -17911,7 +17877,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168939",
@@ -17934,7 +17900,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168940",
@@ -17957,7 +17923,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168946",
@@ -17980,7 +17946,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168949",
@@ -18003,7 +17969,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168950",
@@ -18026,7 +17992,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168964",
@@ -18049,7 +18015,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168968",
@@ -18072,7 +18038,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168974",
@@ -18095,7 +18061,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-958168976",
@@ -18118,7 +18084,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1109115973",
@@ -18141,7 +18107,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1109209234",
@@ -18164,7 +18130,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1109263011",
@@ -18187,7 +18153,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1110239039",
@@ -18210,7 +18176,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1110245175",
@@ -18233,7 +18199,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1110245836",
@@ -18256,7 +18222,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1110245981",
@@ -18279,7 +18245,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1253693371",
@@ -18302,7 +18268,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1253693382",
@@ -18325,7 +18291,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1259280237",
@@ -18348,7 +18314,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1260629720",
@@ -18371,7 +18337,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1271761735",
@@ -18394,7 +18360,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705203012",
@@ -18417,7 +18383,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705320923",
@@ -18440,7 +18406,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705366955",
@@ -18463,7 +18429,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705367261",
@@ -18486,7 +18452,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705367264",
@@ -18509,7 +18475,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705407698",
@@ -18532,7 +18498,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705407701",
@@ -18555,7 +18521,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705407702",
@@ -18578,7 +18544,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705407993",
@@ -18601,7 +18567,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705408002",
@@ -18624,7 +18590,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705424240",
@@ -18647,7 +18613,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1705460133",
@@ -18670,7 +18636,7 @@
         "opening_hours": "24/7",
         "phone": "+81-78-846-3133",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1908157430",
@@ -18693,7 +18659,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1911042608",
@@ -18716,7 +18682,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-1911043812",
@@ -18739,7 +18705,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2088150637",
@@ -18762,7 +18728,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2091973962",
@@ -18785,7 +18751,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2172412752",
@@ -18808,7 +18774,7 @@
         "opening_hours": "24/7",
         "phone": "+81-078-230-2119",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2183017862",
@@ -18831,7 +18797,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2196872620",
@@ -18854,7 +18820,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2578969327",
@@ -18877,7 +18843,7 @@
         "opening_hours": "PH,Mo-Su 07:00-23:00",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2578976748",
@@ -18900,7 +18866,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2579017528",
@@ -18923,7 +18889,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2579297238",
@@ -18946,7 +18912,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2579297242",
@@ -18969,7 +18935,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2589933935",
@@ -18992,7 +18958,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2592787814",
@@ -19015,7 +18981,7 @@
         "opening_hours": null,
         "phone": "+81-78-704-4766",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2700808781",
@@ -19038,7 +19004,7 @@
         "opening_hours": "Mo-Su 11:00-22:30",
         "phone": "078-995-3356",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2704240366",
@@ -19061,7 +19027,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2722877353",
@@ -19084,7 +19050,7 @@
         "opening_hours": "24/7",
         "phone": "+81-78-515-0719",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2783480401",
@@ -19107,7 +19073,7 @@
         "opening_hours": "24/7",
         "phone": "+81-78-334-6764",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2783608649",
@@ -19130,7 +19096,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2789747116",
@@ -19153,7 +19119,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2867887201",
@@ -19176,7 +19142,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2919681468",
@@ -19199,7 +19165,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2947852633",
@@ -19222,7 +19188,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2972491334",
@@ -19245,7 +19211,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2972492033",
@@ -19268,7 +19234,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2972493833",
@@ -19291,7 +19257,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-2985636460",
@@ -19314,7 +19280,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3011807215",
@@ -19334,10 +19300,10 @@
         "longitude": 135.2759329,
         "address": "",
         "website": null,
-        "opening_hours": "Mo-Su,PH 08:00-20:00",
+        "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3022909171",
@@ -19360,7 +19326,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3022909173",
@@ -19383,7 +19349,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3071335441",
@@ -19406,7 +19372,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3158811193",
@@ -19429,7 +19395,7 @@
         "opening_hours": "24/7",
         "phone": "+81-78-739-5221",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3194961561",
@@ -19452,7 +19418,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3195144161",
@@ -19475,7 +19441,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3195151061",
@@ -19498,7 +19464,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3195155061",
@@ -19521,7 +19487,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3195156567",
@@ -19544,7 +19510,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3195164561",
@@ -19567,7 +19533,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3205980761",
@@ -19590,7 +19556,7 @@
         "opening_hours": "Mo,Tu,We[1-2,4-5],Th,Fr 11:00-22:00; PH off",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3210079761",
@@ -19613,15 +19579,15 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3210117182",
         "source": "OpenStreetMap",
         "osm_type": "node",
         "osm_id": 3210117182,
-        "name": "JICA関西食堂",
-        "name_en": "JICA Kansai Cafeteria",
+        "name": "JICA食堂",
+        "name_en": null,
         "name_th": null,
         "brand": null,
         "brand_en": null,
@@ -19631,12 +19597,12 @@
         "city": "Kobe",
         "latitude": 34.6985365,
         "longitude": 135.2158279,
-        "address": "1-5-2, 灘浜脇浜線",
-        "website": "https://www.jica.go.jp/domestic/kansai/office/restaurant/index.html",
+        "address": "",
+        "website": null,
         "opening_hours": "11:30-14:00,17:30-21:00",
-        "phone": "+81 78 261 0341",
+        "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3221164880",
@@ -19659,7 +19625,7 @@
         "opening_hours": "24/7",
         "phone": "+81-78-846-2113",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3265116276",
@@ -19682,7 +19648,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3293749861",
@@ -19705,7 +19671,7 @@
         "opening_hours": "11:30-20:00",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3308832382",
@@ -19728,7 +19694,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3314614666",
@@ -19751,7 +19717,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3314614667",
@@ -19774,7 +19740,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3314614668",
@@ -19797,7 +19763,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3496450096",
@@ -19820,7 +19786,7 @@
         "opening_hours": "11:00-22:00",
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3496456593",
@@ -19843,7 +19809,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3496460393",
@@ -19866,7 +19832,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3496494193",
@@ -19889,7 +19855,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3577975204",
@@ -19912,7 +19878,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3604161663",
@@ -19935,7 +19901,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3669649622",
@@ -19958,7 +19924,7 @@
         "opening_hours": null,
         "phone": "078-903-1825",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3669656613",
@@ -19981,7 +19947,7 @@
         "opening_hours": "11:30-14:30; 17:00-21:30",
         "phone": "+81-78-904-3916",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3669713513",
@@ -20004,7 +19970,7 @@
         "opening_hours": null,
         "phone": null,
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-3669939470",
@@ -20027,7 +19993,7 @@
         "opening_hours": "10:30-18:00",
         "phone": "+81-78-904-0218",
         "wikidata": null,
-        "updated_at": "2026-11-21T03:42:23+00:00"
+        "updated_at": "2026-11-23T03:36:07+00:00"
       },
       {
         "id": "osm-node-728256775",
@@ -85410,5 +85376,5 @@
       }
     ]
   },
-  "updated_at": "2026-11-22T02:43:33+00:00"
+  "updated_at": "2026-11-23T03:18:11+00:00"
 }
