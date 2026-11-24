@@ -12,8 +12,8 @@
       "transport": 357
     },
     "fresh_counts": {
-      "attractions": 147,
-      "restaurants": 108,
+      "attractions": 0,
+      "restaurants": 0,
       "cafes": 0,
       "shopping": 0,
       "transport": 0
@@ -55,15 +55,20 @@
         "Kanazawa": 0
       }
     },
-    "weather_cities_updated": 5,
+    "weather_cities_updated": 4,
     "failures": [
-      "attractions: Osaka: HTTP Error 504: Gateway Timeout",
+      "attractions: Osaka: The read operation timed out",
       "attractions: Kyoto: The read operation timed out",
       "attractions: Nara: The read operation timed out",
+      "attractions: Kobe: The read operation timed out",
+      "attractions: Kanazawa: The read operation timed out",
+      "attractions: no usable fresh data; kept previous snapshot",
       "restaurants: Osaka: The read operation timed out",
       "restaurants: Kyoto: The read operation timed out",
       "restaurants: Nara: The read operation timed out",
-      "restaurants: Kanazawa: The read operation timed out",
+      "restaurants: Kobe: skipped (time budget used up)",
+      "restaurants: Kanazawa: skipped (time budget used up)",
+      "restaurants: no usable fresh data; kept previous snapshot",
       "cafes: Osaka: skipped (time budget used up)",
       "cafes: Kyoto: skipped (time budget used up)",
       "cafes: Nara: skipped (time budget used up)",
@@ -81,9 +86,10 @@
       "transport: Nara: skipped (time budget used up)",
       "transport: Kobe: skipped (time budget used up)",
       "transport: Kanazawa: skipped (time budget used up)",
-      "transport: no usable fresh data; kept previous snapshot"
+      "transport: no usable fresh data; kept previous snapshot",
+      "weather: Osaka: <urlopen error _ssl.c:994: The handshake operation timed out>"
     ],
-    "last_attempt_at": "2026-11-23T03:18:11+00:00",
+    "last_attempt_at": "2026-11-24T06:33:28+00:00",
     "sources": [
       "OpenStreetMap (Overpass API)",
       "Open-Meteo"
@@ -165,56 +171,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-23",
-          "weather_code": 1,
-          "temperature_max_c": 12.6,
-          "temperature_min_c": 4.1,
-          "precipitation_probability_max": 0
-        },
-        {
           "date": "2026-11-24",
-          "weather_code": 65,
-          "temperature_max_c": 12.4,
-          "temperature_min_c": 6.9,
+          "weather_code": 63,
+          "temperature_max_c": 11.0,
+          "temperature_min_c": 6.7,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
           "weather_code": 2,
           "temperature_max_c": 10.7,
-          "temperature_min_c": 5.3,
-          "precipitation_probability_max": 4
+          "temperature_min_c": 4.9,
+          "precipitation_probability_max": 2
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 12.4,
-          "temperature_min_c": 1.1,
+          "temperature_max_c": 12.9,
+          "temperature_min_c": 3.7,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 81,
-          "temperature_max_c": 18.3,
-          "temperature_min_c": 5.4,
-          "precipitation_probability_max": 42
+          "weather_code": 51,
+          "temperature_max_c": 17.7,
+          "temperature_min_c": 6.9,
+          "precipitation_probability_max": 40
         },
         {
           "date": "2026-11-28",
           "weather_code": 81,
-          "temperature_max_c": 18.2,
+          "temperature_max_c": 18.6,
           "temperature_min_c": 7.7,
-          "precipitation_probability_max": 44
+          "precipitation_probability_max": 80
         },
         {
           "date": "2026-11-29",
-          "weather_code": 1,
-          "temperature_max_c": 12.7,
-          "temperature_min_c": 2.2,
-          "precipitation_probability_max": 16
+          "weather_code": 51,
+          "temperature_max_c": 11.1,
+          "temperature_min_c": 3.0,
+          "precipitation_probability_max": 30
+        },
+        {
+          "date": "2026-11-30",
+          "weather_code": 0,
+          "temperature_max_c": 13.8,
+          "temperature_min_c": 1.5,
+          "precipitation_probability_max": 0
         }
       ],
-      "updated_at": "2026-11-23T03:38:45+00:00"
+      "updated_at": "2026-11-24T06:54:55+00:00"
     },
     "nara": {
       "city": "Nara",
@@ -224,56 +230,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-23",
-          "weather_code": 1,
-          "temperature_max_c": 13.1,
-          "temperature_min_c": 3.1,
-          "precipitation_probability_max": 0
-        },
-        {
           "date": "2026-11-24",
           "weather_code": 65,
-          "temperature_max_c": 15.1,
-          "temperature_min_c": 6.7,
+          "temperature_max_c": 12.9,
+          "temperature_min_c": 6.4,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
-          "weather_code": 2,
-          "temperature_max_c": 10.4,
-          "temperature_min_c": 4.7,
+          "weather_code": 1,
+          "temperature_max_c": 10.1,
+          "temperature_min_c": 4.2,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 12.8,
-          "temperature_min_c": 3.5,
+          "temperature_max_c": 13.5,
+          "temperature_min_c": 4.6,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 81,
-          "temperature_max_c": 19.5,
-          "temperature_min_c": 4.7,
-          "precipitation_probability_max": 47
+          "weather_code": 53,
+          "temperature_max_c": 19.0,
+          "temperature_min_c": 8.2,
+          "precipitation_probability_max": 50
         },
         {
           "date": "2026-11-28",
-          "weather_code": 81,
-          "temperature_max_c": 16.9,
-          "temperature_min_c": 9.2,
-          "precipitation_probability_max": 49
+          "weather_code": 53,
+          "temperature_max_c": 17.8,
+          "temperature_min_c": 9.9,
+          "precipitation_probability_max": 72
         },
         {
           "date": "2026-11-29",
           "weather_code": 3,
-          "temperature_max_c": 13.4,
+          "temperature_max_c": 11.5,
           "temperature_min_c": 4.9,
-          "precipitation_probability_max": 12
+          "precipitation_probability_max": 16
+        },
+        {
+          "date": "2026-11-30",
+          "weather_code": 0,
+          "temperature_max_c": 13.5,
+          "temperature_min_c": 3.9,
+          "precipitation_probability_max": 0
         }
       ],
-      "updated_at": "2026-11-23T03:38:45+00:00"
+      "updated_at": "2026-11-24T06:54:55+00:00"
     },
     "kobe": {
       "city": "Kobe",
@@ -283,56 +289,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-23",
-          "weather_code": 1,
-          "temperature_max_c": 13.1,
-          "temperature_min_c": 6.7,
-          "precipitation_probability_max": 0
-        },
-        {
           "date": "2026-11-24",
-          "weather_code": 65,
-          "temperature_max_c": 18.4,
-          "temperature_min_c": 6.7,
+          "weather_code": 63,
+          "temperature_max_c": 15.6,
+          "temperature_min_c": 6.4,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
-          "weather_code": 2,
-          "temperature_max_c": 10.6,
-          "temperature_min_c": 5.9,
+          "weather_code": 1,
+          "temperature_max_c": 10.2,
+          "temperature_min_c": 5.5,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-26",
           "weather_code": 3,
-          "temperature_max_c": 12.5,
-          "temperature_min_c": 6.3,
+          "temperature_max_c": 13.4,
+          "temperature_min_c": 7.5,
           "precipitation_probability_max": 0
         },
         {
           "date": "2026-11-27",
-          "weather_code": 80,
-          "temperature_max_c": 18.3,
-          "temperature_min_c": 10.4,
-          "precipitation_probability_max": 49
+          "weather_code": 53,
+          "temperature_max_c": 18.0,
+          "temperature_min_c": 11.2,
+          "precipitation_probability_max": 46
         },
         {
           "date": "2026-11-28",
-          "weather_code": 51,
-          "temperature_max_c": 16.8,
-          "temperature_min_c": 9.7,
-          "precipitation_probability_max": 51
+          "weather_code": 81,
+          "temperature_max_c": 17.3,
+          "temperature_min_c": 9.5,
+          "precipitation_probability_max": 76
         },
         {
           "date": "2026-11-29",
-          "weather_code": 2,
-          "temperature_max_c": 13.4,
-          "temperature_min_c": 7.6,
+          "weather_code": 3,
+          "temperature_max_c": 12.2,
+          "temperature_min_c": 6.7,
           "precipitation_probability_max": 10
+        },
+        {
+          "date": "2026-11-30",
+          "weather_code": 0,
+          "temperature_max_c": 13.5,
+          "temperature_min_c": 7.6,
+          "precipitation_probability_max": 0
         }
       ],
-      "updated_at": "2026-11-23T03:38:45+00:00"
+      "updated_at": "2026-11-24T06:54:55+00:00"
     },
     "kanazawa": {
       "city": "Kanazawa",
@@ -342,56 +348,56 @@
       "timezone": "Asia/Tokyo",
       "daily": [
         {
-          "date": "2026-11-23",
-          "weather_code": 2,
-          "temperature_max_c": 13.9,
-          "temperature_min_c": 5.4,
-          "precipitation_probability_max": 0
-        },
-        {
           "date": "2026-11-24",
           "weather_code": 65,
-          "temperature_max_c": 15.5,
-          "temperature_min_c": 6.7,
+          "temperature_max_c": 14.6,
+          "temperature_min_c": 6.6,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-25",
-          "weather_code": 55,
-          "temperature_max_c": 9.3,
-          "temperature_min_c": 6.4,
+          "weather_code": 61,
+          "temperature_max_c": 8.6,
+          "temperature_min_c": 5.7,
           "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-26",
           "weather_code": 51,
-          "temperature_max_c": 14.6,
-          "temperature_min_c": 7.6,
-          "precipitation_probability_max": 8
+          "temperature_max_c": 14.2,
+          "temperature_min_c": 7.7,
+          "precipitation_probability_max": 16
         },
         {
           "date": "2026-11-27",
-          "weather_code": 51,
-          "temperature_max_c": 20.0,
-          "temperature_min_c": 7.5,
-          "precipitation_probability_max": 25
+          "weather_code": 2,
+          "temperature_max_c": 19.3,
+          "temperature_min_c": 10.8,
+          "precipitation_probability_max": 17
         },
         {
           "date": "2026-11-28",
-          "weather_code": 80,
-          "temperature_max_c": 17.5,
-          "temperature_min_c": 8.7,
-          "precipitation_probability_max": 93
+          "weather_code": 95,
+          "temperature_max_c": 16.8,
+          "temperature_min_c": 8.1,
+          "precipitation_probability_max": 100
         },
         {
           "date": "2026-11-29",
-          "weather_code": 81,
-          "temperature_max_c": 11.0,
-          "temperature_min_c": 7.1,
-          "precipitation_probability_max": 98
+          "weather_code": 80,
+          "temperature_max_c": 9.3,
+          "temperature_min_c": 5.7,
+          "precipitation_probability_max": 100
+        },
+        {
+          "date": "2026-11-30",
+          "weather_code": 3,
+          "temperature_max_c": 15.5,
+          "temperature_min_c": 6.9,
+          "precipitation_probability_max": 12
         }
       ],
-      "updated_at": "2026-11-23T03:38:45+00:00"
+      "updated_at": "2026-11-24T06:54:55+00:00"
     }
   },
   "events": [],
@@ -85376,5 +85382,5 @@
       }
     ]
   },
-  "updated_at": "2026-11-23T03:18:11+00:00"
+  "updated_at": "2026-11-24T06:33:28+00:00"
 }
