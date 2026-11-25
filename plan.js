@@ -59,6 +59,8 @@ sgLoadData();
 let SG={d:1,r:"kz",e:420,l:1350,s:150,ltd:0,sort:"stay",all:false,mode:"auto",n:0,o:"sg",m:540,pm:420,P:{}},SGO=[];
 try{SG={...SG,...JSON.parse(localStorage.getItem(SGK)||"{}")};localStorage.removeItem("osaka_plan_v1");localStorage.removeItem("osaka_places_v1")}catch(e){}
 const sgSave=()=>{try{localStorage.setItem(SGK,JSON.stringify(SG))}catch(e){}};
+if(!SG.mp){SG={...SG,d:1,r:"kz",n:1,o:"pre",P:{},mp:1};sgSave()}   // แผนหลัก: วัน 2 นอนคานาซาวะ → วัน 3 ชิราคาวาโกะแล้วกลับโอซาก้า (ย้ายค่าเก่าครั้งเดียว)
+function mpReset(){SG={...SG,d:1,r:"kz",n:1,o:"pre",P:{},mode:"auto"};sgSave();TP.sgOn=1;tpSave();renderPlan()}
 const sgM=s=>{const a=s.split(":");return +a[0]*60+ +a[1]};
 const sgT=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
 const sgDur=m=>{const h=Math.floor(m/60),r=m%60;return (h?h+" ชม.":"")+(h&&r?" ":"")+(r?r+" นาที":"")||"0 นาที"};
@@ -240,6 +242,7 @@ const TPN=1080;   // นอนที่หมู่บ้าน: เที่ย
 let TP={v:"trip",d:0,sgOn:0,D:{}};
 try{TP={...TP,...JSON.parse(localStorage.getItem(TPK)||"{}")}}catch(e){}
 const tpSave=()=>{try{localStorage.setItem(TPK,JSON.stringify(TP))}catch(e){}};
+if(!TP.mp){TP.sgOn=1;TP.mp=1;tpSave()}   // แผนหลัก: เปิดช่วงไปชิราคาวาโกะเป็นค่าเริ่มต้น (ย้ายค่าเก่าครั้งเดียว)
 const TPA={sg:"🏯 ในชิราคาวาโกะ",osaka:"🏙️ โอซาก้า",kyoto:"⛩️ เกียวโต",nara:"🦌 นารา",kanazawa:"🏮 คานาซาวะ",other:"🧭 เมืองอื่น",misc:"🍜 อาหาร / พัก"};
 const TPC=[
   {id:"s-walk",a:"sg",e:"🏘️",n:"เดินชมหมู่บ้านโอกิมาจิ",m:60},
@@ -674,7 +677,7 @@ function renderTrip(){
   const gdBox=`<details class="dt" ${TPG?"open":""} ontoggle="TPG=this.open?1:0;if(TPG)gdLoad()" style="margin-top:12px"><summary>🌏 ค้นหาร้านและที่เที่ยวในคันไซ</summary><section id="getoh-live-data" style="margin-top:8px"><p class="note" style="margin-top:0">ข้อมูลสถานที่และอากาศจาก Getoh Data Engine · อัปเดตจาก data/kansai.json</p><div id="gd-panel"><div class="note">กำลังโหลดข้อมูล Kansai…</div></div></section></details>`;
   $("plan").innerHTML=`<h1>🗓️ แผนเที่ยว</h1><p class="sub">เลือกวัน แล้วกด + เพิ่มที่เที่ยว ระบบจัดเวลาให้เอง</p>
   <div class="pl-days" role="tablist" aria-label="เลือกวัน">${dayChips}</div>
-  <div class="card"><b style="font-size:18px">วัน ${i+1} · ${sgFd(i)}${i===0?" · วันถึง":last?" · วันกลับ":""}</b>
+  <div class="card"><b style="font-size:18px">วัน ${i+1} · ${sgFd(i)}${i===0?" · วันถึง":last?" · วันกลับ":""}</b>${MP[i]?`<div class="note" style="margin:2px 0 6px">🗺️ ${esc(MP[i].t)} · 🛏 ${esc(MP[i].s)}${MP[i].n?" · "+esc(MP[i].n):""}</div>`:""}
     <div class="tl">${rows}</div>
     ${users?`<div class="note" style="margin:0 0 6px">เวลาจัดให้อัตโนมัติ · แตะการ์ดเพื่อปรับเวลา · ลาก ⋮⋮ เพื่อเรียงลำดับ</div>`:`<div class="empty"><div style="font-size:32px">🌱</div><b>ยังไม่มีแผนวันนี้</b><p>เลือกที่ที่อยากไป ระบบจะจัดเวลาและเวลาเดินทางให้</p><button class="btn" onclick="tpSheet(1)">+ เพิ่มที่เที่ยวแรก</button></div>`}
     ${sortBtn}${backNote}${sgBox}
@@ -870,9 +873,10 @@ function renderSG(){
   const days=Array.from({length:N+1-(ov?1:0)},(_,i)=>[i]),shown=SG.all?res:res.slice(0,3),lastD=ov?SG.d+1:SG.d;
   const dlab=i=>ov?sgFd(i)+" → "+sgFd(i+1)+(i===0?" · เริ่มวันถึง":i+1===N?" · กลับวันสุดท้าย":""):sgFd(i)+(i===0?" · วันถึง":i===N?" · วันกลับ":"");
   const info=[SG.d===0?`🛬 วันแรก เครื่องลง ${tm(F[0].arr,"Asia/Tokyo")} ระบบเผื่อเวลาเข้าเมือง เริ่มออกจากโอซาก้าได้ไม่เร็วกว่า ${sgT(e)}`:"",lastD===N?`🛫 วันสุดท้าย เครื่องออก ${tm(F[F.length-1].dep,"Asia/Tokyo")} ต้องกลับถึงโอซาก้าไม่เกิน ${sgT(l)}`:""].filter(Boolean);
-  const stayNote=pre?`🌙 วันแรกเดินทางไปนอนที่${mid} วันที่ 2 ขึ้นบัสเช้าไปเที่ยวชิราคาวาโกะ แล้วกลับโอซาก้าตอนเย็น · ตั้งเวลาออกจากโอซาก้าวันแรกด้านบน · ที่พักไม่อยู่ในไฟล์ ต้องจองเอง`:sg?"🏡 มินชุกุในหมู่บ้านมีห้องน้อย ควรจองล่วงหน้า (ข้อมูลที่พักไม่อยู่ในไฟล์) · ช่วง ม.ค.–ก.พ. บางปีมีงานไลท์อัพต้องจองแยก":`🏨 วันแรกเที่ยวชิราคาวาโกะแล้วนั่งบัสกลับมานอนที่${mid} · ที่พักไม่อยู่ในไฟล์ ต้องจองเอง`;
+  const stayNote=pre?`🌙 วันแรกเดินทางไปนอนที่${mid} วันที่ 2 ขึ้นบัสเช้าไปเที่ยวชิราคาวาโกะ แล้วกลับโอซาก้าตอนเย็น · ตั้งเวลาออกจากโอซาก้าวันแรกด้านบน · ที่พักคานาซาวะจองแล้ว (ดูในแท็บโรงแรม)`:sg?"🏡 มินชุกุในหมู่บ้านมีห้องน้อย ควรจองล่วงหน้า (ข้อมูลที่พักไม่อยู่ในไฟล์) · ช่วง ม.ค.–ก.พ. บางปีมีงานไลท์อัพต้องจองแยก":`🏨 วันแรกเที่ยวชิราคาวาโกะแล้วนั่งบัสกลับมานอนที่${mid} · ที่พักไม่อยู่ในไฟล์ ต้องจองเอง`;
   $("plan").innerHTML=`<button class="chip" style="margin-bottom:8px" onclick="tpView('trip')">← กลับแผนเที่ยว</button><h1>🏯 ตัวเลือกรถไปชิราคาวาโกะ</h1><p class="sub">เลือกวันและเวลา ระบบหาเที่ยวรถไฟ+รถบัสจากโอซาก้า แบบไป-กลับวันเดียวหรือค้าง 1 คืน จากตารางในไฟล์ที่อัปโหลด · ที่เลือกที่นี่จะไปอยู่ในแผนเที่ยวให้อัตโนมัติ</p>
-  <div class="pinfo" style="background:#7a4b00">⚠️ ตารางรถบัสเป็นข้อมูล ณ ${esc(SGMETA.label)} (รถไฟ ณ ${esc(SGMETA.train)}) ก่อนเดินทางจริงตรวจเวลาล่าสุดและจองที่นั่งรถบัส หลายเที่ยวต้องจองล่วงหน้า${sgLinks()}</div>
+  <div class="pinfo" style="background:#1f6b42">🗺️ แผนหลัก: ${sgFd(1)} ไปนอนคานาซาวะ → ${sgFd(2)} ชิราคาวาโกะ แล้วกลับโอซาก้า · <a href="#" style="color:inherit;text-decoration:underline" onclick="mpReset();return false">ใช้แผนหลักนี้</a></div>
+  <div class="pinfo" style="background:#7a4b00;margin-top:8px">⚠️ ตารางรถบัสเป็นข้อมูล ณ ${esc(SGMETA.label)} (รถไฟ ณ ${esc(SGMETA.train)}) ก่อนเดินทางจริงตรวจเวลาล่าสุดและจองที่นั่งรถบัส หลายเที่ยวต้องจองล่วงหน้า${sgLinks()}</div>
   <div class="card fm" style="margin-top:10px">
     <div class="note" style="margin:0 0 4px">รูปแบบการเดินทาง</div>
     <div class="chips" style="padding-top:0"><button class="chip ${ov?"":"on"}" onclick="sgSet('n',0)">☀️ ไป-กลับวันเดียว</button><button class="chip ${ov?"on":""}" onclick="sgSet('n',1)">🌙 ค้าง 1 คืน</button></div>

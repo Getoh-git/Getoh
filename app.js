@@ -167,6 +167,7 @@ const rcount=h=>rv(h).length?`💬 ${rv(h).length} คอมเมนต์ห�
 const rsum=h=>rv(h).length?`👍${rv(h).filter(x=>x[0]==="+").length} · 👎${rv(h).filter(x=>x[0]==="-").length}`:"ยังไม่มีข้อมูล";
 const price=h=>h.price!=null?"฿"+Math.round(h.price).toLocaleString("th-TH"):"–"; // ราคารวมทั้งทริป (NIGHTS คืน)
 let sel=[],area="ALL",cityF="ALL";
+const cityNote=(c,g)=>{const n=g&&g[0]?nightsOf(g[0]):NIGHTS;return c==="Osaka"?`พักยาว ${n} คืน ไม่เช็กเอาต์`:`${n} คืน`};
 const night=h=>h.price!=null?"฿"+Math.round(h.price/nightsOf(h)).toLocaleString("th-TH"):"–";
 let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs")||"[]"))}catch(e){}
 function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
@@ -309,7 +310,7 @@ function draw(){
   const ns=[...new Set(L.map(nightsOf))];
   $("count").textContent=`แสดง ${L.length} จาก ${all().length} โรงแรมที่คัดไว้ · ราคารวม ${ns.length===1?ns[0]+" คืน":"ตามจำนวนคืนของแต่ละที่พัก"} · จองแล้ว ${L.filter(h=>h.booked).length} · ราคาอ้างอิง ${OSAKA.priceDate||"–"}`;
   const order=[...new Set(all().map(cityOf))],cs=[...new Set(L.map(cityOf))].sort((x,y)=>order.indexOf(x)-order.indexOf(y));
-  $("list").innerHTML=(cityF==="ALL"&&cs.length>1?cs.map(c=>{const g=L.filter(h=>cityOf(h)===c);return `<div class="city-head"><b>${esc(CITY_TH[c]||c)}</b><span>${g.length} โรงแรม · จองแล้ว ${g.filter(h=>h.booked).length}</span></div>`+g.map(card).join("")}).join(""):L.map(card).join(""))||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมในรายการนี้</div>`;
+  $("list").innerHTML=(cityF==="ALL"&&cs.length>1?cs.map(c=>{const g=L.filter(h=>cityOf(h)===c);return `<div class="city-head"><b>${esc(CITY_TH[c]||c)}</b><span>${esc(cityNote(c,g))} · ${g.length} โรงแรม · จองแล้ว ${g.filter(h=>h.booked).length}</span></div>`+g.map(card).join("")}).join(""):L.map(card).join(""))||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมในรายการนี้</div>`;
   L.forEach(h=>{if(photoSet.has(h.id))loadThumb(h.id)});
   $("n").textContent=sel.length;$("act").classList.toggle("hide",!sel.length);$("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
   renderDecisionBoard();if(map)mapDraw();
@@ -690,13 +691,23 @@ function copyLine(){
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกข้อความสำหรับ LINE แล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
 
+// ---------- แผนหลักของทริป (ข้อมูลอยู่ใน hotels.js → master) ----------
+const MP=(OSAKA.master&&OSAKA.master.days)||[],MPE={osaka:"🏙️",kanazawa:"🏮",sg:"🏯"};
+const mpDate=i=>new Date(F[0].arr+i*864e5).toLocaleDateString("th-TH",{timeZone:"Asia/Tokyo",day:"numeric",month:"short"});
+function renderMaster(){
+  const el=$("mp");
+  if(el&&MP.length)el.innerHTML=`<div class="mp-h"><b>🗺️ แผนหลักของทริป</b><small>ฟิกเวลาเฉพาะตั๋วเครื่องบิน ที่เหลือยืดหยุ่น</small></div><div class="mp-row">${MP.map((d,i)=>`<button type="button" class="mp-d mp-${esc(d.k)}" onclick="mpGo(${i})"><small>วัน ${i+1} · ${esc(mpDate(i))}</small><span aria-hidden="true">${MPE[d.k]||"📍"}</span><b>${esc(d.t)}</b><em>🛏 ${esc(d.s)}</em></button>`).join("")}</div>`;
+  const hb=$("mp-hotel");
+  if(hb)hb.innerHTML=`<div><b>🏙️ โอซาก้า</b> พักยาวตลอดทริป ${NIGHTS} คืน ไม่เช็กเอาต์ (ของหนักเก็บไว้ตอนไปคานาซาวะ)</div><div><b>🏮 คานาซาวะ</b> 1 คืน · ${esc(mpDate(1))} → ${esc(mpDate(2))}</div>`;
+}
+function mpGo(i){if(typeof TP!=="undefined"){TP.v="trip";TP.d=i;tpSave()}tab("plan")}
 (function(){ // หัวหน้าแรก: ช่วงวันที่และจำนวนคืน (อ่านจากไฟลท์ใน hotels.js)
   const d=$("hx-dates"),n=$("hx-nights");if(!d||!n)return;
   const a=F[0].arrD.split(" "),b=F[F.length-1].depD.split(" "),y=new Date(F[0].arr+324e5).getUTCFullYear();
   d.textContent=a[1]===b[1]?`${a[0]}–${b[0]} ${a[1]} ${y}`:`${F[0].arrD} – ${F[F.length-1].depD} ${y}`;
-  n.textContent=`${NIGHTS} คืนที่โอซาก้า`;
+  n.textContent=`${NIGHTS+1} วัน ${NIGHTS} คืน · โอซาก้า · คานาซาวะ`;
 })();
-setInterval(tick,1000);tick();chips();draw();
+setInterval(tick,1000);tick();chips();draw();renderMaster();
 const hotelMapDetails=$("hotel-map-details");if(hotelMapDetails)hotelMapDetails.addEventListener("toggle",()=>{if(hotelMapDetails.open&&map)setTimeout(()=>map.invalidateSize(),120)});
 sync();
 setInterval(()=>{if(!document.hidden&&!document.body.classList.contains("gm-open"))sync(true)},20000);
