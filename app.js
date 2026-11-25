@@ -693,10 +693,13 @@ function copyLine(){
 
 // ---------- แผนหลักของทริป (ข้อมูลอยู่ใน hotels.js → master) ----------
 const MP=(OSAKA.master&&OSAKA.master.days)||[],MPE={osaka:"🏙️",kanazawa:"🏮",sg:"🏯"};
+const mpFl=i=>{ // เที่ยวบินของวันถึง/วันกลับ: เวลาที่ควรถึงสนามบิน (ฟิก) → เครื่องออก → เครื่องลง
+  const f=i===0?F[0]:i===MP.length-1?F[F.length-1]:null;if(!f)return"";
+  return `<div class="mp-f"><b>🛫 ถึงสนามบิน ${esc(f.from)}</b><strong>${esc(f.apT||"–")}</strong><small>ออก ${esc(f.depT||"")} → ถึง ${esc(f.to)} ${esc(f.arrT||"")}</small></div>`};
 const mpDate=i=>new Date(F[0].arr+i*864e5).toLocaleDateString("th-TH",{timeZone:"Asia/Tokyo",day:"numeric",month:"short"});
 function renderMaster(){
   const el=$("mp");
-  if(el&&MP.length)el.innerHTML=`<div class="mp-h"><b>🗺️ แผนหลักของทริป</b><small>ฟิกเวลาเฉพาะตั๋วเครื่องบิน ที่เหลือยืดหยุ่น</small></div><div class="mp-row">${MP.map((d,i)=>`<button type="button" class="mp-d mp-${esc(d.k)}" onclick="mpGo(${i})"><small>วัน ${i+1} · ${esc(mpDate(i))}</small><span aria-hidden="true">${MPE[d.k]||"📍"}</span><b>${esc(d.t)}</b><em>🛏 ${esc(d.s)}</em></button>`).join("")}</div>`;
+  if(el&&MP.length)el.innerHTML=`<div class="mp-h"><b>🗺️ แผนหลักของทริป</b><small>ฟิกเวลาเฉพาะตั๋วเครื่องบิน ที่เหลือยืดหยุ่น</small></div><div class="mp-row">${MP.map((d,i)=>`<button type="button" class="mp-d mp-${esc(d.k)}${mpFl(i)?" mp-fl":""}" onclick="mpGo(${i})"><small>วัน ${i+1} · ${esc(mpDate(i))}</small><span aria-hidden="true">${MPE[d.k]||"📍"}</span><b>${esc(d.t)}</b><em>🛏 ${esc(d.s)}</em>${mpFl(i)}</button>`).join("")}</div>`;
   const hb=$("mp-hotel");
   if(hb)hb.innerHTML=`<div><b>🏙️ โอซาก้า</b> พักยาวตลอดทริป ${NIGHTS} คืน ไม่เช็กเอาต์ (ของหนักเก็บไว้ตอนไปคานาซาวะ)</div><div><b>🏮 คานาซาวะ</b> 1 คืน · ${esc(mpDate(1))} → ${esc(mpDate(2))}</div>`;
 }
