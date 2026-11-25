@@ -41,7 +41,7 @@ function renderPrep(){
 const FM_ENDPOINT = "https://asia-northeast1-osaka-trip-b03a0.cloudfunctions.net/flightMonitor";
 let FM_BUSY = false;
 let FM_DATA = null;
-const fmFlights = () => (window.OSAKA_CONFIG && window.OSAKA_CONFIG.flights || []).map(f => ({
+const fmFlights = () => ((window.OSAKA_CONFIG && window.OSAKA_CONFIG.flights) || (window.OSAKA && window.OSAKA.flights) || []).map(f => ({
   no: String(f.no || "").trim().toUpperCase(),
   title: f.title || "",
   from: f.from || "",
@@ -135,7 +135,7 @@ function fmRender() {
 async function fmRefresh() {
   if (FM_BUSY) return;
   const flights = fmFlights();
-  if (!flights.length || flights.some(f => !f.no || !f.dep || !f.arr)) return toast("ข้อมูลเที่ยวบินใน hotels.js ไม่ครบ");
+  if (!flights.length || flights.some(f => !f.no || !f.dep || !f.arr)) return toast("ไม่พบข้อมูลเที่ยวบินจาก OSAKA_CONFIG.flights");
   FM_BUSY = true; fmRender();
   try {
     const response = await fetch(FM_ENDPOINT, {
