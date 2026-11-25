@@ -82,6 +82,21 @@
           ".validate": "newData.hasChildren(['n','s','t']) && newData.child('n').isString() && newData.child('n').val().length > 0 && newData.child('n').val().length <= 12 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 99999 && newData.child('t').isNumber()"
         }
       }
+    },
+    "flightMonitor": {
+      ".read": true,
+      "currentStatus": {
+        "$flight": {
+          ".write": "now < 1803859200000",
+          ".validate": "newData.hasChildren(['flightNumber','status','checkedAt']) && newData.child('flightNumber').isString() && newData.child('status').isString() && newData.child('checkedAt').isNumber()"
+        }
+      },
+      "history": {
+        "$flight": {
+          ".write": "now < 1803859200000",
+          ".validate": "newData.hasChildren(['sampleSize','periodDays','calculatedAt']) && newData.child('sampleSize').isNumber() && newData.child('periodDays').val() === 365 && newData.child('calculatedAt').isNumber()"
+        }
+      }
     }
   }
 }
