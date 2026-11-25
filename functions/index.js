@@ -136,3 +136,160 @@ exports.placesLookup = onRequest(
     }
   }
 );
+
+
+// Flight Monitor — Manual refresh only. Configure with:
+// firebase functions:secrets:set FLIGHTAWARE_API_KEY
+const FLIGHTAWARE_API_KEY = defineSecret('FLIGHTAWARE_API_KEY');
+const FLIGHT_DB = 'https://osaka-trip-b03a0-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FLIGHT_CORS = ['https://getoh-git.github.io'];
+const flightIso = d => d.toISOString().replace('.000Z', 'Z');
+const flightDelay = (actual, scheduled) => {
+  if (!actual || !scheduled) return null;
+  const n = Math.round((Date.parse(actual) - Date.parse(scheduled)) / 60000);
+  return Number.isFinite(n) ? n : null;
+};
+const flightStatus = f => {
+  if (f.cancelled) return 'Cancelled';
+  const s = String(f.status || '').toLowerCase();
+  if (f.actual_in || /landed|arrived/.test(s)) return 'Landed';
+  if (f.actual_out || /airborne|en.?route|in.?flight/.test(s)) return 'Airborne';
+  if (/delay/.test(s)) return 'Delayed';
+  if (/scheduled|filed|expected|on.?time/.test(s)) return 'Scheduled';
+  return f.status || 'Unknown';
+};
+async function aeroFlights(ident, start, end, apiKey) {
+  const url = new URL(`https://aeroapi.flightaware.com/aeroapi/flights/${encodeURIComponent(ident)}`);
+  url.searchParams.set('start', flightIso(start));
+  url.searchParams.set('end', flightIso(end));
+  url.searchParams.set('max_pages', '3');
+  const response = await fetch(url, { headers: { 'x-apikey': apiKey, 'Accept': 'application/json' } });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = payload && payload.errors && payload.errors[0] && payload.errors[0].message;
+    throw new Error(message || `FlightAware API HTTP ${response.status}`);
+  }
+  return Array.isArray(payload.flights) ? payload.flights : [];
+}
+function matchFlight(f, config) {
+  const origin = f.origin && (f.origin.code || f.origin.code_iata);
+  const destination = f.destination && (f.destination.code || f.destination.code_iata);
+  return (!origin || origin === config.from) && (!destination || destination === config.to);
+}
+function summarizeFlightHistory(rows) {
+  const completed = rows.filter(f => f.actual_out || f.actual_in);
+  const departureDelays = completed.map(f => flightDelay(f.actual_out, f.scheduled_out)).filter(v => v !== null);
+  const arrivalDelays = completed.map(f => flightDelay(f.actual_in, f.scheduled_in)).filter(v => v !== null);
+  const onTime = departureDelays.filter(v => v <= 15).length;
+  const averagePositive = values => {
+    const late = values.filter(v => v > 0);
+    return late.length ? Math.round(late.reduce((a, b) => a + b, 0) / late.length) : 0;
+  };
+  return {
+    sampleSize: completed.length,
+    onTimeRate: departureDelays.length ? Math.round(onTime / departureDelays.length * 1000) / 10 : null,
+    averageDepartureDelay: departureDelays.length ? averagePositive(departureDelays) : null,
+    averageArrivalDelay: arrivalDelays.length ? averagePositive(arrivalDelays) : null,
+    cancelled: rows.filter(f => f.cancelled).length,
+    periodDays: 365,
+    calculatedAt: Date.now()
+  };
+}
+exports.flightMonitor = onRequest(
+  { region: 'asia-northeast1', secrets: [FLIGHTAWARE_API_KEY], cors: FLIGHT_CORS, timeoutSeconds: 540, memory: '512MiB', maxInstances: 2 },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') return res.status(204).send('');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    try {
+      const flights = req.body && req.body.flights;
+      if (!Array.isArray(flights) || flights.length < 1 || flights.length > 4) {
+        return res.status(400).json({ error: 'ข้อมูลเที่ยวบินไม่ถูกต้อง' });
+      }
+      for (const f of flights) {
+        if (!f || !/^[A-Z0-9]{2,3}\d{1,4}$/.test(String(f.no || '').toUpperCase()) ||
+            !/^[A-Z]{3}$/.test(String(f.from || '')) || !/^[A-Z]{3}$/.test(String(f.to || '')) ||
+            !Number.isFinite(Date.parse(f.dep)) || !Number.isFinite(Date.parse(f.arr))) {
+          return res.status(400).json({ error: 'หมายเลขเที่ยวบิน สนามบิน หรือวันเดินทางไม่ถูกต้อง' });
+        }
+      }
+
+      const apiKey = FLIGHTAWARE_API_KEY.value();
+      const checkedAt = Date.now();
+      const current = {}, history = {};
+      for (const config of flights) {
+        const ident = String(config.no).toUpperCase();
+        const scheduled = new Date(config.dep);
+        // Query the scheduled flight window. Before departure this retrieves filed/estimated data;
+        // after arrival it can return actual times and final status.
+        const liveRows = await aeroFlights(
+          ident, new Date(scheduled.getTime() - 36 * 3600000),
+          new Date(scheduled.getTime() + 48 * 3600000), apiKey
+        );
+        const live = liveRows.filter(f => matchFlight(f, config))
+          .sort((a, b) => Math.abs(Date.parse(a.scheduled_out || 0) - scheduled) - Math.abs(Date.parse(b.scheduled_out || 0) - scheduled))[0];
+
+        const currentRecord = live ? {
+          flightNumber: ident,
+          status: flightStatus(live),
+          scheduledOut: live.scheduled_out || config.dep,
+          estimatedOut: live.estimated_out || null,
+          actualOut: live.actual_out || null,
+          scheduledIn: live.scheduled_in || config.arr,
+          estimatedIn: live.estimated_in || null,
+          actualIn: live.actual_in || null,
+          departureDelayMinutes: flightDelay(live.actual_out || live.estimated_out, live.scheduled_out),
+          arrivalDelayMinutes: flightDelay(live.actual_in || live.estimated_in, live.scheduled_in),
+          checkedAt,
+          source: 'FlightAware AeroAPI'
+        } : {
+          flightNumber: ident, status: 'Unavailable',
+          scheduledOut: config.dep, scheduledIn: config.arr,
+          checkedAt, source: 'FlightAware AeroAPI',
+          message: 'ไม่พบข้อมูลเที่ยวบินในช่วงเวลาที่ค้นหา'
+        };
+        current[ident] = currentRecord;
+
+        // Retrieve a rolling 12-month history in monthly windows to avoid oversized requests.
+        const rowsByKey = new Map();
+        const end = new Date();
+        const start = new Date(end.getTime() - 365 * 86400000);
+        for (let cursor = new Date(start); cursor < end;) {
+          const next = new Date(cursor);
+          next.setUTCDate(next.getUTCDate() + 30);
+          if (next > end) next.setTime(end.getTime());
+          const rows = await aeroFlights(ident, cursor, next, apiKey);
+          for (const row of rows) {
+            if (!matchFlight(row, config)) continue;
+            const key = row.fa_flight_id || `${row.ident || ident}_${row.scheduled_out || ''}`;
+            rowsByKey.set(key, row);
+          }
+          cursor = next;
+        }
+        const rows = [...rowsByKey.values()];
+        history[ident] = summarizeFlightHistory(rows);
+      }
+
+      // Write each permitted leaf path so the child-level RTDB rules are applied.
+      let saved = true;
+      for (const [ident, value] of Object.entries(current)) {
+        const write = await fetch(`${FLIGHT_DB}/flightMonitor/currentStatus/${encodeURIComponent(ident)}.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value)
+        });
+        if (!write.ok) { saved = false; console.error('Flight currentStatus write failed', write.status, await write.text()); }
+      }
+      for (const [ident, value] of Object.entries(history)) {
+        const write = await fetch(`${FLIGHT_DB}/flightMonitor/history/${encodeURIComponent(ident)}.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value)
+        });
+        if (!write.ok) { saved = false; console.error('Flight history write failed', write.status, await write.text()); }
+      }
+      return res.status(200).json({
+        current, history, checkedAt, source: 'FlightAware AeroAPI',
+        persistence: saved ? 'saved' : 'not-saved'
+      });
+    } catch (error) {
+      console.error('flightMonitor failed', error);
+      return res.status(502).json({ error: error.message || 'ตรวจสอบข้อมูลเที่ยวบินไม่สำเร็จ' });
+    }
+  }
+);
