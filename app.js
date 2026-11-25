@@ -159,13 +159,15 @@ const all=()=>{
 const find=id=>all().find(h=>h.id===id);
 const COL={Namba:"#0284c7",Ebisu:"#059669","Shin-Imamiya":"#7c3aed",Umeda:"#d97706"},PAL=["#db2777","#0d9488","#dc2626","#4f46e5","#ca8a04","#0891b2"];
 const colorOf=a=>COL[a]||PAL[[...String(a||"")].reduce((s,c)=>(s*31+c.charCodeAt(0))%PAL.length,0)];
+const CITY_TH={Osaka:"โอซาก้า",Kanazawa:"คานาซาวะ"},cityOf=h=>h.city||"Osaka",nightsOf=h=>h.nights||NIGHTS;
+const VB={Osaka:"135.35,34.8,135.65,34.5",Kanazawa:"136.55,36.65,136.78,36.50"};
 const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
 const rv=h=>h.reviews||[];
 const rcount=h=>rv(h).length?`💬 ${rv(h).length} คอมเมนต์ห้อง`:"⚪ ยังไม่มีคอมเมนต์ห้อง";
 const rsum=h=>rv(h).length?`👍${rv(h).filter(x=>x[0]==="+").length} · 👎${rv(h).filter(x=>x[0]==="-").length}`:"ยังไม่มีข้อมูล";
 const price=h=>h.price!=null?"฿"+Math.round(h.price).toLocaleString("th-TH"):"–"; // ราคารวมทั้งทริป (NIGHTS คืน)
-let sel=[],area="ALL";
-const night=h=>h.price!=null?"฿"+Math.round(h.price/NIGHTS).toLocaleString("th-TH"):"–";
+let sel=[],area="ALL",cityF="ALL";
+const night=h=>h.price!=null?"฿"+Math.round(h.price/nightsOf(h)).toLocaleString("th-TH"):"–";
 let favs=new Set();try{favs=new Set(JSON.parse(localStorage.getItem("osaka_favs")||"[]"))}catch(e){}
 function fav(id){favs.has(id)?favs.delete(id):favs.add(id);try{localStorage.setItem("osaka_favs",JSON.stringify([...favs]))}catch(e){}draw()}
 
@@ -189,12 +191,16 @@ function closeSheet(){$("ov").classList.add("hide");document.body.style.overflow
 function toast(m){const o=$("toast");if(o)o.remove();const t=document.createElement("div");t.id="toast";t.setAttribute("role","status");t.setAttribute("aria-live","polite");t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 
 function chips(){
-  const A=["ALL","FAV",...new Set(all().map(h=>h.area).filter(Boolean))];
+  const H=all(),cities=[...new Set(H.map(cityOf))];
+  if(cityF!=="ALL"&&!cities.includes(cityF))cityF="ALL";
+  const ce=$("city-chips");
+  if(ce)ce.innerHTML=["ALL",...cities].map(c=>`<button class="chip ${cityF===c?"on":""}" data-c="${esc(c)}">${c==="ALL"?"ทุกเมือง":esc(CITY_TH[c]||c)}<small>${c==="ALL"?H.length:H.filter(h=>cityOf(h)===c).length}</small></button>`).join("");
+  const A=["ALL","FAV",...new Set(H.filter(h=>cityF==="ALL"||cityOf(h)===cityF).map(h=>h.area).filter(Boolean))];
   if(!A.includes(area))area="ALL";
-  const CH=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":a==="FAV"?"⭐ ที่ชอบ":esc(a)}</button>`).join("");
-  $("chips").innerHTML=CH;
+  $("chips").innerHTML=A.map(a=>`<button class="chip ${area===a?"on":""}" data-a="${esc(a)}">${a==="ALL"?"ทั้งหมด":a==="FAV"?"⭐ ที่ชอบ":esc(a)}</button>`).join("");
 }
 for(const c of ["chips"])$(c).addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;area=b.dataset.a;chips();draw()});
+if($("city-chips"))$("city-chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;cityF=b.dataset.c;area="ALL";chips();draw()});
 
 const rtLine=h=>h.rt&&h.rt.length?`⭐ ${h.rt[0][1]}/10 · ${esc(h.rt[0][0])} ${Number(h.rt[0][2]).toLocaleString("th-TH")} รีวิว${h.rt.length>1?` (+${h.rt.length-1} เว็บ)`:""}`:"";
 const firstRv=(h,s)=>{const r=rv(h).find(x=>x[0]===s);return r?r[1]:""};
@@ -208,7 +214,7 @@ async function hgFetch(id){
   const ep=window.GETOH_PLACES_API_URL;if(!ep){toast("ยังไม่ได้ตั้งค่า Google Places Proxy");return}
   HGL[id]=1;delete HGE[id];hgPaint(id);
   try{
-    const body={query:h.name+" Osaka Japan"};
+    const body={query:h.name+" "+cityOf(h)+" Japan"};
     if(hasLL(h)){body.latitude=h.lat;body.longitude=h.lng}   // มีพิกัด → proxy จำกัดค้นในรัศมี 150 ม. แม่นกว่า
     const r=await fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     const d=await r.json();if(!r.ok)throw Error(d.error||("HTTP "+r.status));
@@ -278,10 +284,10 @@ function card(h){
   const on=sel.includes(h.id),src=thumb[h.id]||h.img||"",p=firstRv(h,"+"),n=firstRv(h,"-"),rl=rtLine(h);
   return `<article class="card h ${on?"sel":""}" onclick="detail(${h.id})">
     <div class="ph"><span class="im" id="im-${h.id}">${src?imgTag(esc(src)):""}</span>${src?"":"🏨 ยังไม่มีรูป"}<span class="sc" style="background:${colorOf(h.area)}">${h.score!=null?h.score:"–"}<small>/10</small></span><button class="fv" aria-label="ชอบ" onclick="event.stopPropagation();fav(${h.id})">${favs.has(h.id)?"★":"☆"}</button><span class="photo-status">${statusLabel(h)}</span></div>
-    <div class="hb"><div class="hotel-name-row"><h3>${esc(h.name)}</h3><button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"＋"}</button></div><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
+    <div class="hb"><div class="hotel-name-row"><h3>${esc(h.name)}</h3><button class="pick" aria-label="เลือกเปรียบเทียบ" onclick="event.stopPropagation();pick(${h.id})">${on?"✓":"＋"}</button></div><div class="tag">${esc(h.tag||"")} · ${esc(h.area||"")}${h.booked?` <span class="bk-pill">✅ จองแล้ว</span>`:""}</div>
       ${rl?`<div class="rtl">${rl}</div>`:""}${hgCardLine(h)}<div class="rc">${rsum(h)} · 📐 ${h.size?h.size+" m²":"–"}${h.custom?" · เพิ่มเอง":""}</div>
       ${p||n?`<div class="pq">${p?`<span class="g">👍 ${esc(p)}</span>`:""}${n?`<span class="b">👎 ${esc(n)}</span>`:""}</div>`:""}
-      <div class="hotel-price-row"><div><small>ราคารวม ${NIGHTS} คืน · ณ ${esc(OSAKA.priceDate||"ไม่ระบุ")}</small><strong>${price(h)}</strong><em>≈ ${night(h)} /คืน</em></div>${hasLL(h)?`<button class="map-mini" onclick="event.stopPropagation();showOnMap(${h.id})">📍 แผนที่</button>`:""}</div>${statusActions(h)}</div></article>`;
+      <div class="hotel-price-row"><div><small>ราคารวม ${nightsOf(h)} คืน · ${h.booked?"ราคาที่จองไว้":"ณ "+esc(OSAKA.priceDate||"ไม่ระบุ")}</small><strong>${price(h)}</strong><em>≈ ${night(h)} /คืน</em></div>${hasLL(h)?`<button class="map-mini" onclick="event.stopPropagation();showOnMap(${h.id})">📍 แผนที่</button>`:""}</div>${statusActions(h)}</div></article>`;
 }
 function renderDecisionBoard(){
   const A=all(),chosen=A.filter(h=>h.decisionStatus==="chosen"),main=A.filter(h=>h.decisionStatus==="main"),backup=A.filter(h=>h.decisionStatus==="backup");
@@ -298,10 +304,12 @@ async function setDecisionStatus(id,status){
 }
 function draw(){
   const q=$("q")?$("q").value.toLowerCase():"",min=$("size")?+$("size").value:0,s=$("sort")?$("sort").value:"id";
-  const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
+  const L=all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(cityF==="ALL"||cityOf(h)===cityF)&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min);
   const f={pa:(a,b)=>(a.price??1e12)-(b.price??1e12),pd:(a,b)=>(b.price??-1)-(a.price??-1),sz:(a,b)=>(b.size||0)-(a.size||0),sc:(a,b)=>(b.score||0)-(a.score||0)}[s];if(f)L.sort(f);
-  $("count").textContent=`แสดง ${L.length} จาก ${all().length} โรงแรมที่คัดไว้ · ราคารวม ${NIGHTS} คืน · ราคาอ้างอิง ${OSAKA.priceDate||"–"}`;
-  $("list").innerHTML=L.map(card).join("")||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมในรายการนี้</div>`;
+  const ns=[...new Set(L.map(nightsOf))];
+  $("count").textContent=`แสดง ${L.length} จาก ${all().length} โรงแรมที่คัดไว้ · ราคารวม ${ns.length===1?ns[0]+" คืน":"ตามจำนวนคืนของแต่ละที่พัก"} · จองแล้ว ${L.filter(h=>h.booked).length} · ราคาอ้างอิง ${OSAKA.priceDate||"–"}`;
+  const order=[...new Set(all().map(cityOf))],cs=[...new Set(L.map(cityOf))].sort((x,y)=>order.indexOf(x)-order.indexOf(y));
+  $("list").innerHTML=(cityF==="ALL"&&cs.length>1?cs.map(c=>{const g=L.filter(h=>cityOf(h)===c);return `<div class="city-head"><b>${esc(CITY_TH[c]||c)}</b><span>${g.length} โรงแรม · จองแล้ว ${g.filter(h=>h.booked).length}</span></div>`+g.map(card).join("")}).join(""):L.map(card).join(""))||`<div class="card" style="text-align:center;color:var(--mut)">ไม่พบโรงแรมในรายการนี้</div>`;
   L.forEach(h=>{if(photoSet.has(h.id))loadThumb(h.id)});
   $("n").textContent=sel.length;$("act").classList.toggle("hide",!sel.length);$("n-hotels").innerHTML=`<span>🏨</span>โรงแรม (${all().length})`;
   renderDecisionBoard();if(map)mapDraw();
@@ -309,7 +317,7 @@ function draw(){
 function pick(id){sel=sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];draw()}
 
 function revHtml(h){
-  const r=rv(h),g=k=>r.filter(x=>x[0]===k),q=encodeURIComponent(h.name+" Osaka");
+  const r=rv(h),g=k=>r.filter(x=>x[0]===k),q=encodeURIComponent(h.name+" "+cityOf(h));
   const R=(arr,c)=>arr.map(x=>`<div class="rv ${c}">${esc(x[1])}<small>${esc(x[2]||"")}</small></div>`).join("");
   const sec=(t,arr,c)=>arr.length?`<details class="dt" style="margin-top:8px"><summary>${t} (${arr.length})</summary><div style="margin-top:6px">${R(arr,c)}</div></details>`:"";
   const rt=h.rt&&h.rt.length?`<div class="kv"><span>⭐ เว็บจอง (เต็ม 10)</span><b>${h.rt.map(x=>`${esc(x[0])} ${x[1]}`).join(" · ")}</b></div><div class="note">จำนวนรีวิว ${h.rt.map(x=>Number(x[2]).toLocaleString("th-TH")).join(" / ")} · แต่ละเว็บใช้เกณฑ์ไม่เหมือนกัน</div>`:"";
@@ -323,12 +331,13 @@ function detail(id){
   const h=find(id);if(!h)return;
   const on=sel.includes(id);
   const cats=h.loc!=null?`<div class="kv"><span>ทำเล · สะอาด · บริการ · คุ้มค่า</span><b>${[h.loc,h.cl,h.sv,h.vl].map(v=>v??"–").join(" · ")}</b></div><div class="note">คะแนนรายหมวดมาจากไฟล์เดิม ยังไม่ได้ตรวจกับแหล่งรีวิว</div>`:"";
-  const map=h.map||"https://maps.google.com/?q="+encodeURIComponent(h.name+" Osaka");
+  const map=h.map||"https://maps.google.com/?q="+encodeURIComponent(h.name+" "+cityOf(h));
   openSheet(h.name,`
-    <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(h.area||"")}</div>
+    <div class="tag" style="margin-bottom:6px">${esc(h.tag||"")} · ${esc(CITY_TH[cityOf(h)]||cityOf(h))} · ${esc(h.area||"")}</div>
+    ${h.booked?`<div class="bk-box">✅ จองแล้ว${h.ci?` · เช็กอิน ${esc(h.ci)}`:""}${h.cancelBy?`<br>ยกเลิกฟรีได้ถึง ${esc(h.cancelBy)}`:""}${h.payOn?`<br>ตัดเงินอัตโนมัติ ${esc(h.payOn)}`:""}</div>`:""}
     <div class="detail-status"><b>สถานะการตัดสินใจ</b>${statusActions(h)}</div>
     <div class="pl"><span>📍 ${esc(h.area||"–")}</span><span>📐 ${h.size?h.size+" ตร.ม.":"–"}</span><span>⭐️ ${h.score!=null?h.score+"/10":"–"}</span><button class="fv" style="width:auto;padding:0 12px" onclick="fav(${id});detail(${id})">${favs.has(id)?"★ ชอบแล้ว":"☆ ชอบ"}</button></div>
-    <div class="bk"><div><small class="note" style="margin:0">ราคารวม ${NIGHTS} คืน</small><div><b style="font-size:20px">${price(h)}</b></div><div class="note" style="margin:0">≈ ${night(h)} /คืน</div>${h.custom?"":`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" Osaka booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
+    <div class="bk"><div><small class="note" style="margin:0">ราคารวม ${nightsOf(h)} คืน</small><div><b style="font-size:20px">${price(h)}</b></div><div class="note" style="margin:0">≈ ${night(h)} /คืน</div>${h.custom?"":h.booked?`<div class="note" style="margin:0">ราคาที่จองไว้แล้ว</div>`:`<div class="note" style="margin:0">ราคา ณ ${esc(OSAKA.priceDate||"")} · เช็กกับเว็บจองก่อนจอง</div>`}</div><a class="btn" href="${esc(h.map||"https://www.google.com/search?q="+encodeURIComponent(h.name+" "+cityOf(h)+" booking"))}" target="_blank" rel="noopener">ดูที่เว็บจอง</a></div>
     ${cats}${h.cm?`<div class="note">โน้ต: ${esc(h.cm)}</div>`:""}
     <div class="rvh">📷 รูปภาพ</div><div id="ph-box" data-id="${id}" class="phg note">กำลังโหลดรูป...</div>
     ${hgBox(h)}${revHtml(h)}
@@ -345,16 +354,18 @@ function openForm(id){
   const areas=[...new Set(all().map(x=>x.area).filter(Boolean))];
   openSheet(h?"✏️ แก้ไขที่พัก":"➕ เพิ่มที่พัก",`<div class="fm">
     <label>ชื่อที่พัก *<input id="f-name" maxlength="120"></label>
+    <label>เมือง<select id="f-city">${[...new Set(["Osaka","Kanazawa",...all().map(cityOf)])].map(c=>`<option value="${esc(c)}">${esc(CITY_TH[c]||c)}</option>`).join("")}</select></label>
     <label>ย่าน (เลือกหรือพิมพ์ใหม่)<input id="f-area" list="f-areas" maxlength="40" placeholder="เช่น Namba"><datalist id="f-areas">${areas.map(a=>`<option value="${esc(a)}">`).join("")}</datalist></label>
-    <div class="g2"><label>ขนาดห้อง (ตร.ม.)<input id="f-size" type="number" inputmode="decimal" min="0"></label><label>ราคารวม ${NIGHTS} คืน (บาท)<input id="f-price" type="number" inputmode="decimal" min="0"></label></div>
+    <div class="g2"><label>ขนาดห้อง (ตร.ม.)<input id="f-size" type="number" inputmode="decimal" min="0"></label><label>ราคารวมทั้งที่พัก (บาท)<input id="f-price" type="number" inputmode="decimal" min="0"></label></div>
     <div class="g2"><label>คะแนนรวม (0-10)<input id="f-score" type="number" inputmode="decimal" step="0.1" min="0" max="10"></label><label>จุดเด่นสั้น ๆ<input id="f-tag" maxlength="60"></label></div>
     <label>ลิงก์ Google Maps หรือเว็บจอง (ไม่บังคับ)<input id="f-map" type="url" inputmode="url" placeholder="https://..."></label>
     <label>โน้ต<input id="f-cm" maxlength="200"></label>
     <label>คอมเมนต์ห้อง บรรทัดละ 1 ข้อ ขึ้นต้นด้วย + (ชม) - (ติ) หรือ ~ (กลาง ๆ)<textarea id="f-rv" rows="5" placeholder="+ ห้องสะอาด&#10;- ห้องเล็ก"></textarea></label>
     <label>แหล่งที่มาของคอมเมนต์<input id="f-src" maxlength="40" placeholder="เช่น Agoda"></label>
     <button class="btn" onclick="saveForm(${id||0})">💾 บันทึก</button></div>`);
+  if(!h&&cityF!=="ALL")$("f-city").value=cityF;
   if(h){const set=(k,v)=>{$("f-"+k).value=v??""};
-    set("name",h.name);set("area",h.area);set("size",h.size);set("price",h.price);set("score",h.score);set("tag",h.tag);set("map",h.map);set("cm",h.cm);
+    set("name",h.name);set("city",cityOf(h));set("area",h.area);set("size",h.size);set("price",h.price);set("score",h.score);set("tag",h.tag);set("map",h.map);set("cm",h.cm);
     set("rv",rv(h).map(r=>r[0]+" "+r[1]).join("\n"));set("src",(rv(h)[0]||[])[2]);}
 }
 function saveForm(id){
@@ -364,7 +375,7 @@ function saveForm(id){
   const reviews=$("f-rv").value.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const s="+-~".includes(l[0])?l[0]:"~";return [s,(s===l[0]?l.slice(1):l).trim(),src]}).filter(r=>r[1]);
   let map=$("f-map").value.trim();if(!/^https?:\/\//i.test(map))map="";
   let score=num($("f-score").value);if(score!=null)score=Math.min(10,Math.max(0,score));
-  const o={name,area:$("f-area").value.trim()||"อื่น ๆ",size:num($("f-size").value),price:num($("f-price").value),score,tag:$("f-tag").value.trim()||"ที่พักที่เพิ่มเอง",cm:$("f-cm").value.trim(),map,reviews};
+  const o={name,city:$("f-city").value||"Osaka",area:$("f-area").value.trim()||"อื่น ๆ",size:num($("f-size").value),price:num($("f-price").value),score,tag:$("f-tag").value.trim()||"ที่พักที่เพิ่มเอง",cm:$("f-cm").value.trim(),map,reviews};
   const old=id?find(id):null,ll=parseLL(map);
   if(ll){o.lat=ll[0];o.lng=ll[1]}
   putHotel(id||Date.now(),{...(old||{}),...o});
@@ -468,7 +479,7 @@ async function delPhoto(id,k,btn){
 }
 
 // ---------- แผนที่ ----------
-let map=null,layer=null,placing=null,prevMk=null,mapFit=false,auto=null;
+let map=null,layer=null,placing=null,prevMk=null,mapFit=null,auto=null;
 const hasLL=h=>Number.isFinite(h.lat)&&Number.isFinite(h.lng);
 function parseLL(u){
   u=String(u||"");
@@ -477,7 +488,7 @@ function parseLL(u){
   const a=+m[1],b=+m[2];
   return a>=30&&a<=40&&b>=128&&b<=146?[a,b]:null; // เฉพาะพิกัดในญี่ปุ่น
 }
-const filt=()=>{const q=$("q").value.toLowerCase(),min=+$("size").value;return all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min)};
+const filt=()=>{const q=$("q").value.toLowerCase(),min=+$("size").value;return all().filter(h=>(h.name.toLowerCase().includes(q)||(h.tag||"").toLowerCase().includes(q))&&(cityF==="ALL"||cityOf(h)===cityF)&&(area==="ALL"||(area==="FAV"?favs.has(h.id):h.area===area))&&(h.size||0)>=min)};
 function initMap(){
   if(map)return true;
   if(typeof L==="undefined"){$("mnote").textContent="โหลดแผนที่ไม่ได้ (ต้องต่ออินเทอร์เน็ต)";return false}
@@ -493,9 +504,9 @@ function mapDraw(){
   const base=filt(),pin=base.filter(hasLL),un=base.filter(h=>!hasLL(h));
   pin.forEach(h=>{
     const ic=L.divIcon({className:"",html:`<div class="pin" style="background:${colorOf(h.area)}">${h.price!=null?"฿"+(h.price/1000).toFixed(1)+"k":"•"}</div>`,iconSize:[54,26],iconAnchor:[27,13]});
-    L.marker([h.lat,h.lng],{icon:ic}).addTo(layer).bindPopup(`<b>${esc(h.name)}</b><br>รวม ${NIGHTS} คืน ${price(h)} · ⭐️ ${h.score!=null?h.score:"–"} · ${h.size?h.size+" m²":"–"}<br><a href="#" onclick="detail(${h.id});return false">ดูรายละเอียด</a> · <a href="#" onclick="placeFor(${h.id});return false">ย้ายหมุด</a>`);
+    L.marker([h.lat,h.lng],{icon:ic}).addTo(layer).bindPopup(`<b>${esc(h.name)}</b><br>รวม ${nightsOf(h)} คืน ${price(h)} · ⭐️ ${h.score!=null?h.score:"–"} · ${h.size?h.size+" m²":"–"}<br><a href="#" onclick="detail(${h.id});return false">ดูรายละเอียด</a> · <a href="#" onclick="placeFor(${h.id});return false">ย้ายหมุด</a>`);
   });
-  if(!mapFit&&pin.length){map.fitBounds(L.latLngBounds(pin.map(h=>[h.lat,h.lng])),{padding:[30,30],maxZoom:16});mapFit=true}
+  if(mapFit!==cityF&&pin.length){map.fitBounds(L.latLngBounds(pin.map(h=>[h.lat,h.lng])),{padding:[30,30],maxZoom:16});mapFit=cityF}
   $("mcount").textContent=`ปักหมุดแล้ว ${pin.length} · ยังไม่ปัก ${un.length}`;
   if(!auto){const n=all().filter(h=>!hasLL(h)).length;$("mauto").innerHTML=n?`<button class="btn g" onclick="autoPin()">🪄 ปักหมุดอัตโนมัติให้ทั้ง ${n} แห่ง</button>`:""}
   $("munpin").innerHTML=un.map(h=>`<div class="card" style="display:flex;gap:8px;align-items:center;padding:10px;margin-bottom:8px"><div style="flex:1;min-width:0"><b style="font-size:15px">${esc(h.name)}</b><div class="rc">${esc(h.area||"")}</div></div><button class="btn o" style="width:auto;min-height:40px;font-size:13px" onclick="findLL(${h.id})">🔎 ค้นหา</button><button class="btn" style="width:auto;min-height:40px;font-size:13px" onclick="placeFor(${h.id})">📍 ปัก</button></div>`).join("");
@@ -520,10 +531,10 @@ function showOnMap(id){
   setTimeout(()=>{map.invalidateSize();map.setView([h.lat,h.lng],17)},90);
 }
 // ---------- ปักหมุดอัตโนมัติ (ตรวจผลก่อนยืนยัน) ----------
-async function geo(name){
+async function geo(name,city){
   try{
-    const q=name.replace(/\(.*?\)/g,"").trim()+" Osaka";
-    const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=jp&bounded=1&viewbox=135.35,34.8,135.65,34.5&q="+encodeURIComponent(q));
+    const q=name.replace(/\(.*?\)/g,"").trim()+" "+(city||"Osaka");
+    const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=jp&bounded=1&viewbox="+(VB[city]||VB.Osaka)+"&q="+encodeURIComponent(q));
     const d=await r.json();
     const x=(Array.isArray(d)?d:[]).find(o=>["tourism","building"].includes(o.category));
     return x?{lat:+x.lat,lng:+x.lon,label:String(x.display_name||"").split(",").slice(0,3).join(",")}:null;
@@ -536,7 +547,7 @@ async function autoPin(){
   auto={items:[],miss:[],stop:false};const A=auto;
   for(let i=0;i<todo.length&&!A.stop;i++){
     autoMsg(`<div class="card" style="padding:10px"><div class="note" style="margin:0 0 8px">🔎 กำลังค้นหา ${i+1}/${todo.length}: ${esc(todo[i].name)}</div><button class="btn o" style="min-height:40px" onclick="autoCancel()">ยกเลิก</button></div>`);
-    const r=await geo(todo[i].name);
+    const r=await geo(todo[i].name,cityOf(todo[i]));
     if(A.stop)break;
     if(r){
       const mk=L.circleMarker([r.lat,r.lng],{radius:11,color:"#f59e0b",weight:3,fillColor:"#f59e0b",fillOpacity:.35}).addTo(map);
@@ -582,7 +593,7 @@ async function findLL(id){
   const h=find(id);if(!h)return;
   toast("กำลังค้นหาตำแหน่ง...");
   try{
-    const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&bounded=1&viewbox=135.35,34.8,135.65,34.5&q="+encodeURIComponent(h.name+" Osaka"));
+    const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&bounded=1&viewbox="+(VB[cityOf(h)]||VB.Osaka)+"&q="+encodeURIComponent(h.name+" "+cityOf(h)));
     const d=await r.json();
     if(!Array.isArray(d)||!d.length){toast("ไม่พบชื่อนี้ กด 📍 ปัก แล้วแตะบนแผนที่เอง");return}
     const lat=+d[0].lat,lng=+d[0].lon;
@@ -636,7 +647,7 @@ async function importList(a){
     if(!r||typeof r.name!=="string"||!r.name.trim()||have.has(r.name.trim().toLowerCase()))continue;
     const rvs=Array.isArray(r.reviews)?r.reviews.filter(x=>Array.isArray(x)&&typeof x[1]==="string").slice(0,30).map(x=>["+-~".includes(x[0])?x[0]:"~",String(x[1]).slice(0,300),String(x[2]||"").slice(0,40)]):[];
     const map=typeof r.map==="string"&&/^https?:\/\//i.test(r.map)?r.map:"";
-    const body={name:r.name.trim().slice(0,120),area:String(r.area||"อื่น ๆ").slice(0,40),size:num(r.size),price:num(r.price),score:num(r.score),tag:String(r.tag||"ที่พักที่เพิ่มเอง").slice(0,60),cm:String(r.cm||"").slice(0,200),map,reviews:rvs};
+    const body={name:r.name.trim().slice(0,120),city:String(r.city||"Osaka").slice(0,40),area:String(r.area||"อื่น ๆ").slice(0,40),size:num(r.size),price:num(r.price),score:num(r.score),tag:String(r.tag||"ที่พักที่เพิ่มเอง").slice(0,60),cm:String(r.cm||"").slice(0,200),map,reviews:rvs};
     if(num(r.lat)!=null&&num(r.lng)!=null){body.lat=num(r.lat);body.lng=num(r.lng)}
     jobs.push(db("PUT","/"+(Date.now()+i++),body));have.add(body.name.toLowerCase());
   }
@@ -674,8 +685,8 @@ function compare(){
 }
 function copyLine(){
   const L=sel.length?all().filter(h=>sel.includes(h.id)):all();
-  let t=`🇯🇵 สรุปที่พักโอซาก้า 2027 (${L.length} โรงแรม)\n\n`;
-  L.forEach((h,i)=>{t+=`${i+1}. ${h.name}\n   📐 ${h.size?h.size+" ตร.ม.":"-"} | 💵 รวม ${NIGHTS} คืน ${price(h)}\n   ⭐️ ${h.score!=null?h.score+"/10":"-"} | ${h.tag||""}\n\n`});
+  let t=`🇯🇵 สรุปที่พักทริปญี่ปุ่น 2027 (${L.length} โรงแรม)\n\n`;
+  L.forEach((h,i)=>{t+=`${i+1}. ${h.name} (${CITY_TH[cityOf(h)]||cityOf(h)})${h.booked?" ✅ จองแล้ว":""}\n   📐 ${h.size?h.size+" ตร.ม.":"-"} | 💵 รวม ${nightsOf(h)} คืน ${price(h)}\n   ⭐️ ${h.score!=null?h.score+"/10":"-"} | ${h.tag||""}\n\n`});
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("คัดลอกข้อความสำหรับ LINE แล้ว"),()=>toast("คัดลอกไม่สำเร็จ"));else toast("เบราว์เซอร์นี้คัดลอกไม่ได้");
 }
 
