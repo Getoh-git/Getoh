@@ -33,6 +33,7 @@ function renderPrep(){
     <div class="note">คำนวณจากเวลาถึงสนามบินลบ 90 นาที (เดินทางราว 45–60 นาที เผื่อเวลา) ขากลับใช้เทอร์มินัล 2 ซึ่งต้องต่อรถ shuttle จาก T1 ให้ตรวจกับสายการบินอีกครั้ง วันนี้เช็กเอาต์โรงแรมโอซาก้า (ก่อน ${esc(b.cout||"เวลาในใบจอง")}) ถ้ายังไม่ถึงเวลาไปสนามบิน ฝากกระเป๋าที่โรงแรมได้</div></div>
   <div id="flight-monitor"></div>
   <div class="card" style="margin-top:10px"><div class="rvh" style="margin-top:0">✅ เช็กลิสต์ (${done}/${tot})</div>${CK.map(g=>`<div class="note" style="margin:10px 0 4px"><b>${g[0]}</b></div>`+g[1].map(x=>`<div class="kv" style="cursor:pointer" onclick="ckTog(this.dataset.k)" data-k="${esc(x)}"><span>${P.ck[x]?"☑️":"⬜"} ${esc(x)}</span></div>`).join("")).join("")}</div>`;
+  fmRender();
 }
 
 
